@@ -10,22 +10,21 @@ import {
 } from "react-native";
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
-import { useLocaleStore, useThemeStore, useAccessibilityStore } from "@/lib/store";
+import { useLocaleStore, useThemeStore } from "@/lib/store";
 import { t } from "@/lib/i18n";
 import { IconCircleCheck, IconHome2 } from "@/components/Icons";
 import type { Locale } from "@parkit/shared";
 import { useMemo } from "react";
-import { useValetTheme, useResponsiveLayout } from "@/theme/valetTheme";
+import { useValetTheme } from "@/theme/valetTheme";
 import type { ThemePreference } from "@/lib/themeStore";
 
 const MIN_ROW = 58;
 
 type Theme = ReturnType<typeof useValetTheme>;
 
-function createSettingsStyles(theme: Theme, contentMaxWidth: number, sectionPadding: number, textScale: number) {
+function createSettingsStyles(theme: Theme, contentMaxWidth: number, sectionPadding: number) {
   const C = theme.colors;
   const S = theme.space;
-  const F = theme.font;
   const R = theme.radius;
   const Fonts = theme.fontFamily;
 
@@ -58,7 +57,6 @@ function createSettingsStyles(theme: Theme, contentMaxWidth: number, sectionPadd
       width: 44,
     },
     title: {
-      fontSize: Math.round(F.secondary * 0.85),
       fontWeight: "800",
       fontFamily: Fonts.primary,
       color: C.text,
@@ -75,16 +73,13 @@ function createSettingsStyles(theme: Theme, contentMaxWidth: number, sectionPadd
     },
     /** Same visual hierarchy as `receive` / tickets (readable in ES/EN). */
     sectionTitle: {
-      fontSize: Math.round(F.secondary * 0.85 * textScale),
-      fontWeight: "800",
-      fontFamily: Fonts.primary,
+      fontWeight: '600',
       color: C.textMuted,
-      letterSpacing: 0.65,
-      marginBottom: S.sm,
       marginTop: S.md,
+      marginBottom: S.sm,
+      lineHeight: 22,
     },
     helpText: {
-      fontSize: Math.round(F.status * 0.65),
       fontFamily: Fonts.primary,
       lineHeight: 18,
       color: C.textMuted,
@@ -95,8 +90,8 @@ function createSettingsStyles(theme: Theme, contentMaxWidth: number, sectionPadd
       backgroundColor: C.card,
       borderRadius: R.card,
       overflow: "hidden",
-      borderWidth: 2,
-      borderColor: C.border,
+      borderWidth: 1,
+      borderColor: theme.isDark ? "rgba(148, 163, 184, 0.15)" : "rgba(226, 232, 240, 0.8)",
     },
     localeRow: {
       flexDirection: "row",
@@ -119,13 +114,11 @@ function createSettingsStyles(theme: Theme, contentMaxWidth: number, sectionPadd
       backgroundColor: theme.isDark ? "rgba(148, 163, 184, 0.12)" : "#E2E8F0",
     },
     localeLabel: {
-      fontSize: Math.round(F.status * 0.65),
       fontWeight: "700",
       fontFamily: Fonts.primary,
       color: C.text,
     },
     localeHint: {
-      fontSize: Math.round(F.status * 0.65),
       fontFamily: Fonts.primary,
       color: C.textSubtle,
       marginTop: 2,
@@ -137,14 +130,12 @@ export default function SettingsScreen() {
   const router = useRouter();
   const { locale, setLocale } = useLocaleStore();
   const { preference, setPreference } = useThemeStore();
-  const { textScale } = useAccessibilityStore();
   const theme = useValetTheme();
-  const responsive = useResponsiveLayout();
   const insets = useSafeAreaInsets();
   const systemScheme = useColorScheme();
   const styles = useMemo(
-    () => createSettingsStyles(theme, responsive.contentMaxWidth, responsive.sectionPadding, textScale),
-    [theme, responsive.contentMaxWidth, responsive.sectionPadding, textScale]
+    () => createSettingsStyles(theme, 9999, 20),
+    [theme]
   );
 
   const handleSetLocale = (newLocale: Locale) => {
@@ -173,7 +164,7 @@ export default function SettingsScreen() {
       <View style={styles.inner} key={locale}>
         <View style={styles.contentFrame}>
         <View style={[styles.header, { paddingTop: insets.top + theme.space.md }]}>
-          <View style={{ width: 44 }} />
+          <View style={{ width: 44, height: 44 }} />
           <Text style={styles.title} maxFontSizeMultiplier={1.8}>
             {t(locale, "settings.title")}
           </Text>
@@ -191,7 +182,7 @@ export default function SettingsScreen() {
             {t(locale, "settings.intro")}
           </Text>
 
-          <Text style={styles.sectionTitle}>{t(locale, "settings.themeSection")}</Text>
+          <Text style={styles.sectionTitle} maxFontSizeMultiplier={1.5}>{t(locale, "settings.themeSection")}</Text>
           <View style={styles.section}>
             {(["system", "light", "dark"] as const).map((pref, i, arr) => (
               <Pressable
@@ -207,9 +198,9 @@ export default function SettingsScreen() {
                 accessibilityState={{ selected: isThemeActive(pref) }}
               >
                 <View>
-                  <Text style={styles.localeLabel}>{themeLabel(pref)}</Text>
+                  <Text style={styles.localeLabel} maxFontSizeMultiplier={1.5}>{themeLabel(pref)}</Text>
                   {pref === "system" && (
-                    <Text style={styles.localeHint}>
+                    <Text style={styles.localeHint} maxFontSizeMultiplier={1.5}>
                       {systemScheme === "light"
                         ? t(locale, "settings.themeSystemHintLight")
                         : t(locale, "settings.themeSystemHintDark")}
@@ -217,13 +208,13 @@ export default function SettingsScreen() {
                   )}
                 </View>
                 {isThemeActive(pref) && (
-                  <IconCircleCheck size={28 * textScale} color={theme.colors.primary} />
+                  <IconCircleCheck size={theme.icon.md} color={theme.colors.primary} />
                 )}
               </Pressable>
             ))}
           </View>
 
-          <Text style={styles.sectionTitle}>{t(locale, "settings.languageSection")}</Text>
+          <Text style={styles.sectionTitle} maxFontSizeMultiplier={1.5}>{t(locale, "settings.languageSection")}</Text>
           <View style={styles.section}>
             <Pressable
               style={({ pressed }) => [
@@ -235,9 +226,9 @@ export default function SettingsScreen() {
               accessibilityRole="button"
               accessibilityState={{ selected: locale === "es" }}
             >
-              <Text style={styles.localeLabel}>{t(locale, "settings.spanish")}</Text>
+              <Text style={styles.localeLabel} maxFontSizeMultiplier={1.5}>{t(locale, "settings.spanish")}</Text>
               {locale === "es" && (
-                <IconCircleCheck size={28 * textScale} color={theme.colors.primary} />
+                <IconCircleCheck size={theme.icon.md} color={theme.colors.primary} />
               )}
             </Pressable>
             <Pressable
@@ -251,9 +242,9 @@ export default function SettingsScreen() {
               accessibilityRole="button"
               accessibilityState={{ selected: locale === "en" }}
             >
-              <Text style={styles.localeLabel}>{t(locale, "settings.english")}</Text>
+              <Text style={styles.localeLabel} maxFontSizeMultiplier={1.5}>{t(locale, "settings.english")}</Text>
               {locale === "en" && (
-                <IconCircleCheck size={28 * textScale} color={theme.colors.primary} />
+                <IconCircleCheck size={theme.icon.md} color={theme.colors.primary} />
               )}
             </Pressable>
           </View>

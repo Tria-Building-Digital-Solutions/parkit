@@ -44,7 +44,7 @@ export function ValetChipAvatar({
           resizeMode="cover"
         />
       ) : (
-        <Text style={{ fontSize: size * 0.45, fontWeight: "800", letterSpacing: -0.2, color: av.fg }}>
+        <Text style={{ fontSize: size * 0.5, fontWeight: "800", letterSpacing: -0.2, color: av.fg }}>
           {initials}
         </Text>
       )}

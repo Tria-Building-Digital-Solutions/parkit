@@ -1,5 +1,6 @@
 import React from 'react';
 import { View, Text, TextInput, StyleSheet } from 'react-native';
+import { useValetTheme } from '@/theme/valetTheme';
 import { t } from '@/lib/i18n';
 import type { Locale } from '@parkit/shared';
 import { formatPhoneWithCountryCode } from '@/lib/phoneInternational';
@@ -27,9 +28,14 @@ interface DriverInfoFormProps {
     inputBorder: string;
   };
   fonts: {
-    secondary: number;
-    body: number;
-    status: number;
+    xs: number;
+    sm: number;
+    base: number;
+    md: number;
+    lg: number;
+    xl: number;
+    xxl: number;
+    xxxl: number;
   };
   space: {
     sm: number;
@@ -53,6 +59,8 @@ export function DriverInfoForm({
   fonts: F,
   space: S,
 }: DriverInfoFormProps) {
+  const theme = useValetTheme();
+
   const handlePhoneChange = (value: string) => {
     const formatted = formatPhoneWithCountryCode(value, countryCode);
     onPhoneChange(formatted);
@@ -60,15 +68,15 @@ export function DriverInfoForm({
 
   const styles = StyleSheet.create({
     stepExplain: {
-      fontSize: Math.round(F.secondary * 0.65),
+      fontSize: F.base,
       fontWeight: '600',
       color: C.textMuted,
       marginTop: -4,
       marginBottom: S.md,
-      lineHeight: 22,
+      lineHeight: F.md,
     },
     inputLabel: {
-      fontSize: Math.round(F.status * 0.6),
+      fontSize: F.base,
       fontWeight: '500',
       color: C.text,
       marginBottom: 6,
@@ -99,7 +107,8 @@ export function DriverInfoForm({
     },
     nameInput: {
       flex: 1,
-      fontSize: Math.round(F.status * 0.6),
+      fontSize: F.base,
+      fontWeight: '600',
       color: C.text,
       paddingVertical: 12,
       letterSpacing: 0.3,
@@ -116,7 +125,7 @@ export function DriverInfoForm({
       paddingHorizontal: 16,
       paddingVertical: 12,
       paddingLeft: 48,
-      fontSize: Math.round(F.status * 0.6),
+      fontSize: F.base,
       fontWeight: '600',
       color: C.text,
       marginBottom: S.sm,
@@ -130,7 +139,7 @@ export function DriverInfoForm({
       zIndex: 1,
     },
     errorText: {
-      fontSize: Math.round(F.status * 0.55),
+      fontSize: F.base,
       color: '#ef4444',
       marginTop: -12,
     },
@@ -143,7 +152,7 @@ export function DriverInfoForm({
       <Text style={styles.inputLabel}>{t(locale, 'receive.labelFullName')}</Text>
       <View style={styles.nameInputContainer}>
         <View style={styles.nameInputWrapper}>
-          <IconUser size={20} color={C.textMuted} />
+          <IconUser size={theme.icon.sm} color={C.textMuted} />
           <TextInput
             style={styles.nameInput}
             value={firstName}
@@ -157,7 +166,7 @@ export function DriverInfoForm({
         </View>
         <View style={styles.nameSeparator} />
         <View style={styles.nameInputWrapper}>
-          <IconUser size={20} color={C.textMuted} />
+          <IconUser size={theme.icon.sm} color={C.textMuted} />
           <TextInput
             style={styles.nameInput}
             value={lastName}
@@ -173,7 +182,7 @@ export function DriverInfoForm({
 
       <Text style={styles.inputLabel}>{t(locale, 'receive.labelEmail')}</Text>
       <View style={styles.inputContainer}>
-        <IconMail size={20} color={C.textMuted} style={styles.inputIcon} />
+        <IconMail size={theme.icon.sm} color={C.textMuted} style={styles.inputIcon} />
         <TextInput
           style={styles.input}
           value={email}
@@ -182,15 +191,19 @@ export function DriverInfoForm({
           placeholderTextColor={C.textSubtle}
           keyboardType="email-address"
           autoCapitalize="none"
+          autoCorrect={false}
+          spellCheck={false}
           maxFontSizeMultiplier={2}
           autoComplete="email"
+          textContentType="none"
+          dataDetectorTypes="none"
         />
       </View>
       {emailError && <Text style={[styles.errorText, { marginBottom: 8 }]}>{emailError}</Text>}
 
       <Text style={styles.inputLabel}>{t(locale, 'receive.labelPhoneOptional')}</Text>
       <View style={styles.inputContainer}>
-        <IconPhone size={20} color={C.textMuted} style={styles.inputIcon} />
+        <IconPhone size={theme.icon.sm} color={C.textMuted} style={styles.inputIcon} />
         <TextInput
           style={styles.input}
           value={phone}

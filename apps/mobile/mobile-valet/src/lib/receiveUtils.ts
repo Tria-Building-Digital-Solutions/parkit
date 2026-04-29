@@ -12,7 +12,18 @@ export function randomWalkInPassword(): string {
 
 export function isValidCrPlate(value: string): boolean {
   const p = formatPlate(value).trim();
-  return /^\d{6}$/.test(p) || /^[A-Z]{3}-\d{3}$/.test(p);
+  // Allow various Costa Rica plate formats:
+  // 6 digits: 123456
+  // 3 letters + 3 numbers: ABC-123
+  // 3 letters + 4 numbers: ABC-1234
+  // 2 letters + 4 numbers: AB-1234
+  // Any alphanumeric with 5-7 characters
+  if (/^\d{6}$/.test(p)) return true;
+  if (/^[A-Z]{3}-\d{3}$/.test(p)) return true;
+  if (/^[A-Z]{3}-\d{4}$/.test(p)) return true;
+  if (/^[A-Z]{2}-\d{4}$/.test(p)) return true;
+  if (/^[A-Z0-9]{5,7}$/.test(p)) return true;
+  return false;
 }
 
 export function formatBenefitTime(

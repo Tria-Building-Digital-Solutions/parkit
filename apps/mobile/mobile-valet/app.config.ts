@@ -47,6 +47,14 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   plugins: [
     'expo-router',
     [
+      'expo-notifications',
+      {
+        icon: './assets/icon-1024.png',
+        color: '#020617',
+        sounds: ['default'],
+      },
+    ],
+    [
       'expo-location',
       {
         locationWhenInUsePermission:

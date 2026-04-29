@@ -13,14 +13,14 @@ import {
 } from "react-native";
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import { Redirect, useRouter } from "expo-router";
-import { useMemo, useEffect, useState, useCallback, useRef } from "react";
+import { useMemo, useEffect, useState, useCallback } from "react";
 import React from "react";
 import { IconUser, IconLocationFilled, IconList, IconSettings, IconLogout, IconKey, IconKeyOff, IconSteeringWheelOutline, IconTrafficCone, IconCircleCheck } from "@/components/Icons";
 import { Logo } from "@parkit/shared";
 import api, { clearAuthToken } from "@/lib/api";
 import { useAuthStore, useLocaleStore, useCompanyStore, useParkingPreferenceStore, useAccessibilityStore } from "@/lib/store";
 import { t } from "@/lib/i18n";
-import { useValetTheme, ticketsA11y } from "@/theme/valetTheme";
+import { useValetTheme } from "@/theme/valetTheme";
 import { useValetProfileSync } from "@/lib/useValetProfileSync";
 import { useNearestParking, haversineKm } from "@/lib/useNearestParking";
 import { useOnAppForeground } from "@/lib/useOnAppForeground";
@@ -58,8 +58,8 @@ class HomeErrorBoundary extends React.Component<
     if (this.state.hasError) {
       return (
         <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', padding: 20, backgroundColor: '#fee2e2' }}>
-          <Text style={{ fontSize: ERROR_TITLE_SIZE, fontWeight: 'bold', color: '#dc2626', marginBottom: 10 }}>Error en Home</Text>
-          <Text style={{ fontSize: ERROR_BODY_SIZE, color: '#7f1d1d', textAlign: 'center' }}>{this.state.error?.message}</Text>
+          <Text style={{ fontSize: ERROR_TITLE_SIZE, fontWeight: 'bold', color: '#dc2626', marginBottom: 10 }} maxFontSizeMultiplier={1.5}>Error en Home</Text>
+          <Text style={{ fontSize: ERROR_BODY_SIZE, color: '#7f1d1d', textAlign: 'center' }} maxFontSizeMultiplier={1.5}>{this.state.error?.message}</Text>
         </View>
       );
     }
@@ -96,17 +96,16 @@ function HomeScreenContent() {
   const setManualParkingId = useParkingPreferenceStore((s) => s.setManualParkingId);
   const hydrateParkingPreference = useParkingPreferenceStore((s) => s.hydrateParkingPreference);
   const [parkingModalOpen, setParkingModalOpen] = useState(false);
-  const [queueAlertModalOpen, setQueueAlertModalOpen] = useState(false);
   const [logoutModalOpen, setLogoutModalOpen] = useState(false);
-  const [queueAlertCount, setQueueAlertCount] = useState(0);
+  const [parkingAlertCount, setParkingAlertCount] = useState(0);
+  const [deliveryAlertCount, setDeliveryAlertCount] = useState(0);
   const isDriverUi = user?.valetStaffRole === "DRIVER";
-  const prevQueueAlertCountRef = useRef(0);
-  const { textScale, reduceMotion } = useAccessibilityStore();
+  const {  reduceMotion } = useAccessibilityStore();
   const statusKey = user?.valetCurrentStatus;
   const isAvailable = statusKey === "AVAILABLE";
 
   // Calculate proportional header sizes based on logo and text scale
-  const headerSizes = getHeaderSizes(HEADER_LOGO_BASE_SIZE, textScale);
+  const headerSizes = getHeaderSizes(HEADER_LOGO_BASE_SIZE);
 
   useEffect(() => {
     void hydrateParkingPreference();
@@ -114,17 +113,23 @@ function HomeScreenContent() {
 
   const loadQueueAlerts = useCallback(async (opts?: { silent?: boolean }) => {
     if (!user?.id || !isDriverUi) {
-      setQueueAlertCount(0);
+      setParkingAlertCount(0);
+      setDeliveryAlertCount(0);
       return;
     }
     try {
-      const res = await api.get<{ data?: { count?: number } }>(
-        `/notifications/user/${encodeURIComponent(user.id)}/unread-count`
+      const res = await api.get<{ data?: { parking?: number; delivery?: number } }>(
+        `/notifications/user/${encodeURIComponent(user.id)}/unread-count-all`
       );
-      const count = Number(res.data?.data?.count ?? 0);
-      setQueueAlertCount(Number.isFinite(count) && count > 0 ? Math.floor(count) : 0);
+      const parkingCount = Number(res.data?.data?.parking ?? 0);
+      const deliveryCount = Number(res.data?.data?.delivery ?? 0);
+      setParkingAlertCount(Number.isFinite(parkingCount) && parkingCount > 0 ? Math.floor(parkingCount) : 0);
+      setDeliveryAlertCount(Number.isFinite(deliveryCount) && deliveryCount > 0 ? Math.floor(deliveryCount) : 0);
     } catch {
-      if (!opts?.silent) setQueueAlertCount(0);
+      if (!opts?.silent) {
+        setParkingAlertCount(0);
+        setDeliveryAlertCount(0);
+      }
     }
   }, [user?.id, isDriverUi]);
 
@@ -143,15 +148,6 @@ function HomeScreenContent() {
   useOnAppForeground(() => {
     void loadQueueAlerts({ silent: true });
   });
-
-  useEffect(() => {
-    if (!isDriverUi) return;
-    const prev = prevQueueAlertCountRef.current;
-    if (queueAlertCount > prev && queueAlertCount > 0) {
-      setQueueAlertModalOpen(true);
-    }
-    prevQueueAlertCountRef.current = queueAlertCount;
-  }, [queueAlertCount, isDriverUi]);
 
   const displayedParking = useMemo(() => {
     if (!user) return null;
@@ -279,16 +275,18 @@ function HomeScreenContent() {
                 <View style={[styles.headerGreetingRow, { gap: headerSizes.gap }]}>
                   <View style={styles.headerGreetingCol}>
                     <Text
-                      style={[styles.headerDisplayName, { color: headerTextPrimary, fontSize: Math.round(ticketsA11y.font.status * 0.65) }]}
+                      style={[styles.headerDisplayName, { color: headerTextPrimary, fontSize: theme.font.base }]}
                       numberOfLines={2}
-                      maxFontSizeMultiplier={2}
+                      maxFontSizeMultiplier={1.5}
+                      adjustsFontSizeToFit={true}
                     >
                       {displayName}
                     </Text>
                     <Text
-                      style={[styles.headerRoleBelow, { color: headerTextPrimary, fontSize: Math.round(ticketsA11y.font.status * 0.65) }]}
+                      style={[styles.headerRoleBelow, { color: headerTextPrimary }]}
                       numberOfLines={1}
                       maxFontSizeMultiplier={1.5}
+                      adjustsFontSizeToFit={true}
                     >
                       {isDriverUi ? t(locale, "home.titleDriver") : t(locale, "home.titleReception")}
                     </Text>
@@ -353,18 +351,6 @@ function HomeScreenContent() {
                         borderRadius: headerSizes.statusDotSize * 0.215,
                       }]} />}
                     </View>
-                    {(queueAlertCount ?? 0) > 0 && (
-                      <View style={[styles.headerBadge, {
-                        minWidth: headerSizes.badgeSize,
-                        height: headerSizes.badgeSize,
-                        borderRadius: headerSizes.badgeSize / 2,
-                        paddingHorizontal: headerSizes.badgeSize * 0.22,
-                      }]}>
-                        <Text style={[styles.headerBadgeText, { fontSize: headerSizes.badgeFontSize }]}>
-                          {queueAlertCount > 99 ? "99+" : queueAlertCount}
-                        </Text>
-                      </View>
-                    )}
                   </Pressable>
                 </View>
               </View>
@@ -376,17 +362,17 @@ function HomeScreenContent() {
         <View style={styles.gridFlex}>
           {isDriverUi ? (
             <>
-              <View style={[styles.gridRowFill, { flex: 0.6}]}>
+              <View style={[styles.gridRowFixed]}>
                 <AnimatedGridTile
                   variant="accent"
                   lucideIcon={IconSteeringWheelOutline}
                   title={t(locale, "home.actionParkingQueue")}
                   sub=""
+                  badgeCount={parkingAlertCount}
                   onPress={() => router.push({ pathname: "/tickets", params: { queue: "parking" } })}
                   styles={styles}
                   isDark={theme.isDark}
                   index={0}
-                  textScale={textScale}
                   reduceMotion={reduceMotion}
                   iconStrokeWidth={1.5}
                   centerContent={true}
@@ -396,13 +382,13 @@ function HomeScreenContent() {
                   lucideIcon={IconTrafficCone}
                   title={t(locale, "home.actionDeliveryQueue")}
                   sub=""
-                  badgeCount={queueAlertCount}
+                  badgeCount={deliveryAlertCount}
                   onPress={() => router.push({ pathname: "/tickets", params: { queue: "delivery" } })}
                   styles={styles}
                   isDark={theme.isDark}
                   index={1}
-                  textScale={textScale}
                   reduceMotion={reduceMotion}
+                  iconStrokeWidth={1.5}
                   centerContent={true}
                 />
               </View>
@@ -410,38 +396,35 @@ function HomeScreenContent() {
                 <WorkflowTile
                   styles={styles}
                   isDark={theme.isDark}
-                  textScale={textScale}
                 />
               </View>
             </>
           ) : (
             <>
-              <View style={[styles.gridRowFill, { flex: 0.8 }]}>
+              <View style={[styles.gridRowFixed]}>
                 <AnimatedGridTile
                   variant="accent"
                   lucideIcon={IconKey}
-                  iconSize={Math.round(headerSizes.avatarSize * 0.5)}
+                  iconSize={20}
                   title={t(locale, "home.actionReceive")}
                   sub=""
                   onPress={() => router.push("/receive")}
                   styles={styles}
                   isDark={theme.isDark}
                   index={0}
-                  textScale={textScale}
                   reduceMotion={reduceMotion}
                   centerContent={true}
                 />
                 <AnimatedGridTile
                   variant="warm"
                   lucideIcon={IconKeyOff}
-                  iconSize={Math.round(headerSizes.avatarSize * 0.5)}
+                  iconSize={20}
                   title={t(locale, "home.actionReturn")}
                   sub=""
                   onPress={() => router.push("/return-pickup")}
                   styles={styles}
                   isDark={theme.isDark}
                   index={1}
-                  textScale={textScale}
                   reduceMotion={reduceMotion}
                   centerContent={true}
                 />
@@ -450,7 +433,6 @@ function HomeScreenContent() {
                 <WorkflowTile
                   styles={styles}
                   isDark={theme.isDark}
-                  textScale={textScale}
                 />
               </View>
             </>
@@ -465,48 +447,48 @@ function HomeScreenContent() {
             accessibilityLabel={t(locale, "home.chooseParking")}
           >
             <View style={styles.bottomIconWrap}>
-              <IconLocationFilled size={Math.round(14 * textScale)} fill={C.primary}  color={C.primary} />
+              <IconLocationFilled size={theme.icon.xs} fill={C.primary}  color={C.primary} />
             </View>
             <View style={styles.bottomTextCol}>
               <View style={styles.bottomTitleRow}>
-                <Text style={styles.bottomTitle} numberOfLines={1}>
+                <Text style={styles.bottomTitle} numberOfLines={1} maxFontSizeMultiplier={1.5} adjustsFontSizeToFit={true}>
                   {t(locale, "home.nearestTitle")}
                 </Text>
                 {allParkings.length > 0 && locStatus !== "loading" && locStatus !== "unavailable" && (
-                  <IconList size={Math.round(18 * textScale)} color={C.primary} />
+                  <IconList size={theme.icon.sm} color={C.primary} />
                 )}
               </View>
               {locStatus === "loading" && (
                 <View style={styles.bottomLoadingRow}>
                   <ActivityIndicator size="small" color={C.primary} />
-                  <Text style={styles.bottomMeta}>{t(locale, "home.nearestLoading")}</Text>
+                  <Text style={styles.bottomMeta} maxFontSizeMultiplier={1.5}>{t(locale, "home.nearestLoading")}</Text>
                 </View>
               )}
               {locStatus === "unavailable" && (
-                <Text style={styles.bottomMeta}>{t(locale, "home.nearestNoCoords")}</Text>
+                <Text style={styles.bottomMeta} maxFontSizeMultiplier={1.5}>{t(locale, "home.nearestNoCoords")}</Text>
               )}
               {locStatus === "denied" && (
-                <Text style={styles.bottomMeta}>{t(locale, "home.nearestDenied")}</Text>
+                <Text style={styles.bottomMeta} maxFontSizeMultiplier={1.5}>{t(locale, "home.nearestDenied")}</Text>
               )}
               {(locStatus === "ready" || locStatus === "denied") && displayedParking && (
                 <>
                   {displayedParking.isManual && (
-                    <Text style={[styles.bottomManualHint, { color: C.textMuted }]}>
+                    <Text style={[styles.bottomManualHint, { color: C.textMuted }]} maxFontSizeMultiplier={1.5}>
                       {t(locale, "home.manualParkingHint")}
                     </Text>
                   )}
-                  <Text style={styles.bottomName} numberOfLines={2}>
+                  <Text style={styles.bottomName} numberOfLines={2} maxFontSizeMultiplier={1.5} adjustsFontSizeToFit={true}>
                     {displayedParking.parking.name}
                   </Text>
                   {displayedParking.parking.company && (
-                    <Text style={styles.bottomCompany} numberOfLines={1}>
+                    <Text style={styles.bottomCompany} numberOfLines={1} maxFontSizeMultiplier={1.5} adjustsFontSizeToFit={true}>
                       {displayedParking.parking.company.commercialName?.trim() ||
                         displayedParking.parking.company.legalName?.trim() ||
                         "—"}
                     </Text>
                   )}
                   {displayedParking.distanceKm != null && (
-                    <Text style={styles.bottomMeta}>
+                    <Text style={styles.bottomMeta} maxFontSizeMultiplier={1.5}>
                       {t(locale, "home.nearestKm", {
                         km:
                           displayedParking.distanceKm < 10
@@ -515,7 +497,7 @@ function HomeScreenContent() {
                       })}
                     </Text>
                   )}
-                  <Text style={styles.bottomAddr} numberOfLines={2}>
+                  <Text style={styles.bottomAddr} maxFontSizeMultiplier={1.5}>
                     {displayedParking.parking.address}
                   </Text>
                   {displayedParking.isManual && (
@@ -523,7 +505,7 @@ function HomeScreenContent() {
                       style={({ pressed }) => [styles.bottomUseNearestBtn, pressed && styles.pressed]}
                       onPress={() => void setManualParkingId(null)}
                     >
-                      <Text style={[styles.bottomUseNearestText, { color: C.primary }]}>
+                      <Text style={[styles.bottomUseNearestText, { color: C.primary }]} maxFontSizeMultiplier={1.5}>
                         {t(locale, "home.useNearestParking")}
                       </Text>
                     </Pressable>
@@ -541,10 +523,10 @@ function HomeScreenContent() {
             accessibilityRole="button"
             accessibilityLabel={t(locale, "home.settings")}
           >
-            <IconSettings size={Math.round(22 * textScale)} color={C.primary} />
+            <IconSettings size={theme.icon.md} color={C.primary} />
             <Text
               style={[styles.helpLogoutBtnText, { color: C.primary }]}
-              maxFontSizeMultiplier={2}
+              maxFontSizeMultiplier={1.5}
               numberOfLines={2}
             >
               {t(locale, "home.settings")}
@@ -556,10 +538,10 @@ function HomeScreenContent() {
             accessibilityRole="button"
             accessibilityLabel={t(locale, "tickets.logout")}
           >
-            <IconLogout size={Math.round(22 * textScale)} color={C.logout} />
+            <IconLogout size={theme.icon.md} color={C.logout} />
             <Text
               style={[styles.helpLogoutBtnText, { color: C.logout }]}
-              maxFontSizeMultiplier={2}
+              maxFontSizeMultiplier={1.5}
               numberOfLines={2}
             >
               {t(locale, "tickets.logout")}
@@ -580,7 +562,7 @@ function HomeScreenContent() {
               accessibilityLabel={t(locale, "common.cancel")}
             />
             <View style={[styles.modalSheet, { backgroundColor: C.card, borderColor: C.border }]}>
-              <Text style={[styles.modalTitle, { color: C.text }]}>{t(locale, "home.parkingPickerTitle")}</Text>
+              <Text style={[styles.modalTitle, { color: C.text }]} maxFontSizeMultiplier={1.5}>{t(locale, "home.parkingPickerTitle")}</Text>
               <FlatList
                 data={allParkings}
                 keyExtractor={(item) => item.id}
@@ -601,45 +583,23 @@ function HomeScreenContent() {
                       }}
                     >
                       <View style={styles.parkingRowText}>
-                        <Text style={[styles.parkingRowName, { color: C.text }]} numberOfLines={2}>
+                        <Text style={[styles.parkingRowName, { color: C.text }]} numberOfLines={2} maxFontSizeMultiplier={1.5}>
                           {item.name}
                         </Text>
-                        <Text style={[styles.parkingRowAddr, { color: C.textMuted }]} numberOfLines={2}>
+                        <Text style={[styles.parkingRowAddr, { color: C.textMuted }]} numberOfLines={2} maxFontSizeMultiplier={1.5}>
                           {item.address}
                         </Text>
                       </View>
-                      {isSelected && <IconCircleCheck size={26} color={C.primary} />}
+                      {isSelected && <IconCircleCheck size={theme.icon.md} color={C.primary} />}
                     </Pressable>
                   );
                 }}
                 ListEmptyComponent={
-                  <Text style={{ color: C.textMuted, padding: theme.space.md }}>
+                  <Text style={{ color: C.textMuted, padding: theme.space.md }} maxFontSizeMultiplier={1.5}>
                     {t(locale, "home.parkingPickerEmpty")}
                   </Text>
                 }
               />
-            </View>
-          </View>
-        </Modal>
-
-        <Modal
-          visible={queueAlertModalOpen}
-          animationType="slide"
-          transparent
-          onRequestClose={() => setQueueAlertModalOpen(false)}
-        >
-          <View style={styles.modalOverlay}>
-            <Pressable
-              style={styles.modalBackdropPress}
-              onPress={() => setQueueAlertModalOpen(false)}
-              accessibilityLabel={t(locale, "common.cancel")}
-            />
-            <View style={[styles.modalSheet, { backgroundColor: C.card, borderColor: C.border }]}>
-              <Text style={[styles.modalTitle, { color: C.text }]}>{t(locale, "home.queueAlertTitle")}</Text>
-              <Text style={[styles.modalBody, { color: C.textMuted }]}>{t(locale, "home.queueAlertBody")}</Text>
-              <Pressable style={styles.modalDoneBtn} onPress={() => setQueueAlertModalOpen(false)}>
-                <Text style={[styles.modalDoneBtnText, { color: C.primary }]}>{t(locale, "common.ok")}</Text>
-              </Pressable>
             </View>
           </View>
         </Modal>
@@ -657,8 +617,8 @@ function HomeScreenContent() {
               accessibilityLabel={t(locale, "common.cancel")}
             />
             <View style={[styles.modalSheet, { backgroundColor: C.card, borderColor: C.border }]}>
-              <Text style={[styles.modalTitle, { color: C.text }]}>{t(locale, "tickets.logoutConfirmTitle")}</Text>
-              <Text style={[styles.modalBody, { color: C.textMuted }]}>{t(locale, "tickets.logoutConfirmMessage")}</Text>
+              <Text style={[styles.modalTitle, { color: C.text }]} maxFontSizeMultiplier={1.5}>{t(locale, "tickets.logoutConfirmTitle")}</Text>
+              <Text style={[styles.modalBody, { color: C.textMuted }]} maxFontSizeMultiplier={1.5}>{t(locale, "tickets.logoutConfirmMessage")}</Text>
               <View style={styles.modalActions}>
                 <Pressable
                   style={({ pressed }) => [
@@ -668,7 +628,7 @@ function HomeScreenContent() {
                   ]}
                   onPress={() => setLogoutModalOpen(false)}
                 >
-                  <Text style={[styles.modalActionBtnText, { color: C.text }]}>{t(locale, "common.cancel")}</Text>
+                  <Text style={[styles.modalActionBtnText, { color: C.text }]} maxFontSizeMultiplier={1.5}>{t(locale, "common.cancel")}</Text>
                 </Pressable>
                 <Pressable
                   style={({ pressed }) => [
@@ -681,7 +641,7 @@ function HomeScreenContent() {
                     void confirmLogout();
                   }}
                 >
-                  <Text style={[styles.modalActionBtnText, { color: "#fff" }]}>{t(locale, "tickets.logout")}</Text>
+                  <Text style={[styles.modalActionBtnText, { color: "#fff" }]} maxFontSizeMultiplier={1.5}>{t(locale, "tickets.logout")}</Text>
                 </Pressable>
               </View>
             </View>
@@ -695,12 +655,17 @@ function HomeScreenContent() {
 
 type Theme = ReturnType<typeof useValetTheme>;
 
-function createStyles(theme: Theme, shortestSide: number, isTablet: boolean, isLandscape: boolean, headerSizes: { avatarSize: number }) {
+function createStyles(
+  theme: Theme,
+  shortestSide: number,
+  isTablet: boolean,
+  isLandscape: boolean,
+  headerSizes: { avatarSize: number }
+) {
   const C = theme.colors;
   const S = theme.space;
-  const F = ticketsA11y.font;
+  const F = theme.font;
   const R = theme.radius;
-  const Fonts = theme.fontFamily;
 
   return StyleSheet.create({
     safe: {
@@ -773,8 +738,7 @@ function createStyles(theme: Theme, shortestSide: number, isTablet: boolean, isL
     },
     headerRoleBelow: {
       fontWeight: Platform.OS === "android" ? "normal" : "600",
-      fontFamily: Fonts.primary,
-      textAlign: "right",
+            textAlign: "right",
       letterSpacing: 0.2,
     },
     /** Avatar container with status dot */
@@ -821,13 +785,10 @@ function createStyles(theme: Theme, shortestSide: number, isTablet: boolean, isL
     headerAvatarImage: {
     },
     headerAvatarInitials: {
-      fontSize: Math.round(F.status * 0.65),
       fontWeight: "600",
-      fontFamily: Fonts.primary,
     },
     headerDisplayName: {
       fontWeight: Platform.OS === "android" ? "normal" : "700",
-      fontFamily: Fonts.primary,
       textAlign: "right",
       letterSpacing: -0.3,
     },
@@ -847,8 +808,6 @@ function createStyles(theme: Theme, shortestSide: number, isTablet: boolean, isL
     headerBadgeText: {
       color: "#fff",
       fontWeight: "600",
-      fontFamily: Fonts.primary,
-      fontSize: 10,
     },
     gridFlex: {
       flex: 1,
@@ -861,6 +820,12 @@ function createStyles(theme: Theme, shortestSide: number, isTablet: boolean, isL
     gridRowFill: {
       flex: 1,
       minHeight: 0,
+      flexDirection: "row",
+      alignItems: "stretch",
+      gap: S.sm,
+    },
+    gridRowFixed: {
+      height: isTablet ? 140 : 120,
       flexDirection: "row",
       alignItems: "stretch",
       gap: S.sm,
@@ -904,9 +869,7 @@ function createStyles(theme: Theme, shortestSide: number, isTablet: boolean, isL
       }),
     },
     helpLogoutBtnText: {
-      fontSize: Math.round(F.status * 0.65),
-      fontWeight: "600",
-      fontFamily: Fonts.primary,
+      fontWeight: "700",
       textAlign: "center",
       flexShrink: 1,
     },
@@ -963,6 +926,10 @@ function createStyles(theme: Theme, shortestSide: number, isTablet: boolean, isL
       backgroundColor: theme.isDark ? "rgba(30, 41, 59, 0.45)" : "rgba(255, 255, 255, 0.8)",
       borderColor: theme.isDark ? "rgba(6, 182, 212, 0.25)" : "rgba(14, 116, 144, 0.15)",
     },
+    tileFilled: {
+      backgroundColor: C.primary,
+      borderColor: C.primary,
+    },
     tileIconWrap: {
       width: headerSizes.avatarSize,
       height: headerSizes.avatarSize,
@@ -987,25 +954,20 @@ function createStyles(theme: Theme, shortestSide: number, isTablet: boolean, isL
     },
     tileBadgeText: {
       color: "#fff",
-      fontSize: Math.round(F.status * 0.65),
+      fontSize: F.xs,
       fontWeight: "600",
       letterSpacing: 0.2,
     },
     tileTitle: {
-      fontSize: Math.round(F.status * 0.65),
-      fontWeight: Platform.OS === "android" ? "normal" : "600",
-      fontFamily: Fonts.primary,
+      fontWeight: "700",
       color: C.text,
       marginBottom: 4,
       textAlign: "center",
       width: "100%",
     },
     tileSub: {
-      fontSize: Math.round(F.status * 0.65),
       fontWeight: "600",
-      fontFamily: Fonts.primary,
       color: C.textMuted,
-      lineHeight: Math.round(F.status * 0.85),
       textAlign: "center",
       width: "100%",
     },
@@ -1053,9 +1015,7 @@ function createStyles(theme: Theme, shortestSide: number, isTablet: boolean, isL
       marginBottom: 4,
     },
     bottomTitle: {
-      fontSize: Math.round(F.status * 0.65),
       fontWeight: "600",
-      fontFamily: Fonts.primary,
       color: C.textMuted,
       letterSpacing: 0.6,
       flex: 1,
@@ -1070,14 +1030,10 @@ function createStyles(theme: Theme, shortestSide: number, isTablet: boolean, isL
       flexShrink: 0,
     },
     bottomChooseBtnText: {
-      fontSize: Math.round(F.status * 0.65),
       fontWeight: "600",
-      fontFamily: Fonts.primary,
     },
     bottomManualHint: {
-      fontSize: Math.round(F.status * 0.65),
       fontWeight: "700",
-      fontFamily: Fonts.primary,
       marginBottom: 4,
     },
     bottomUseNearestBtn: {
@@ -1086,36 +1042,29 @@ function createStyles(theme: Theme, shortestSide: number, isTablet: boolean, isL
       paddingVertical: 4,
     },
     bottomUseNearestText: {
-      fontSize: Math.round(F.status * 0.65),
       fontWeight: "600",
-      fontFamily: Fonts.primary,
+    },
+    logoutText: {
+      fontWeight: "700",
+      color: C.text,
     },
     bottomName: {
-      fontSize: Math.round(F.status * 0.65),
       fontWeight: "600",
-      fontFamily: Fonts.primary,
       color: C.text,
     },
     bottomCompany: {
-      fontSize: Math.round(F.status * 0.65),
       fontWeight: "600",
-      fontFamily: Fonts.primary,
       color: C.textMuted,
       marginTop: 2,
     },
     bottomMeta: {
-      fontSize: Math.round(F.status * 0.65),
       fontWeight: "700",
-      fontFamily: Fonts.primary,
       color: C.primary,
       marginTop: 2,
     },
     bottomAddr: {
-      fontSize: Math.round(F.status * 0.65),
-      fontFamily: Fonts.primary,
       color: C.textSubtle,
       marginTop: 4,
-      lineHeight: Math.round(F.status * 0.95),
     },
     bottomLoadingRow: {
       flexDirection: "row",
@@ -1141,9 +1090,7 @@ function createStyles(theme: Theme, shortestSide: number, isTablet: boolean, isL
       paddingBottom: S.lg,
     },
     modalTitle: {
-      fontSize: Math.round(F.status * 0.65),
       fontWeight: Platform.OS === "android" ? "normal" : "600",
-      fontFamily: Fonts.primary,
       textAlign: "center",
       marginBottom: S.sm,
     },
@@ -1161,20 +1108,12 @@ function createStyles(theme: Theme, shortestSide: number, isTablet: boolean, isL
       flex: 1,
     },
     parkingRowName: {
-      fontSize: Math.round(F.status * 0.65),
       fontWeight: "600",
-      fontFamily: Fonts.primary,
     },
     parkingRowAddr: {
-      fontSize: Math.round(F.status * 0.65),
-      fontFamily: Fonts.primary,
       marginTop: 4,
-      lineHeight: Math.round(F.status * 0.95),
     },
     modalBody: {
-      fontSize: Math.round(F.status * 0.65),
-      fontFamily: Fonts.primary,
-      lineHeight: Math.round(F.status * 0.95),
       marginBottom: S.md,
     },
     modalDoneBtn: {
@@ -1186,9 +1125,7 @@ function createStyles(theme: Theme, shortestSide: number, isTablet: boolean, isL
       justifyContent: "center",
     },
     modalDoneBtnText: {
-      fontSize: Math.round(F.status * 0.65),
       fontWeight: "800",
-      fontFamily: Fonts.primary,
     },
     modalActions: {
       flexDirection: "row",
@@ -1206,9 +1143,7 @@ function createStyles(theme: Theme, shortestSide: number, isTablet: boolean, isL
       minHeight: 48,
     },
     modalActionBtnText: {
-      fontSize: Math.round(F.status * 0.65),
       fontWeight: "700",
-      fontFamily: Fonts.primary,
     },
   });
 }

@@ -1,13 +1,12 @@
 import { View, Text, StyleSheet, Pressable, StatusBar, TextInput, KeyboardAvoidingView, ScrollView, Platform, ActivityIndicator, Keyboard } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
-import { useLocaleStore, useAccessibilityStore, useAuthStore } from "@/lib/store";
+import { useLocaleStore, useAuthStore } from "@/lib/store";
 import { t } from "@/lib/i18n";
 import { useMemo, useState, useRef, useEffect } from "react";
 import { AnimatedAuthBackground } from "@/components/AnimatedAuthBackground";
 import { AnimatedFormCard } from "@/components/AnimatedFormCard";
-import { AnimatedBackButton } from "@/components/AnimatedBackButton";
-import { useValetTheme, useResponsiveLayout } from "@/theme/valetTheme";
+import { useValetTheme } from "@/theme/valetTheme";
 import { Logo } from "@parkit/shared";
 import { signup, translateError } from "@/lib/auth";
 import { IconMail, IconLock, IconUser, IconEye, IconEyeOff, IconClipboardText, IconCar } from "@/components/Icons";
@@ -22,11 +21,8 @@ export default function SignupScreen() {
   const locale = useLocaleStore((s) => s.locale);
   const insets = useSafeAreaInsets();
   const theme = useValetTheme();
-  const responsive = useResponsiveLayout();
-  const { textScale } = useAccessibilityStore();
   const { setUser } = useAuthStore();
   const { auth: a } = theme;
-  const F = theme.font;
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
@@ -53,17 +49,6 @@ export default function SignupScreen() {
     };
   }, []);
 
-  const handleBackPress = () => {
-    if (formCardRef.current) {
-      formCardRef.current(); // Start exit animation
-      setTimeout(() => {
-        router.replace("/welcome");
-      }, 450); // Wait for premium animation to complete
-    } else {
-      router.replace("/welcome");
-    }
-  };
-
   const styles = useMemo(
     () =>
       StyleSheet.create({
@@ -71,20 +56,9 @@ export default function SignupScreen() {
         heroStrip: {
           flex: 1,
         },
-        topBar: {
-          flexDirection: "row",
-          alignItems: "center",
-          paddingHorizontal: Math.max(12, responsive.horizontalPadding - 12),
-          paddingTop: 8,
-          paddingBottom: 8,
-          width: "100%",
-          maxWidth: responsive.formMaxWidth,
-          alignSelf: "center",
-          backgroundColor: 'transparent',
-        },
         hero: {
           position: 'absolute',
-          top: 140,
+          top: 200,
           left: 0,
           right: 0,
           alignItems: 'center',
@@ -93,7 +67,6 @@ export default function SignupScreen() {
         logo: { marginBottom: 0 },
         valetLabel: {
           marginTop: 0,
-          fontSize: Math.round(F.secondary * textScale),
           fontWeight: "700",
           letterSpacing: 2,
           color: a.authHeroValetLabel,
@@ -104,16 +77,14 @@ export default function SignupScreen() {
           borderTopLeftRadius: 28,
           borderTopRightRadius: 28,
           ...a.authFormSheetSeparator,
-          paddingHorizontal: responsive.horizontalPadding,
+          paddingHorizontal: 20,
           paddingTop: 28,
           paddingBottom: 0,
           alignItems: "stretch",
           width: "100%",
-          maxWidth: responsive.formMaxWidth,
           alignSelf: "center",
         },
         ctaText: {
-          fontSize: Math.round(F.status * 0.65 * textScale),
           fontWeight: "600",
           color: a.text,
           marginBottom: 20,
@@ -128,36 +99,34 @@ export default function SignupScreen() {
           marginBottom: 14,
         },
         btnPrimaryText: {
-          fontSize: Math.round(F.status * 0.65 * textScale),
           fontWeight: "600",
           color: a.btnSignupText,
           letterSpacing: 0.5,
         },
         btnPressed: { opacity: 0.9 },
         roleSelection: {
-          marginBottom: 20,
+          marginBottom: 16,
         },
         roleLabel: {
-          fontSize: Math.round(F.status * 0.6 * textScale),
-          fontWeight: "600",
+          fontSize: theme.font.base,
+          fontWeight: '600',
           color: a.text,
-          marginBottom: 12,
+          marginBottom: 6,
         },
         roleButtons: {
           flexDirection: 'row',
           backgroundColor: a.inputBg,
-          borderRadius: 16,
+          borderRadius: 12,
           padding: 4,
-          borderWidth: 2,
+          borderWidth: 1,
           borderColor: a.inputBorder,
         },
         roleButton: {
           flex: 1,
-          height: CONTROL_HEIGHT - 8,
-          borderRadius: 12,
+          height: 48,
+          borderRadius: 8,
           alignItems: 'center',
           justifyContent: 'center',
-          gap: 8,
           marginHorizontal: 2,
         },
         roleButtonSelected: {
@@ -169,13 +138,14 @@ export default function SignupScreen() {
           elevation: 2,
         },
         roleButtonContent: {
+          flexDirection: 'row',
           alignItems: 'center',
           justifyContent: 'center',
-          gap: 6,
+          gap: 8,
         },
         roleButtonText: {
-          fontSize: Math.round(F.status * 0.52 * textScale),
-          fontWeight: '700',
+          fontSize: theme.font.base,
+          fontWeight: '600',
           color: a.textMuted,
           textAlign: 'center',
           letterSpacing: 0.3,
@@ -215,7 +185,6 @@ export default function SignupScreen() {
         },
         nameInput: {
           flex: 1,
-          fontSize: Math.round(F.status * 0.6 * textScale),
           color: a.text,
           paddingVertical: 12,
           letterSpacing: 0.3,
@@ -228,7 +197,6 @@ export default function SignupScreen() {
           paddingHorizontal: 16,
           paddingVertical: 12,
           paddingLeft: 48,
-          fontSize: Math.round(F.status * 0.6 * textScale),
           color: a.text,
           height: CONTROL_HEIGHT - 8,
         },
@@ -240,7 +208,6 @@ export default function SignupScreen() {
           zIndex: 1,
         },
         inputLabel: {
-          fontSize: Math.round(F.status * 0.6 * textScale),
           fontWeight: "500",
           color: a.text,
           marginBottom: 6,
@@ -253,11 +220,19 @@ export default function SignupScreen() {
           padding: 4,
           zIndex: 1,
         },
+        loginLink: {
+          color: a.btnLoginBg,
+          fontWeight: '600',
+          fontSize: theme.font.base,
+          marginTop: 16,
+          marginBottom: 8,
+          textAlign: 'center',
+        },
         scrollView: {
-          maxHeight: responsive.height * 0.5,
+          maxHeight: 400,
         },
       }),
-    [a, responsive.formMaxWidth, responsive.horizontalPadding, F, responsive.height, textScale]
+    [a, theme.font.base]
   );
 
 
@@ -274,21 +249,12 @@ export default function SignupScreen() {
         >
           <View style={styles.rootColumn}>
             <View style={styles.heroStrip}>
-          <View style={[styles.topBar, { paddingTop: Math.max(insets.top, 12) }]}>
-            <View style={{ position: 'absolute', left: Math.max(12, responsive.horizontalPadding - 12), top: 56 }}>
-              <AnimatedBackButton
-                onPress={handleBackPress}
-                accessibilityLabel={t(locale, "common.back")}
-                appearance="auth"
-              />
-            </View>
-          </View>
           <View style={styles.hero}>
             <View style={styles.logoWrap}>
               {!isKeyboardVisible && (
                 <>
                   <Logo size={LOGO_SIZE} style={styles.logo} variant={theme.isDark ? "onDark" : "onLight"} />
-                  <Text style={styles.valetLabel}>valet</Text>
+                  <Text style={styles.valetLabel} maxFontSizeMultiplier={1.5}>valet</Text>
                 </>
               )}
             </View>
@@ -298,10 +264,10 @@ export default function SignupScreen() {
         <View>
           <AnimatedFormCard ref={formCardRef} isVisible={true} animationType="slide_from_bottom">
             <View style={[styles.bottomSection, { paddingBottom: Math.max(insets.bottom, 12) }]}>
-              <Text style={styles.ctaText}>Únete a Nuestro Equipo de Valet</Text>
+              <Text style={styles.ctaText} maxFontSizeMultiplier={1.5}>{t(locale, "signup.headline")}</Text>
               
               <View style={styles.roleSelection}>
-                <Text style={styles.roleLabel}>Función</Text>
+                <Text style={styles.roleLabel} maxFontSizeMultiplier={1.5}>{t(locale, "signup.staffRoleLabel")}</Text>
                 <View style={styles.roleButtons}>
                   <Pressable
                     style={[
@@ -319,7 +285,7 @@ export default function SignupScreen() {
                         styles.roleButtonText,
                         staffRole === 'receptionist' && styles.roleButtonTextSelected
                       ]}>
-                        Recepcionista
+                        {t(locale, "signup.staffRoleReceptionist")}
                       </Text>
                     </View>
                   </Pressable>
@@ -337,16 +303,15 @@ export default function SignupScreen() {
                       />
                       <Text style={[
                         styles.roleButtonText,
-                        staffRole === 'driver' && styles.roleButtonTextSelected
-                      ]}>
-                        Conductor
-                      </Text>
+                        staffRole === 'driver' && styles.roleButtonTextSelected,
+                        { color: staffRole === 'driver' ? "#FFFFFF" : a.textMuted },
+                      ]} maxFontSizeMultiplier={1.5}>{t(locale, "signup.staffRoleDriver")}</Text>
                     </View>
                   </Pressable>
                 </View>
               </View>
 
-              <Text style={styles.inputLabel}>Nombre completo</Text>
+              <Text style={styles.inputLabel} maxFontSizeMultiplier={1.5}>{t(locale, "signup.fullName")}</Text>
                 <View style={styles.nameInputContainer}>
                   <View style={styles.nameInputWrapper}>
                     <IconUser 
@@ -383,7 +348,7 @@ export default function SignupScreen() {
                   </View>
                 </View>
                 
-                <Text style={styles.inputLabel}>Correo Electrónico</Text>
+                <Text style={styles.inputLabel} maxFontSizeMultiplier={1.5}>{t(locale, "signup.email")}</Text>
                 <View style={styles.inputContainer}>
                   <IconMail 
                     size={20} 
@@ -399,12 +364,14 @@ export default function SignupScreen() {
                     keyboardType="email-address"
                     autoCapitalize="none"
                     autoCorrect={false}
-                    textContentType="emailAddress"
+                    spellCheck={false}
+                    textContentType="none"
                     autoComplete="email"
+                    dataDetectorTypes="none"
                   />
                 </View>
                 
-                <Text style={styles.inputLabel}>Contraseña</Text>
+                <Text style={styles.inputLabel} maxFontSizeMultiplier={1.5}>{t(locale, "signup.password")}</Text>
                 <View style={styles.inputContainer}>
                   <IconLock 
                     size={20} 
@@ -432,6 +399,8 @@ export default function SignupScreen() {
                     )}
                   </Pressable>
                 </View>
+
+              <View style={{ marginBottom: 16 }} />
 
               <Pressable
                 onPress={async () => {
@@ -462,13 +431,17 @@ export default function SignupScreen() {
                 {isLoading ? (
                   <ActivityIndicator size="small" color={a.btnSignupText} />
                 ) : (
-                  <Text style={styles.btnPrimaryText}>Registrarse</Text>
+                  <Text style={styles.btnPrimaryText} maxFontSizeMultiplier={1.5}>{t(locale, "signup.submit")}</Text>
                 )}
               </Pressable>
               
               {error && (
                 <AuthMessage type="error" message={error} />
               )}
+              
+              <Pressable onPress={() => router.push("/login")}>
+                <Text style={styles.loginLink} maxFontSizeMultiplier={1.5}>{t(locale, "signup.hasAccount")}</Text>
+              </Pressable>
             </View>
           </AnimatedFormCard>
         </View>

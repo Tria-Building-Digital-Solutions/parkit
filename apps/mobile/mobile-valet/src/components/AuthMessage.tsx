@@ -1,7 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet, ViewStyle, TextStyle } from 'react-native';
 import { IconAlertCircle, IconCircleCheck, IconHelpCircle } from './Icons';
-import { useAccessibilityStore } from '@/lib/store';
 import { useValetTheme } from '@/theme/valetTheme';
 
 type MessageType = 'error' | 'success' | 'warning' | 'info';
@@ -19,25 +18,21 @@ export const AuthMessage: React.FC<AuthMessageProps> = ({
   style,
   textStyle,
 }) => {
-  const { textScale } = useAccessibilityStore();
   const theme = useValetTheme();
   const F = theme.font;
-
-  const messageFontSize = Math.round(F.status * 0.55 * textScale);
-  const iconSize = 20 * textScale;
 
   const getIcon = () => {
     switch (type) {
       case 'error':
-        return <IconAlertCircle size={iconSize} color="#EF4444" />;
+        return <IconAlertCircle size={theme.icon.sm} color="#EF4444" />;
       case 'success':
-        return <IconCircleCheck size={iconSize} color="#10B981" />;
+        return <IconCircleCheck size={theme.icon.sm} color="#10B981" />;
       case 'warning':
-        return <IconAlertCircle size={iconSize} color="#F59E0B" />;
+        return <IconAlertCircle size={theme.icon.sm} color="#F59E0B" />;
       case 'info':
-        return <IconHelpCircle size={iconSize} color="#3B82F6" />;
+        return <IconHelpCircle size={theme.icon.sm} color="#3B82F6" />;
       default:
-        return <IconAlertCircle size={iconSize} color="#EF4444" />;
+        return <IconAlertCircle size={theme.icon.sm} color="#EF4444" />;
     }
   };
 
@@ -55,6 +50,8 @@ export const AuthMessage: React.FC<AuthMessageProps> = ({
         return '#EF4444';
     }
   };
+
+  const messageFontSize = F.sm;
 
   return (
     <View style={[styles.container, style]}>

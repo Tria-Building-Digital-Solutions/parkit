@@ -16,7 +16,6 @@ import { IconQrCode, IconCircleCheck, IconAlertCircle } from "@/components/Icons
 import type { Locale } from "@parkit/shared";
 import { t } from "@/lib/i18n";
 import type { useValetTheme } from "@/theme/valetTheme";
-import { useAccessibilityStore } from "@/lib/store";
 
 type Theme = ReturnType<typeof useValetTheme>;
 
@@ -59,7 +58,6 @@ export function ReservationQrPanel({
   const [permission, requestPermission] = useCameraPermissions();
   const [permissionModalOpen, setPermissionModalOpen] = useState(false);
   const handledRef = useRef(false);
-  const { textScale } = useAccessibilityStore();
   const F = theme.font;
   /**
    * Android / expo-camera: if `onBarcodeScanned` activates the analyzer before
@@ -243,7 +241,7 @@ export function ReservationQrPanel({
           >
             <View style={styles.validatingCard}>
               <ActivityIndicator color={ACCENT_GLOW} size="small" />
-              <Text style={[styles.validatingText, { fontSize: Math.round(F.status * 0.65 * textScale) }]}>{t(locale, "receive.qrValidating")}</Text>
+              <Text style={[styles.validatingText, { fontSize: F.sm }]}>{t(locale, "receive.qrValidating")}</Text>
             </View>
           </View>
         )}
@@ -265,7 +263,7 @@ export function ReservationQrPanel({
               {validationMessage.type === 'error' && <IconAlertCircle size={16} color="#EF4444" />}
               <Text style={[
                 styles.validatingText,
-                { fontSize: Math.round(F.status * 0.65 * textScale) },
+                { fontSize: F.sm },
                 validationMessage.type === 'success' && styles.validatingTextSuccess,
                 validationMessage.type === 'error' && styles.validatingTextError
               ]}>{validationMessage.text}</Text>
@@ -298,7 +296,7 @@ export function createQrStyles(theme: Theme, safeInsets: { bottom: number }, lay
   const C = theme.colors;
   const S = theme.space;
   const R = theme.radius;
-  const F = theme.a11yFont;
+  const F = theme.font;
   const Fonts = theme.fontFamily;
   const headerMaxH = layoutHeight ? Math.round(layoutHeight * 0.24) : 130;
 
@@ -386,7 +384,7 @@ export function createQrStyles(theme: Theme, safeInsets: { bottom: number }, lay
       maxHeight: headerMaxH,
     },
     premiumKicker: {
-      fontSize: Math.round(F.status * 0.55),
+      fontSize: F.xs,
       fontWeight: "700",
       letterSpacing: 2,
       color: "rgba(56, 189, 248, 0.85)",
@@ -394,14 +392,14 @@ export function createQrStyles(theme: Theme, safeInsets: { bottom: number }, lay
       marginBottom: S.xs,
     },
     premiumTitle: {
-      fontSize: Math.round(F.status * 0.85),
+      fontSize: F.sm,
       fontWeight: "800",
       color: "#F8FAFC",
       letterSpacing: -0.5,
     },
     premiumSubtitle: {
       marginTop: S.sm,
-      fontSize: Math.round(F.status * 0.65),
+      fontSize: F.sm,
       lineHeight: 22,
       color: "rgba(248, 250, 252, 0.72)",
       maxWidth: 320,
@@ -466,7 +464,7 @@ export function createQrStyles(theme: Theme, safeInsets: { bottom: number }, lay
       marginBottom: S.sm,
     },
     permissionTitle: {
-      fontSize: Math.round(F.status * 0.85),
+      fontSize: F.sm,
       fontWeight: "800",
       color: C.text,
       textAlign: "center",
@@ -510,7 +508,7 @@ export function createQrStyles(theme: Theme, safeInsets: { bottom: number }, lay
       backgroundColor: theme.isDark ? "rgba(148,163,184,0.08)" : "rgba(148,163,184,0.12)",
     },
     webFallbackText: {
-      fontSize: Math.round(F.status * 0.65),
+      fontSize: F.sm,
       color: C.textMuted,
       textAlign: "center",
       lineHeight: 22,
@@ -526,7 +524,7 @@ export function createQrStyles(theme: Theme, safeInsets: { bottom: number }, lay
       gap: S.md,
     },
     permissionText: {
-      fontSize: Math.round(F.status * 0.65),
+      fontSize: F.sm,
       color: C.textMuted,
       textAlign: "center",
       lineHeight: 22,
@@ -543,10 +541,10 @@ export function createQrStyles(theme: Theme, safeInsets: { bottom: number }, lay
     permissionBtnText: {
       color: "#fff",
       fontWeight: "800",
-      fontSize: Math.round(F.status * 0.65),
+      fontSize: F.sm,
     },
     settingsLink: { paddingVertical: S.sm },
-    settingsLinkText: { fontSize: Math.round(F.status * 0.6), fontWeight: "600", color: C.primary },
+    settingsLinkText: { fontSize: F.xs, fontWeight: "600", color: C.primary },
     permissionBtnLegacy: {
       backgroundColor: C.primary,
       paddingVertical: S.md,
@@ -556,7 +554,7 @@ export function createQrStyles(theme: Theme, safeInsets: { bottom: number }, lay
     permissionBtnTextLegacy: {
       color: "#fff",
       fontWeight: "800",
-      fontSize: Math.round(F.status * 0.65),
+      fontSize: F.sm,
     },
     // Bottom sheet styles para permisos
     permissionOverlay: {
@@ -589,7 +587,7 @@ export function createQrStyles(theme: Theme, safeInsets: { bottom: number }, lay
       marginBottom: S.sm,
     },
     permissionSheetTitle: {
-      fontSize: Math.round(F.status * 0.65),
+      fontSize: F.sm,
       fontWeight: '800',
       fontFamily: Fonts.primary,
       color: C.text,
@@ -602,7 +600,7 @@ export function createQrStyles(theme: Theme, safeInsets: { bottom: number }, lay
       marginBottom: S.sm,
     },
     permissionCancelText: {
-      fontSize: Math.round(F.status * 0.6),
+      fontSize: F.xs,
       fontWeight: '800',
       color: C.text,
     },
@@ -614,7 +612,7 @@ export function createQrStyles(theme: Theme, safeInsets: { bottom: number }, lay
       marginBottom: S.sm,
     },
     permissionActionText: {
-      fontSize: Math.round(F.status * 0.6),
+      fontSize: F.xs,
       fontWeight: '800',
       color: '#fff',
     },

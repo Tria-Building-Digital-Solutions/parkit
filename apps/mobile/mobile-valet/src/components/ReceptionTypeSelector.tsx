@@ -1,5 +1,6 @@
 import React from 'react';
 import { View, Text, Pressable, StyleSheet } from 'react-native';
+import { useValetTheme } from '@/theme/valetTheme';
 import { t } from '@/lib/i18n';
 import type { Locale } from '@parkit/shared';
 import { IconCard, IconCash } from '@/components/Icons';
@@ -17,6 +18,72 @@ export function ReceptionTypeSelector({
   receptionType,
   onSelect,
 }: ReceptionTypeSelectorProps) {
+  const theme = useValetTheme();
+  const F = theme.font;
+
+  const styles = StyleSheet.create({
+    sectionLabel: {
+      fontSize: F.sm,
+      fontWeight: '800',
+      color: '#64748B',
+      marginBottom: 8,
+      textTransform: 'uppercase',
+      letterSpacing: 0.5,
+    },
+    stepExplain: {
+      fontSize: F.base,
+      color: '#94A3B8',
+      marginBottom: 16,
+      lineHeight: 20,
+    },
+    typeCardsGrid: {
+      flexDirection: 'row',
+      gap: 12,
+      marginBottom: 20,
+    },
+    typeCard: {
+      flex: 1,
+      backgroundColor: '#F8FAFC',
+      borderRadius: 16,
+      padding: 16,
+      borderWidth: 2,
+      borderColor: '#E2E8F0',
+      alignItems: 'center',
+    },
+    typeCardSelected: {
+      backgroundColor: '#F1F5F9',
+      borderColor: '#3B82F6',
+    },
+    typeCardIcon: {
+      width: 56,
+      height: 56,
+      borderRadius: 16,
+      backgroundColor: '#EFF6FF',
+      alignItems: 'center',
+      justifyContent: 'center',
+      marginBottom: 12,
+    },
+    typeCardIconActive: {
+      backgroundColor: '#3B82F6',
+    },
+    typeCardTitle: {
+      fontSize: F.md,
+      fontWeight: '800',
+      color: '#0F172A',
+      marginBottom: 4,
+      textAlign: 'center',
+    },
+    typeCardBody: {
+      fontSize: F.sm,
+      color: '#64748B',
+      textAlign: 'center',
+      lineHeight: 16,
+    },
+    pressed: {
+      opacity: 0.8,
+    },
+  });
+
   return (
     <>
       <Text style={styles.sectionLabel}>{t(locale, 'receive.wizardTypeTitle')}</Text>
@@ -35,7 +102,7 @@ export function ReceptionTypeSelector({
         >
           <View style={[styles.typeCardIcon, receptionType === 'CARD' && styles.typeCardIconActive]}>
             <IconCard
-              size={28}
+              size={theme.icon.lg}
               color={receptionType === 'CARD' ? '#fff' : isDark ? '#38BDF8' : '#1D4ED8'}
             />
           </View>
@@ -56,7 +123,7 @@ export function ReceptionTypeSelector({
         >
           <View style={[styles.typeCardIcon, receptionType === 'DIRECT' && styles.typeCardIconActive]}>
             <IconCash
-              size={28}
+              size={theme.icon.lg}
               color={receptionType === 'DIRECT' ? '#fff' : isDark ? '#FBBF24' : '#D97706'}
             />
           </View>
@@ -67,66 +134,3 @@ export function ReceptionTypeSelector({
     </>
   );
 }
-
-const styles = StyleSheet.create({
-  sectionLabel: {
-    fontSize: 13,
-    fontWeight: '800',
-    color: '#64748B',
-    marginBottom: 8,
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
-  },
-  stepExplain: {
-    fontSize: 14,
-    color: '#94A3B8',
-    marginBottom: 16,
-    lineHeight: 20,
-  },
-  typeCardsGrid: {
-    flexDirection: 'row',
-    gap: 12,
-    marginBottom: 20,
-  },
-  typeCard: {
-    flex: 1,
-    backgroundColor: '#F8FAFC',
-    borderRadius: 16,
-    padding: 16,
-    borderWidth: 2,
-    borderColor: '#E2E8F0',
-    alignItems: 'center',
-  },
-  typeCardSelected: {
-    backgroundColor: '#F1F5F9',
-    borderColor: '#3B82F6',
-  },
-  typeCardIcon: {
-    width: 56,
-    height: 56,
-    borderRadius: 16,
-    backgroundColor: '#EFF6FF',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 12,
-  },
-  typeCardIconActive: {
-    backgroundColor: '#3B82F6',
-  },
-  typeCardTitle: {
-    fontSize: 15,
-    fontWeight: '800',
-    color: '#0F172A',
-    marginBottom: 4,
-    textAlign: 'center',
-  },
-  typeCardBody: {
-    fontSize: 12,
-    color: '#64748B',
-    textAlign: 'center',
-    lineHeight: 16,
-  },
-  pressed: {
-    opacity: 0.8,
-  },
-});

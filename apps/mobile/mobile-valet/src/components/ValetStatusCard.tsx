@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet, Image, Platform } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { useValetTheme, ticketsA11y } from '@/theme/valetTheme';
+import { useValetTheme } from '@/theme/valetTheme';
 import { IconUser, IconCar, IconClock } from '@/components/Icons';
 
 interface ValetStatusCardProps {
@@ -15,13 +15,12 @@ interface ValetStatusCardProps {
     avatarUrl?: string;
   };
   isDark: boolean;
-  textScale: number;
 }
 
-export function ValetStatusCard({ valet, isDark, textScale }: ValetStatusCardProps) {
+export function ValetStatusCard({ valet, isDark }: ValetStatusCardProps) {
   const theme = useValetTheme();
   const S = theme.space;
-  const F = ticketsA11y.font;
+  const F = theme.font;
 
 
   const getStatusGradient = (): [string, string] => {
@@ -58,6 +57,9 @@ export function ValetStatusCard({ valet, isDark, textScale }: ValetStatusCardPro
     }
   };
 
+  const avatarSize = 48;
+  const avatarRadius = avatarSize / 2;
+
   const styles = StyleSheet.create({
     card: {
       borderRadius: 16,
@@ -84,30 +86,30 @@ export function ValetStatusCard({ valet, isDark, textScale }: ValetStatusCardPro
       marginBottom: S.md,
     },
     avatarContainer: {
-      width: 48,
-      height: 48,
-      borderRadius: 24,
+      width: avatarSize,
+      height: avatarSize,
+      borderRadius: avatarRadius,
       backgroundColor: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(255,255,255,0.2)',
       alignItems: 'center',
       justifyContent: 'center',
       marginRight: S.md,
     },
     avatar: {
-      width: 48,
-      height: 48,
-      borderRadius: 24,
+      width: avatarSize,
+      height: avatarSize,
+      borderRadius: avatarRadius,
     },
     info: {
       flex: 1,
     },
     name: {
-      fontSize: Math.round(F.status * 0.65 * textScale),
+      fontSize: F.base,
       fontWeight: '700',
       color: '#fff',
       marginBottom: 2,
     },
     role: {
-      fontSize: Math.round(F.status * 0.65 * textScale),
+      fontSize: F.sm,
       color: 'rgba(255,255,255,0.8)',
     },
     statusBadge: {
@@ -118,7 +120,7 @@ export function ValetStatusCard({ valet, isDark, textScale }: ValetStatusCardPro
       alignItems: 'center',
     },
     statusText: {
-      fontSize: Math.round(F.status * 0.65 * textScale),
+      fontSize: F.sm,
       fontWeight: '600',
       color: '#fff',
     },
@@ -134,13 +136,13 @@ export function ValetStatusCard({ valet, isDark, textScale }: ValetStatusCardPro
       flex: 1,
     },
     statValue: {
-      fontSize: Math.round(F.status * 0.65 * textScale),
+      fontSize: F.md,
       fontWeight: '800',
       color: '#fff',
       marginBottom: 2,
     },
     statLabel: {
-      fontSize: Math.round(F.status * 0.65 * textScale),
+      fontSize: F.xs,
       color: 'rgba(255,255,255,0.8)',
       textAlign: 'center',
     },
@@ -159,7 +161,7 @@ export function ValetStatusCard({ valet, isDark, textScale }: ValetStatusCardPro
             {valet.avatarUrl ? (
               <Image source={{ uri: valet.avatarUrl }} style={styles.avatar} />
             ) : (
-              <IconUser size={24} color="#fff" />
+              <IconUser size={avatarSize * 0.5} color="#fff" />
             )}
           </View>
           <View style={styles.info}>
@@ -179,7 +181,7 @@ export function ValetStatusCard({ valet, isDark, textScale }: ValetStatusCardPro
 
         <View style={styles.statsContainer}>
           <View style={styles.statItem}>
-            <IconCar size={16} color="rgba(255,255,255,0.8)" />
+            <IconCar size={avatarSize * 0.33} color="rgba(255,255,255,0.8)" />
             <Text style={styles.statValue}>
               {valet.currentTicketCount || 0}
             </Text>
@@ -188,7 +190,7 @@ export function ValetStatusCard({ valet, isDark, textScale }: ValetStatusCardPro
             </Text>
           </View>
           <View style={styles.statItem}>
-            <IconClock size={16} color="rgba(255,255,255,0.8)" />
+            <IconClock size={avatarSize * 0.33} color="rgba(255,255,255,0.8)" />
             <Text style={styles.statValue}>
               {valet.lastActivity || '---'}
             </Text>

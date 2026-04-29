@@ -1,6 +1,6 @@
 import { View, Text, StyleSheet, Pressable, Modal, Platform } from "react-native";
 import { useFeedbackStore, type FeedbackButton } from "@/lib/feedbackStore";
-import { useValetTheme, ticketsA11y } from "@/theme/valetTheme";
+import { useValetTheme } from "@/theme/valetTheme";
 import { useMemo } from "react";
 
 export function FeedbackModal() {
@@ -10,7 +10,7 @@ export function FeedbackModal() {
   const F = theme.font;
   const S = theme.space;
   const R = theme.radius;
-  const M = ticketsA11y.minTouch;
+  const M = theme.minTouch;
   const Fonts = theme.fontFamily;
 
   const styles = useMemo(
@@ -31,7 +31,7 @@ export function FeedbackModal() {
           paddingBottom: S.xl + 20,
         },
         modalTitle: {
-          fontSize: Math.round(F.status * 0.65),
+          fontSize: F.md,
           fontWeight: Platform.OS === "android" ? "normal" : "800",
           textAlign: "center",
           marginBottom: S.sm,
@@ -39,7 +39,7 @@ export function FeedbackModal() {
           color: C.text,
         },
         modalMessage: {
-          fontSize: Math.round(F.status * 0.65),
+          fontSize: F.md,
           fontFamily: Fonts.primary,
           color: C.textMuted,
           textAlign: "center",
@@ -68,13 +68,13 @@ export function FeedbackModal() {
         },
         btnTextDefault: {
           color: "#fff",
-          fontSize: Math.round(F.status * 0.65),
+          fontSize: F.md,
           fontWeight: "700",
           fontFamily: Fonts.primary,
         },
         btnTextCancel: {
           color: C.text,
-          fontSize: Math.round(F.status * 0.65),
+          fontSize: F.md,
           fontWeight: "700",
           fontFamily: Fonts.primary,
         },

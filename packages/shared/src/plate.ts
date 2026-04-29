@@ -1,5 +1,5 @@
 /**
- * Placa Costa Rica: solo números (ej. 345723) o alfanumérico LLL-NNN (ej. RWF-001).
+ * Placa Costa Rica: solo números (ej. 345723) o alfanumérico LLL-NNN (ej. RWF-001) o LLL-NNNN (ej. ABC-1234).
  * Misma lógica que `apps/web/src/lib/inputMasks.ts`.
  */
 export function formatPlate(value: string): string {
@@ -11,6 +11,7 @@ export function formatPlate(value: string): string {
     return allDigits.slice(0, 6);
   }
 
-  const digits = allDigits.slice(0, 3);
+  // Support up to 4 digits for newer plate formats
+  const digits = allDigits.slice(0, 4);
   return letters + (digits.length > 0 ? "-" + digits : "");
 }

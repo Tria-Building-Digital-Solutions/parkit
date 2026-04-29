@@ -21,9 +21,8 @@ import api from "@/lib/api";
 import { useAuthStore, useLocaleStore } from "@/lib/store";
 import { t } from "@/lib/i18n";
 import { createFeedback } from "@/lib/feedback";
-import { ValetBackButton } from "@/components/ValetBackButton";
 import { StickyFormFooter } from "@/components/StickyFormFooter";
-import { ticketsA11y, useResponsiveLayout, useValetTheme } from "@/theme/valetTheme";
+import { useResponsiveLayout, useValetTheme } from "@/theme/valetTheme";
 
 import { MAX_DAMAGE_PHOTOS } from "@/lib/receiveUtils";
 
@@ -43,7 +42,7 @@ function createParkStyles(theme: ReturnType<typeof useValetTheme>, contentMaxWid
   const C = theme.colors;
   const S = theme.space;
   const R = theme.radius;
-  const F = ticketsA11y.font;
+  const F = theme.font;
   const Fonts = theme.fontFamily;
   return StyleSheet.create({
     safe: { flex: 1, backgroundColor: C.bg, alignItems: "center" },
@@ -64,7 +63,7 @@ function createParkStyles(theme: ReturnType<typeof useValetTheme>, contentMaxWid
     },
     scroll: { padding: sectionPadding, paddingBottom: S.xl },
     screenTitle: {
-      fontSize: Math.round(F.secondary * 0.85),
+      fontSize: F.base,
       fontWeight: "800",
       fontFamily: Fonts.primary,
       color: C.text,
@@ -72,7 +71,7 @@ function createParkStyles(theme: ReturnType<typeof useValetTheme>, contentMaxWid
       textAlign: "center",
     },
     sectionLabel: {
-      fontSize: Math.round(F.status * 0.65),
+      fontSize: F.base,
       fontWeight: "800",
       fontFamily: Fonts.primary,
       color: C.textMuted,
@@ -81,24 +80,24 @@ function createParkStyles(theme: ReturnType<typeof useValetTheme>, contentMaxWid
       letterSpacing: 0.6,
     },
     stepExplain: {
-      fontSize: Math.round(F.status * 0.65),
+      fontSize: F.base,
       fontFamily: Fonts.primary,
-      color: C.textSubtle,
+      color: C.textMuted,
       marginTop: -4,
       marginBottom: S.md,
       lineHeight: 22,
     },
     inputFieldLabel: {
-      fontSize: Math.round(F.status * 0.65),
+      fontSize: F.base,
       fontWeight: "700",
       fontFamily: Fonts.primary,
       color: C.textMuted,
       marginBottom: S.xs,
     },
     help: {
-      fontSize: Math.round(F.status * 0.65),
-      fontFamily: Fonts.primary,
-      color: C.textSubtle,
+      fontSize: F.base,
+      fontWeight: "400",
+      color: "#94A3B8",
       marginBottom: S.md,
       lineHeight: 22,
     },
@@ -127,7 +126,7 @@ function createParkStyles(theme: ReturnType<typeof useValetTheme>, contentMaxWid
       color: "#fff",
       fontWeight: "800",
       fontFamily: Fonts.primary,
-      fontSize: Math.round(F.status * 0.65),
+      fontSize: F.base,
     },
     primaryBtnSticky: { marginTop: 0, marginBottom: 0 },
     footerSecondaryBtn: {
@@ -144,7 +143,7 @@ function createParkStyles(theme: ReturnType<typeof useValetTheme>, contentMaxWid
       color: C.text,
       fontWeight: "800",
       fontFamily: Fonts.primary,
-      fontSize: Math.round(F.status * 0.65),
+      fontSize: F.base,
     },
     input: {
       backgroundColor: C.card,
@@ -153,7 +152,7 @@ function createParkStyles(theme: ReturnType<typeof useValetTheme>, contentMaxWid
       borderRadius: R.button,
       paddingHorizontal: S.md,
       paddingVertical: 14,
-      fontSize: Math.round(F.status * 0.65),
+      fontSize: F.base,
       fontFamily: Fonts.primary,
       color: C.text,
       marginBottom: S.sm,
@@ -176,7 +175,7 @@ function createParkStyles(theme: ReturnType<typeof useValetTheme>, contentMaxWid
       gap: S.sm,
     },
     damageCountMeta: {
-      fontSize: Math.round(F.secondary * 0.8),
+      fontSize: F.base,
       fontWeight: "700",
       color: C.textMuted,
       marginBottom: S.md,
@@ -204,7 +203,7 @@ function createParkStyles(theme: ReturnType<typeof useValetTheme>, contentMaxWid
       borderRadius: 999,
     },
     damageNoteOptional: {
-      fontSize: F.secondary - 1,
+      fontSize: F.base,
       marginTop: -6,
       marginBottom: S.sm,
       lineHeight: 20,
@@ -215,13 +214,13 @@ function createParkStyles(theme: ReturnType<typeof useValetTheme>, contentMaxWid
       paddingTop: 12,
     },
     sectionTitle: {
-      fontSize: F.secondary - 1,
+      fontSize: F.base,
       fontWeight: "800",
       color: C.text,
       marginBottom: S.xs,
     },
     sectionHelp: {
-      fontSize: F.secondary,
+      fontSize: F.base,
       color: C.textMuted,
       lineHeight: 22,
       marginBottom: S.md,
@@ -251,12 +250,12 @@ function createParkStyles(theme: ReturnType<typeof useValetTheme>, contentMaxWid
       backgroundColor: theme.isDark ? "rgba(37, 99, 235, 0.2)" : "#DBEAFE",
     },
     slotLabel: {
-      fontSize: F.secondary - 1,
+      fontSize: F.base,
       fontWeight: "800",
       color: C.text,
     },
     slotHint: {
-      fontSize: F.secondary - 1,
+      fontSize: F.base,
       color: C.textMuted,
       marginTop: 4,
     },
@@ -287,14 +286,15 @@ export default function ParkFlowScreen() {
   );
   const feedback = useMemo(() => createFeedback(locale), [locale]);
   const C = theme.colors;
-  const M = ticketsA11y.minTouch;
+  const M = theme.minTouch;
 
   // Wizard tracking
   const startWizard = useCallback(async () => {
     try {
       await api.post("/valets/me/wizard/start", { wizardType: "PARK" });
     } catch (error) {
-      console.error("Failed to start wizard:", error);
+      // Silently ignore wizard errors - not critical for functionality
+      // Network errors and timeouts are expected in poor connectivity
     }
   }, []);
 
@@ -433,18 +433,36 @@ export default function ParkFlowScreen() {
       feedback.error(t(locale, "park.photoLimit", { max: String(MAX_DAMAGE_PHOTOS) }));
       return;
     }
-    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (status !== "granted") {
-      feedback.error(t(locale, "profile.photoPermissionDenied"));
-      return;
+    
+    try {
+      // First check current permission status
+      const { status: currentStatus } = await ImagePicker.getMediaLibraryPermissionsAsync();
+      
+      let status = currentStatus;
+      
+      // Only request if not already granted
+      if (currentStatus !== 'granted') {
+        const { status: requestedStatus } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+        status = requestedStatus;
+      }
+      
+      if (status !== 'granted') {
+        feedback.error(t(locale, "profile.photoPermissionDenied"));
+        return;
+      }
+      
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsEditing: false,
+        quality: 0.88,
+      });
+      
+      if (result.canceled || !result.assets?.[0]?.uri) return;
+      await processAndAddDamagePhoto(result.assets[0].uri);
+    } catch (error) {
+      console.error("Error in pickDamageFromLibrary:", error);
+      feedback.error(t(locale, "profile.photoProcessError"));
     }
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      allowsEditing: false,
-      quality: 0.88,
-    });
-    if (result.canceled || !result.assets?.[0]?.uri) return;
-    await processAndAddDamagePhoto(result.assets[0].uri);
   }, [damagePhotoDataUrls.length, feedback, locale, processAndAddDamagePhoto]);
 
   const takeDamagePhoto = useCallback(async () => {
@@ -452,17 +470,35 @@ export default function ParkFlowScreen() {
       feedback.error(t(locale, "park.photoLimit", { max: String(MAX_DAMAGE_PHOTOS) }));
       return;
     }
-    const { status } = await ImagePicker.requestCameraPermissionsAsync();
-    if (status !== "granted") {
-      feedback.error(t(locale, "profile.photoCameraDenied"));
-      return;
+    
+    try {
+      // First check current permission status
+      const { status: currentStatus } = await ImagePicker.getCameraPermissionsAsync();
+      
+      let status = currentStatus;
+      
+      // Only request if not already granted
+      if (currentStatus !== 'granted') {
+        const { status: requestedStatus } = await ImagePicker.requestCameraPermissionsAsync();
+        status = requestedStatus;
+      }
+      
+      if (status !== 'granted') {
+        feedback.error(t(locale, "profile.photoCameraDenied"));
+        return;
+      }
+      
+      const result = await ImagePicker.launchCameraAsync({
+        allowsEditing: false,
+        quality: 0.88,
+      });
+      
+      if (result.canceled || !result.assets?.[0]?.uri) return;
+      await processAndAddDamagePhoto(result.assets[0].uri);
+    } catch (error) {
+      console.error("Error in takeDamagePhoto:", error);
+      feedback.error(t(locale, "profile.photoProcessError"));
     }
-    const result = await ImagePicker.launchCameraAsync({
-      allowsEditing: false,
-      quality: 0.88,
-    });
-    if (result.canceled || !result.assets?.[0]?.uri) return;
-    await processAndAddDamagePhoto(result.assets[0].uri);
   }, [damagePhotoDataUrls.length, feedback, locale, processAndAddDamagePhoto]);
 
   const removeDamagePhotoAt = useCallback((index: number) => {
@@ -633,7 +669,7 @@ export default function ParkFlowScreen() {
       />
       <View style={styles.frame}>
         <View style={[styles.screenHeader, { paddingTop: insets.top + theme.space.md }]}>
-          <ValetBackButton onPress={() => { void endWizard(); router.back(); }} accessibilityLabel={t(locale, "common.back")} />
+          <View style={{ width: 44, height: 44 }} />
           <Text style={styles.screenTitle}>{t(locale, "park.title")}</Text>
           <View style={{ width: 44 }} />
         </View>

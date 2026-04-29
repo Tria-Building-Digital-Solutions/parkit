@@ -1,6 +1,7 @@
 import { View, Text, ScrollView, Pressable, StyleSheet, FlatList } from "react-native";
 import { useState } from "react";
 import { Link } from "expo-router";
+import { FONT_SCALE } from "@/lib/fontScale";
 
 const MOCK_BOOKINGS = [
   {
@@ -97,7 +98,7 @@ const styles = StyleSheet.create({
     borderBottomColor: "#eee",
   },
   headerTitle: {
-    fontSize: 20,
+    fontSize: FONT_SCALE.xl,
     fontWeight: "bold",
   },
   newButton: {
@@ -108,7 +109,7 @@ const styles = StyleSheet.create({
   },
   newButtonText: {
     color: "#fff",
-    fontSize: 14,
+    fontSize: FONT_SCALE.sm,
     fontWeight: "600",
   },
   bookingCard: {
@@ -128,12 +129,12 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   parking: {
-    fontSize: 16,
+    fontSize: FONT_SCALE.md,
     fontWeight: "bold",
     marginBottom: 4,
   },
   vehicle: {
-    fontSize: 14,
+    fontSize: FONT_SCALE.sm,
     color: "#666",
   },
   statusBadge: {
@@ -143,7 +144,7 @@ const styles = StyleSheet.create({
   },
   statusText: {
     color: "#fff",
-    fontSize: 12,
+    fontSize: FONT_SCALE.xs,
     fontWeight: "600",
   },
   bookingDetails: {
@@ -157,7 +158,7 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   detailText: {
-    fontSize: 12,
+    fontSize: FONT_SCALE.xs,
     color: "#999",
   },
   viewButton: {
@@ -168,7 +169,7 @@ const styles = StyleSheet.create({
   },
   viewButtonText: {
     color: "#fff",
-    fontSize: 14,
+    fontSize: FONT_SCALE.sm,
     fontWeight: "600",
   },
 });

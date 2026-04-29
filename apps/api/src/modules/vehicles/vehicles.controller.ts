@@ -219,11 +219,12 @@ export class VehiclesController {
 
   /** Plate formatted as in web; search across entire system (STAFF valet). */
   static async getByPlateValet(req: Request, res: Response) {
-    try {
+    try {      
       const raw = parseQueryParam(req.query.plate as string | string[] | undefined) || "";
       const countryStr =
         parseQueryParam(req.query.countryCode as string | string[] | undefined) || "CR";
       const plate = formatPlate(raw);
+
       if (!plate.trim()) {
         return fail(res, 400, "plate is required");
       }

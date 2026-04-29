@@ -15,6 +15,7 @@ import { useRouter } from "expo-router";
 import { Logo } from "@parkit/shared";
 import { setHasSeenOnboarding } from "@/lib/onboarding";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
+import { FONT_SCALE } from "@/lib/fontScale";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 
@@ -146,7 +147,7 @@ const styles = StyleSheet.create({
   },
   topLogo: { marginRight: 8 },
   skipText: {
-    fontSize: 16,
+    fontSize: FONT_SCALE.md,
     fontWeight: "600",
   },
   scrollContent: {
@@ -172,14 +173,14 @@ const styles = StyleSheet.create({
     elevation: 4,
   },
   title: {
-    fontSize: 24,
+    fontSize: FONT_SCALE.xxl,
     fontWeight: "700",
     textAlign: "center",
     marginBottom: 12,
     paddingHorizontal: 8,
   },
   description: {
-    fontSize: 16,
+    fontSize: FONT_SCALE.md,
     lineHeight: 24,
     textAlign: "center",
     maxWidth: 300,
@@ -218,7 +219,7 @@ const styles = StyleSheet.create({
   },
   nextButtonText: {
     color: "#FFFFFF",
-    fontSize: 17,
+    fontSize: FONT_SCALE.lg,
     fontWeight: "600",
   },
 });

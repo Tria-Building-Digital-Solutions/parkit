@@ -12,16 +12,20 @@ import {
   ActivityIndicator,
   ScrollView,
 } from "react-native";
+import Constants from "expo-constants";
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { IconUser, IconCircleCheck, IconMail, IconClipboardText, IconCar, IconPhone, IconHome2, IconCamera, IconGallery, IconId, IconList, IconCalendar } from "@/components/Icons";
+import { IconEdit } from "@/components/IconEdit";
+import { ValetBackButton } from "@/components/ValetBackButton";
 import * as ImagePicker from "expo-image-picker";
 import { manipulateAsync, SaveFormat } from "expo-image-manipulator";
 import type { ValetStaffRole } from "@parkit/shared";
-import { useAuthStore, useLocaleStore, useAccessibilityStore } from "@/lib/store";
+import { useAuthStore, useLocaleStore } from "@/lib/store";
+import { useCompanyContext } from "@/lib/useCompanyContext";
 import { t } from "@/lib/i18n";
-import { useValetTheme, ticketsA11y, useResponsiveLayout } from "@/theme/valetTheme";
+import { useValetTheme, useResponsiveLayout } from "@/theme/valetTheme";
 import { StickyFormFooter } from "@/components/StickyFormFooter";
 import api from "@/lib/api";
 import { messageFromAxios } from "@parkit/shared";
@@ -30,7 +34,6 @@ import { createFeedback } from "@/lib/feedback";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { LICENSE_TYPE_OPTIONS, LICENSE_TYPE_VALUES, labelForLicenseType } from "@/lib/licenseTypes";
 import {
-  COUNTRY_DIAL_CODES,
   formatPhoneInternational,
   formatPhoneWithCountryCode,
   getDeviceCountryCode,
@@ -53,13 +56,13 @@ export default function ProfileScreen() {
   const router = useRouter();
   const locale = useLocaleStore((s) => s.locale);
   const { user, mergeUser } = useAuthStore();
-  const { textScale } = useAccessibilityStore();
   const theme = useValetTheme();
   const responsive = useResponsiveLayout();
   const insets = useSafeAreaInsets();
+  useCompanyContext(user);
   const styles = useMemo(
-    () => createStyles(theme, responsive.contentMaxWidth, responsive.sectionPadding, textScale),
-    [theme, responsive.contentMaxWidth, responsive.sectionPadding, textScale]
+    () => createStyles(theme, responsive.contentMaxWidth, responsive.sectionPadding),
+    [theme, responsive.contentMaxWidth, responsive.sectionPadding]
   );
   const C = theme.colors;
   const feedback = useMemo(() => createFeedback(locale), [locale]);
@@ -97,6 +100,7 @@ export default function ProfileScreen() {
   const [licenseExpiryYmd, setLicenseExpiryYmd] = useState("");
   const [expiryPickerOpen, setExpiryPickerOpen] = useState(false);
   const [originalAvatarRemoved, setOriginalAvatarRemoved] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
 
   const hasChanges = useMemo(() => {
     if (saving) return false;
@@ -157,7 +161,7 @@ export default function ProfileScreen() {
         setOriginalAvatarRemoved(false);
         setLocalAvatar(undefined);
         setAvatarRemoved(false);
-      }
+      } else { /* empty */ }
       const vd = vRes?.data?.data;
       if (vd) {
         if (vd.staffRole === "DRIVER" || vd.staffRole === "RECEPTIONIST") {
@@ -186,8 +190,8 @@ export default function ProfileScreen() {
           setLicenseExpiryYmd("");
           setOriginalLicenseExpiryYmd("");
         }
-      }
-    } catch {
+      } else { /* empty */ }
+    } catch (err) {
       feedback.error(t(locale, "profile.loadError"));
     } finally {
       setLoading(false);
@@ -209,49 +213,253 @@ export default function ProfileScreen() {
 
   const processPickedUri = async (uri: string) => {
     try {
+      console.log("Processing image URI:", uri);
+      
+      // Validate URI before processing
+      if (!uri || typeof uri !== 'string') {
+        throw new Error('Invalid image URI provided');
+      }
+      
       const manipulated = await manipulateAsync(
         uri,
         [{ resize: { width: 480 } }],
         { compress: 0.82, format: SaveFormat.JPEG, base64: true }
       );
-      if (manipulated.base64) {
-        setLocalAvatar(`data:image/jpeg;base64,${manipulated.base64}`);
-        setAvatarRemoved(false);
+      
+      if (!manipulated.base64) {
+        throw new Error('Failed to process image - no base64 data returned');
       }
-    } catch {
-      feedback.error(t(locale, "profile.photoProcessError"));
+      
+      const dataUri = `data:image/jpeg;base64,${manipulated.base64}`;
+      console.log("Image processed successfully, data URI length:", dataUri.length);
+      
+      setLocalAvatar(dataUri);
+      setAvatarRemoved(false);
+      
+      // Provide success feedback
+      feedback.success(t(locale, "profile.photoUpdated") || "Photo updated successfully");
+    } catch (error) {
+      console.error("Error in processPickedUri:", error);
+      
+      let errorMessage = t(locale, "profile.photoProcessError");
+      if (error instanceof Error) {
+        if (error.message.includes('file') || error.message.includes('URI')) {
+          errorMessage = t(locale, "profile.photoProcessError");
+        } else if (error.message.includes('memory') || error.message.includes('size')) {
+          errorMessage = t(locale, "profile.photoProcessError");
+        }
+      }
+      
+      feedback.error(errorMessage);
     }
   };
 
   const pickImage = async () => {
-    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (status !== "granted") {
-      feedback.error(t(locale, "profile.photoPermissionDenied"));
-      return;
+    try {
+      console.log("Requesting media library permissions...");
+      
+      // On web, permissions work differently
+      if (Platform.OS === "web") {
+        console.log("Web platform detected, launching image picker...");
+        const result = await ImagePicker.launchImageLibraryAsync({
+          mediaTypes: ['images'],
+          allowsEditing: true,
+          aspect: [1, 1],
+          quality: 0.8,
+        });
+        console.log("Web image picker result:", result);
+        
+        if (result.canceled) {
+          console.log("User cancelled image selection");
+          return;
+        }
+        
+        if (!result.assets?.[0]?.uri) {
+          console.log("No image URI returned");
+          feedback.error(t(locale, "profile.photoProcessError"));
+          return;
+        }
+        
+        await processPickedUri(result.assets[0].uri);
+        return;
+      }
+      
+      // Check if running in Expo Go
+      if (Constants.appOwnership === 'expo') {
+        console.log("Running in Expo Go - using simplified approach");
+      }
+      
+      // First check current permission status
+      const { status: currentStatus } = await ImagePicker.getMediaLibraryPermissionsAsync();
+      console.log("Current media library permission status:", currentStatus);
+      
+      let status = currentStatus;
+      
+      // Always request if not granted (including undetermined)
+      if (currentStatus !== 'granted') {
+        console.log("Requesting media library permissions...");
+        const { status: requestedStatus } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+        status = requestedStatus;
+        console.log("Media library permission status after request:", status);
+      }
+      
+      // For Expo Go, if still not granted after request, try one more time
+      if (Constants.appOwnership === 'expo' && status !== 'granted') {
+        console.log("Expo Go: Permission not granted, trying alternative approach...");
+        // Try direct request without checking first
+        const { status: retryStatus } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+        status = retryStatus;
+        console.log("Expo Go: Retry permission status:", status);
+      }
+      
+      if (status !== 'granted') {
+        console.log("Media library permission denied");
+        // For Expo Go, provide more specific guidance
+        if (Constants.appOwnership === 'expo') {
+          feedback.error("Para acceder a la galería en Expo Go, ve a Configuración > Aplicaciones > Expo Go > Permisos y activa 'Almacenamiento'.");
+          return;
+        }
+        feedback.error(t(locale, "profile.photoPermissionDenied"));
+        return;
+      }
+      
+      console.log("Launching image library...");
+      // Use simplified options for Expo Go compatibility
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ['images'],
+        allowsEditing: Constants.appOwnership !== 'expo', // Disable editing in Expo Go
+        aspect: Constants.appOwnership !== 'expo' ? [1, 1] : undefined,
+        quality: 0.8,
+      });
+      console.log("Image library result:", result);
+      
+      if (result.canceled) {
+        console.log("User cancelled image selection");
+        return;
+      }
+      
+      if (!result.assets?.[0]?.uri) {
+        console.log("No image URI returned");
+        feedback.error(t(locale, "profile.photoProcessError"));
+        return;
+      }
+      
+      await processPickedUri(result.assets[0].uri);
+    } catch (error) {
+      console.error("Error in pickImage:", error);
+      // Provide more specific error messages for Expo Go
+      if (Constants.appOwnership === 'expo') {
+        feedback.error("Error al abrir la galería en Expo Go. Intenta reiniciar la app o usar una development build.");
+        return;
+      }
+      if (error instanceof Error) {
+        if (error.message.includes('Permission')) {
+          feedback.error(t(locale, "profile.photoPermissionDenied"));
+        } else {
+          feedback.error(`${t(locale, "profile.photoProcessError")}: ${error.message}`);
+        }
+      } else {
+        feedback.error(t(locale, "profile.photoProcessError"));
+      }
     }
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      allowsEditing: true,
-      aspect: [1, 1],
-      quality: 0.92,
-    });
-    if (result.canceled || !result.assets?.[0]?.uri) return;
-    await processPickedUri(result.assets[0].uri);
   };
 
   const takePhoto = async () => {
-    const { status } = await ImagePicker.requestCameraPermissionsAsync();
-    if (status !== "granted") {
-      feedback.error(t(locale, "profile.photoCameraDenied"));
-      return;
+    try {
+      console.log("Requesting camera permissions...");
+      
+      // On web, camera works differently and may not be available
+      if (Platform.OS === "web") {
+        console.log("Web platform detected, camera may not be fully supported");
+        feedback.error("Camera is not fully supported on web. Please use gallery option.");
+        return;
+      }
+      
+      // Check if running in Expo Go
+      if (Constants.appOwnership === 'expo') {
+        console.log("Running in Expo Go - using simplified camera approach");
+      }
+      
+      // First check current permission status
+      const { status: currentStatus } = await ImagePicker.getCameraPermissionsAsync();
+      console.log("Current camera permission status:", currentStatus);
+      
+      let status = currentStatus;
+      
+      // Always request if not granted (including undetermined)
+      if (currentStatus !== 'granted') {
+        console.log("Requesting camera permissions...");
+        const { status: requestedStatus } = await ImagePicker.requestCameraPermissionsAsync();
+        status = requestedStatus;
+        console.log("Camera permission status after request:", status);
+      }
+      
+      // For Expo Go, if still not granted after request, try one more time
+      if (Constants.appOwnership === 'expo' && status !== 'granted') {
+        console.log("Expo Go: Camera permission not granted, trying alternative approach...");
+        // Try direct request without checking first
+        const { status: retryStatus } = await ImagePicker.requestCameraPermissionsAsync();
+        status = retryStatus;
+        console.log("Expo Go: Retry camera permission status:", status);
+      }
+      
+      if (status !== 'granted') {
+        console.log("Camera permission denied");
+        // For Expo Go, provide more specific guidance
+        if (Constants.appOwnership === 'expo') {
+          feedback.error("Para acceder a la cámara en Expo Go, ve a Configuración > Aplicaciones > Expo Go > Permisos y activa 'Cámara'.");
+          return;
+        }
+        // Provide more specific error message
+        const errorMessage = Platform.OS === 'ios' 
+          ? t(locale, "profile.photoCameraDenied")
+          : t(locale, "profile.photoCameraDenied");
+        feedback.error(errorMessage);
+        return;
+      }
+      
+      console.log("Launching camera...");
+      // Use simplified options for Expo Go compatibility
+      const result = await ImagePicker.launchCameraAsync({
+        mediaTypes: ['images'],
+        allowsEditing: Constants.appOwnership !== 'expo', // Disable editing in Expo Go
+        aspect: Constants.appOwnership !== 'expo' ? [1, 1] : undefined,
+        quality: 0.8,
+      });
+      console.log("Camera result:", result);
+      
+      if (result.canceled) {
+        console.log("User cancelled camera");
+        return;
+      }
+      
+      if (!result.assets?.[0]?.uri) {
+        console.log("No image URI returned from camera");
+        feedback.error(t(locale, "profile.photoProcessError"));
+        return;
+      }
+      
+      await processPickedUri(result.assets[0].uri);
+    } catch (error) {
+      console.error("Error in takePhoto:", error);
+      // Provide more specific error messages for Expo Go
+      if (Constants.appOwnership === 'expo') {
+        feedback.error("Error al abrir la cámara en Expo Go. Intenta reiniciar la app o usar una development build.");
+        return;
+      }
+      // Provide more specific error messages
+      if (error instanceof Error) {
+        if (error.message.includes('Permission')) {
+          feedback.error(t(locale, "profile.photoCameraDenied"));
+        } else if (error.message.includes('Camera')) {
+          feedback.error(t(locale, "profile.photoCameraDenied"));
+        } else {
+          feedback.error(`${t(locale, "profile.photoProcessError")}: ${error.message}`);
+        }
+      } else {
+        feedback.error(t(locale, "profile.photoProcessError"));
+      }
     }
-    const result = await ImagePicker.launchCameraAsync({
-      allowsEditing: true,
-      aspect: [1, 1],
-      quality: 0.92,
-    });
-    if (result.canceled || !result.assets?.[0]?.uri) return;
-    await processPickedUri(result.assets[0].uri);
   };
 
   const validate = useCallback((): boolean => {
@@ -366,7 +574,17 @@ export default function ProfileScreen() {
         } else {
           setPhone("");
         }
-        feedback.success(t(locale, "profile.saveSuccess"));
+        // Actualizar los valores originales después de guardar exitosamente
+        setOriginalFirstName(fn);
+        setOriginalLastName(ln);
+        setOriginalEmail(em);
+        setOriginalPhone(phone);
+        setOriginalStaffRole(staffRole);
+        setOriginalLicenseExpiryYmd(licenseExpiryYmd);
+        setOriginalLicenseTypes([...licenseTypes]);
+        setOriginalAvatarRemoved(false);
+        
+        setIsEditing(false);
       }
     } catch (e) {
       const msg = messageFromAxios(e);
@@ -403,8 +621,10 @@ export default function ProfileScreen() {
   };
 
   const openPhotoChooser = () => {
+    console.log("openPhotoChooser called, platform:", Platform.OS);
     if (Platform.OS === "web") {
-      void pickImage();
+      // On web, still show modal but with different behavior
+      setPhotoModalOpen(true);
       return;
     }
     setPhotoModalOpen(true);
@@ -420,7 +640,25 @@ export default function ProfileScreen() {
       <View style={styles.frame}>
       <View style={styles.flex}>
         <View style={[styles.header, { paddingTop: insets.top + theme.space.md }]}>
-          <View style={{ width: 44 }} />
+          {isEditing ? (
+            <ValetBackButton
+              onPress={() => {
+                // Salir de modo edición
+                setIsEditing(false);
+              }}
+              accessibilityLabel={t(locale, "common.back")}
+            />
+          ) : (
+            <Pressable 
+              onPress={() => {
+                // Entrar en modo edición
+                setIsEditing(true);
+              }} 
+              style={{ width: 44, height: 44, alignItems: "center", justifyContent: "center" }}
+            >
+              <IconEdit size={24} color={C.text} />
+            </Pressable>
+          )}
           <Text style={styles.headerTitle}>{t(locale, "profile.title")}</Text>
           <Pressable onPress={() => router.replace("/home")} style={{ width: 44, alignItems: "center", justifyContent: "center" }}>
             <IconHome2 size={24} color={C.text} />
@@ -432,11 +670,11 @@ export default function ProfileScreen() {
             <ActivityIndicator size="large" color={C.primary} />
             <Text style={styles.loadingText}>{t(locale, "common.loading")}</Text>
           </View>
-        ) : (
+        ) : isEditing ? (
           <View style={styles.bodyColumn}>
             <ScrollView
               style={styles.scroll}
-              contentContainerStyle={styles.scrollContent}
+              contentContainerStyle={[styles.scrollContent, { flexGrow: 1 }]}
               keyboardShouldPersistTaps="handled"
               showsVerticalScrollIndicator={false}
             >
@@ -487,7 +725,7 @@ export default function ProfileScreen() {
                       styles.roleButtonText,
                       staffRole === 'RECEPTIONIST' && styles.roleButtonTextSelected
                     ]}>
-                      Recepcionista
+                      {t(locale, "profile.receptionistRole")}
                     </Text>
                   </View>
                 </Pressable>
@@ -507,26 +745,22 @@ export default function ProfileScreen() {
                       styles.roleButtonText,
                       staffRole === 'DRIVER' && styles.roleButtonTextSelected
                     ]}>
-                      Conductor
+                      {t(locale, "profile.driverRole")}
                     </Text>
                   </View>
                 </Pressable>
               </View>
             </View>
 
-            <View style={styles.nameRow}>
+            <Text style={styles.inputLabel} maxFontSizeMultiplier={1.5}>{t(locale, "profile.fullName")}</Text>
               <View style={styles.nameInputContainer}>
-                <Text style={styles.label}>
-                  {t(locale, "profile.firstName")}
-                  <Text style={{ color: C.logout }}> *</Text>
-                </Text>
-                <View style={styles.inputContainer}>
-                  <IconUser size={20} color={C.textMuted} style={styles.inputIcon} />
+                <View style={styles.nameInputWrapper}>
+                  <IconUser 
+                    size={20} 
+                    color={C.textMuted} 
+                  />
                   <TextInput
-                    style={[
-                      styles.input,
-                      { borderColor: fieldErrors.firstName ? C.logout : C.border },
-                    ]}
+                    style={styles.nameInput}
                     value={firstName}
                     onChangeText={(v) => {
                       setFirstName(v);
@@ -535,25 +769,18 @@ export default function ProfileScreen() {
                     placeholder={t(locale, "profile.placeholderFirstName")}
                     placeholderTextColor={C.textSubtle}
                     autoCapitalize="words"
+                    textContentType="givenName"
+                    autoComplete="name-given"
                   />
                 </View>
-                {fieldErrors.firstName ? (
-                  <Text style={styles.fieldError}>{fieldErrors.firstName}</Text>
-                ) : null}
-              </View>
-
-              <View style={styles.nameInputContainer}>
-                <Text style={styles.label}>
-                  {t(locale, "profile.lastName")}
-                  <Text style={{ color: C.logout }}> *</Text>
-                </Text>
-                <View style={styles.inputContainer}>
-                  <IconUser size={20} color={C.textMuted} style={styles.inputIcon} />
+                <View style={styles.nameSeparator} />
+                <View style={styles.nameInputWrapper}>
+                  <IconUser 
+                    size={20} 
+                    color={C.textMuted} 
+                  />
                   <TextInput
-                    style={[
-                      styles.input,
-                      { borderColor: fieldErrors.lastName ? C.logout : C.border },
-                    ]}
+                    style={styles.nameInput}
                     value={lastName}
                     onChangeText={(v) => {
                       setLastName(v);
@@ -562,13 +789,17 @@ export default function ProfileScreen() {
                     placeholder={t(locale, "profile.placeholderLastName")}
                     placeholderTextColor={C.textSubtle}
                     autoCapitalize="words"
+                    textContentType="familyName"
+                    autoComplete="name-family"
                   />
                 </View>
-                {fieldErrors.lastName ? (
-                  <Text style={styles.fieldError}>{fieldErrors.lastName}</Text>
-                ) : null}
               </View>
-            </View>
+              {fieldErrors.firstName ? (
+                <Text style={styles.fieldError}>{fieldErrors.firstName}</Text>
+              ) : null}
+              {fieldErrors.lastName ? (
+                <Text style={styles.fieldError}>{fieldErrors.lastName}</Text>
+              ) : null}
 
             <Text style={styles.label}>
               {t(locale, "profile.email")}
@@ -590,6 +821,10 @@ export default function ProfileScreen() {
                 placeholderTextColor={C.textSubtle}
                 keyboardType="email-address"
                 autoCapitalize="none"
+                autoCorrect={false}
+                spellCheck={false}
+                textContentType="none"
+                dataDetectorTypes="none"
               />
             </View>
             {fieldErrors.email ? <Text style={styles.fieldError}>{fieldErrors.email}</Text> : null}
@@ -607,7 +842,7 @@ export default function ProfileScreen() {
                   setPhone(formatPhoneWithCountryCode(v, getDeviceCountryCode()));
                   if (fieldErrors.phone) setFieldErrors((e) => ({ ...e, phone: undefined }));
                 }}
-                placeholder={`+${COUNTRY_DIAL_CODES[getDeviceCountryCode()] || "1"}`}
+                placeholder={t(locale, "profile.placeholderPhone")}
                 placeholderTextColor={C.textSubtle}
                 keyboardType="default"
                 autoComplete="tel"
@@ -631,7 +866,7 @@ export default function ProfileScreen() {
                 >
                   <IconId size={20} color={C.textMuted} style={{ position: 'absolute', left: 16, top: '50%', marginTop: 0, zIndex: 1 }} />
                   <Text
-                    style={[{ color: C.text, paddingTop: 4, textAlignVertical: 'center', fontSize: Math.round(theme.font.status * 0.6 * textScale), fontFamily: theme.fontFamily.primary }]} numberOfLines={1}
+                    style={[{ color: C.text, paddingTop: 4, textAlignVertical: 'center', fontSize: theme.font.base, fontFamily: theme.fontFamily.primary }]} numberOfLines={1}
                   >
                     {licenseCodesDisplay || t(locale, "profile.licenseTypesPlaceholder")}
                   </Text>
@@ -705,7 +940,7 @@ export default function ProfileScreen() {
                 >
                   <IconCalendar size={20} color={C.textMuted} style={{ position: 'absolute', left: 16, top: '50%', marginTop: 0, zIndex: 1 }} />
                   <Text
-                    style={[{ color: C.text, paddingTop: 4, textAlignVertical: 'center', fontSize: Math.round(theme.font.status * 0.6 * textScale), fontFamily: theme.fontFamily.primary }]} numberOfLines={1}
+                    style={[{ color: C.text, paddingTop: 4, textAlignVertical: 'center', fontSize: theme.font.base, fontFamily: theme.fontFamily.primary }]} numberOfLines={1}
                   >
                     {licenseExpiryYmd.trim()
                       ? licenseExpiryYmd
@@ -797,7 +1032,9 @@ export default function ProfileScreen() {
                         pressed && styles.pressed,
                       ]}
                       onPress={() => {
+                        console.log("Gallery button pressed!");
                         setPhotoModalOpen(false);
+                        console.log("Modal closed, calling pickImage...");
                         void pickImage();
                       }}
                       accessibilityRole="button"
@@ -813,7 +1050,9 @@ export default function ProfileScreen() {
                         pressed && styles.pressed,
                       ]}
                       onPress={() => {
+                        console.log("Camera button pressed!");
                         setPhotoModalOpen(false);
+                        console.log("Modal closed, calling takePhoto...");
                         void takePhoto();
                       }}
                       accessibilityRole="button"
@@ -853,6 +1092,98 @@ export default function ProfileScreen() {
               </StickyFormFooter>
             </View>
           </View>
+        ) : (
+          // Vista estática - modo lectura con look and feel de settings
+          <View style={styles.bodyColumn}>
+            <ScrollView
+              style={styles.scroll}
+              contentContainerStyle={[styles.scrollContent, { flexGrow: 1 }]}
+              showsVerticalScrollIndicator={false}
+            >
+              <View style={styles.avatarBlock}>
+                <View style={[styles.avatarRing, { borderColor: C.border }]}>
+                  {displayAvatarUri ? (
+                    <Image source={{ uri: displayAvatarUri }} style={styles.avatarImage} />
+                  ) : (
+                    <View style={[styles.avatarPlaceholder, { backgroundColor: theme.isDark ? "rgba(148,163,184,0.15)" : "rgba(100,116,139,0.15)" }]}>
+                      <IconUser size={60} color={C.textMuted} />
+                    </View>
+                  )}
+                </View>
+                <Text style={[styles.avatarSub, { color: C.textMuted }]}>
+                  {t(locale, "profile.photo")}
+                </Text>
+              </View>
+
+              <Text style={styles.sectionTitle}>{t(locale, "profile.personalInfo")}</Text>
+              <View style={styles.settingsSection}>
+                <View style={styles.settingsRow}>
+                  {staffRole === 'DRIVER' ? (
+                    <IconCar size={20} color={C.textMuted} style={styles.settingsIcon} />
+                  ) : (
+                    <IconClipboardText size={20} color={C.textMuted} style={styles.settingsIcon} />
+                  )}
+                  <View style={styles.settingsRowContent}>
+                    <Text style={styles.settingsLabel}>{t(locale, "profile.staffRoleLabel")}</Text>
+                    <Text style={styles.settingsValue}>{staffRole === 'DRIVER' ? t(locale, "profile.driverRole") : t(locale, "profile.receptionistRole")}</Text>
+                  </View>
+                </View>
+
+                <View style={styles.settingsRow}>
+                  <IconUser size={20} color={C.textMuted} style={styles.settingsIcon} />
+                  <View style={styles.settingsRowContent}>
+                    <Text style={styles.settingsLabel}>{t(locale, "profile.firstNameLabel")}</Text>
+                    <Text style={styles.settingsValue}>{firstName} {lastName}</Text>
+                  </View>
+                </View>
+
+                <View style={styles.settingsRow}>
+                  <IconMail size={20} color={C.textMuted} style={styles.settingsIcon} />
+                  <View style={styles.settingsRowContent}>
+                    <Text style={styles.settingsLabel}>{t(locale, "profile.emailLabel")}</Text>
+                    <Text style={styles.settingsValue}>{email}</Text>
+                  </View>
+                </View>
+
+                {phone && (
+                  <View style={[styles.settingsRow, styles.settingsRowLast]}>
+                    <IconPhone size={20} color={C.textMuted} style={styles.settingsIcon} />
+                    <View style={styles.settingsRowContent}>
+                      <Text style={styles.settingsLabel}>{t(locale, "profile.phoneLabel")}</Text>
+                      <Text style={styles.settingsValue}>{phone}</Text>
+                    </View>
+                  </View>
+                )}
+              </View>
+
+              {staffRole === "DRIVER" && (
+                <>
+                  <Text style={styles.sectionTitle}>{t(locale, "profile.driverLicenseSection")}</Text>
+                  <View style={styles.settingsSection}>
+                    <View style={styles.settingsRow}>
+                      <IconId size={20} color={C.textMuted} style={styles.settingsIcon} />
+                      <View style={styles.settingsRowContent}>
+                        <Text style={styles.settingsLabel}>{t(locale, "profile.licenseTypesLabel")}</Text>
+                        <Text style={styles.settingsValue}>
+                          {licenseTypes.length > 0 ? licenseCodesDisplay : t(locale, "profile.noLicenseTypes")}
+                        </Text>
+                      </View>
+                    </View>
+
+                    <View style={[styles.settingsRow, styles.settingsRowLast]}>
+                      <IconCalendar size={20} color={C.textMuted} style={styles.settingsIcon} />
+                      <View style={styles.settingsRowContent}>
+                        <Text style={styles.settingsLabel}>{t(locale, "profile.licenseExpiryLabel")}</Text>
+                        <Text style={styles.settingsValue}>
+                          {licenseExpiryYmd ? new Date(licenseExpiryYmd).toLocaleDateString(locale === "es" ? "es-ES" : "en-US") : t(locale, "profile.noExpiryDate")}
+                        </Text>
+                      </View>
+                    </View>
+                  </View>
+                </>
+              )}
+            </ScrollView>
+          </View>
         )}
       </View>
       </View>
@@ -862,12 +1193,11 @@ export default function ProfileScreen() {
 
 type Theme = ReturnType<typeof useValetTheme>;
 
-function createStyles(theme: Theme, contentMaxWidth: number, sectionPadding: number, textScale: number) {
+function createStyles(theme: Theme, contentMaxWidth: number, sectionPadding: number) {
   const C = theme.colors;
   const S = theme.space;
-  const F = ticketsA11y.font;
+  const F = theme.font;
   const R = theme.radius;
-  const Fonts = theme.fontFamily;
 
   return StyleSheet.create({
     safe: { flex: 1, backgroundColor: C.bg, alignItems: "center" },
@@ -892,9 +1222,8 @@ function createStyles(theme: Theme, contentMaxWidth: number, sectionPadding: num
     headerTitle: {
       flex: 1,
       textAlign: "center",
-      fontSize: Math.round(F.secondary * 0.85 * textScale),
+      fontSize: F.base,
       fontWeight: "800",
-      fontFamily: Fonts.primary,
       color: C.text,
     },
     centered: {
@@ -903,7 +1232,7 @@ function createStyles(theme: Theme, contentMaxWidth: number, sectionPadding: num
       alignItems: "center",
       gap: S.md,
     },
-    loadingText: { fontSize: Math.round(F.status * 0.65 * textScale), fontFamily: Fonts.primary, color: C.textMuted },
+    loadingText: { fontSize: F.base, color: C.textMuted },
     scroll: { flex: 1 },
     scrollContent: {
       paddingHorizontal: sectionPadding,
@@ -911,8 +1240,7 @@ function createStyles(theme: Theme, contentMaxWidth: number, sectionPadding: num
       paddingBottom: S.xl,
     },
     intro: {
-      fontSize: Math.round(F.status * 0.65 * textScale),
-      fontFamily: Fonts.primary,
+      fontSize: F.base,
       color: C.textMuted,
       lineHeight: 24,
       marginBottom: S.md,
@@ -920,15 +1248,13 @@ function createStyles(theme: Theme, contentMaxWidth: number, sectionPadding: num
     },
     avatarBlock: { alignItems: "center", marginBottom: S.lg },
     avatarSub: {
-      fontSize: Math.round(F.status * 0.65 * textScale),
-      fontFamily: Fonts.primary,
+      fontSize: F.base,
       textAlign: "center",
       marginTop: S.sm,
       fontWeight: "500",
     },
     avatarHint: {
-      fontSize: Math.round(F.status * 0.65 * textScale),
-      fontFamily: Fonts.primary,
+      fontSize: F.base,
       textAlign: "center",
       marginTop: S.sm,
       marginBottom: S.md,
@@ -953,9 +1279,8 @@ function createStyles(theme: Theme, contentMaxWidth: number, sectionPadding: num
       borderWidth: 2,
     },
     avatarChipText: {
-      fontSize: Math.round(F.status * 0.65 * textScale),
+      fontSize: F.base,
       fontWeight: "800",
-      fontFamily: Fonts.primary,
     },
     avatarRing: {
       width: 80,
@@ -974,24 +1299,27 @@ function createStyles(theme: Theme, contentMaxWidth: number, sectionPadding: num
       backgroundColor: theme.isDark ? "rgba(148,163,184,0.12)" : "rgba(15,23,42,0.06)",
     },
     avatarInitials: {
-      fontSize: Math.round(F.status * 0.65 * textScale),
+      fontSize: F.base,
       fontWeight: "800",
-      fontFamily: Fonts.primary,
       color: C.text,
       letterSpacing: 1,
     },
     secondaryLink: { paddingVertical: S.xs },
     secondaryLinkText: {
-      fontSize: Math.round(F.status * 0.65 * textScale),
+      fontSize: F.base,
       fontWeight: "700",
-      fontFamily: Fonts.primary,
       color: C.primary,
     },
     dangerText: { color: C.logout },
     label: {
-      fontSize: Math.round(F.status * 0.6 * textScale),
+      fontSize: F.base,
       fontWeight: "500",
-      fontFamily: Fonts.primary,
+      color: C.text,
+      marginBottom: S.sm,
+    },
+    inputLabel: {
+      fontSize: F.base,
+      fontWeight: "500",
       color: C.text,
       marginBottom: 6,
     },
@@ -1007,14 +1335,12 @@ function createStyles(theme: Theme, contentMaxWidth: number, sectionPadding: num
     },
     pickerRowText: { flex: 1, minWidth: 0 },
     pickerRowTitle: {
-      fontSize: Math.round(F.status * 0.65 * textScale),
+      fontSize: F.base,
       fontWeight: "800",
-      fontFamily: Fonts.primary,
     },
     pickerRowSub: {
-      fontSize: Math.round(F.status * 0.65 * textScale),
+      fontSize: F.base,
       fontWeight: "600",
-      fontFamily: Fonts.primary,
       marginTop: 4,
       lineHeight: 18,
     },
@@ -1036,9 +1362,8 @@ function createStyles(theme: Theme, contentMaxWidth: number, sectionPadding: num
       paddingBottom: S.lg,
     },
     modalTitle: {
-      fontSize: Math.round(F.status * 0.6 * textScale),
+      fontSize: F.base,
       fontWeight: "800",
-      fontFamily: Fonts.primary,
       textAlign: "center",
       marginBottom: S.sm,
     },
@@ -1055,14 +1380,12 @@ function createStyles(theme: Theme, contentMaxWidth: number, sectionPadding: num
     },
     roleRowText: { flex: 1, minWidth: 0 },
     roleRowName: {
-      fontSize: Math.round(F.status * 0.6 * textScale),
-      fontFamily: Fonts.primary,
+      fontSize: F.base,
     },
     roleRowAddr: {
-      fontSize: Math.round(F.status * 0.65 * textScale),
-      fontFamily: Fonts.primary,
+      fontSize: F.base,
       marginTop: 4,
-      lineHeight: Math.round(F.status * 0.85),
+      lineHeight: F.base,
     },
     input: {
       backgroundColor: theme.auth.inputBg,
@@ -1072,55 +1395,80 @@ function createStyles(theme: Theme, contentMaxWidth: number, sectionPadding: num
       paddingHorizontal: 16,
       paddingVertical: 12,
       paddingLeft: 48,
-      fontSize: Math.round(F.status * 0.6 * textScale),
-      fontFamily: Fonts.primary,
+      fontSize: F.base,
+      fontWeight: '600',
+      letterSpacing: 0.3,
       color: theme.auth.text,
-      marginBottom: S.xs,
       height: 48,
     },
     inputIcon: {
       position: "absolute",
       left: 16,
       top: "50%",
-      marginTop: -14,
+      marginTop: -10,
       zIndex: 1,
     },
     inputContainer: {
       position: "relative",
-      marginBottom: 16,
+      marginBottom: S.md,
     },
     nameRow: {
       flexDirection: "row",
       gap: 12,
     },
     nameInputContainer: {
+      backgroundColor: theme.auth.inputBg,
+      borderWidth: 1,
+      borderColor: theme.auth.inputBorder,
+      borderRadius: 12,
+      flexDirection: 'row',
+      alignItems: 'center',
+      height: 48,
+      marginBottom: 16,
+    },
+    nameInputWrapper: {
       flex: 1,
-      position: "relative",
+      flexDirection: 'row',
+      alignItems: 'center',
+      paddingHorizontal: 16,
+      gap: 8,
+    },
+    nameSeparator: {
+      width: 1,
+      height: '60%',
+      backgroundColor: theme.auth.inputBorder,
+      opacity: 0.5,
+    },
+    nameInput: {
+      flex: 1,
+      color: theme.auth.text,
+      paddingVertical: 12,
+      letterSpacing: 0.3,
     },
     roleSelection: {
-      marginBottom: 20,
+      marginBottom: S.md,
     },
     roleLabel: {
-      fontSize: Math.round(F.status * 0.6 * textScale),
+      fontSize: F.base,
       fontWeight: "600",
       color: C.text,
-      marginBottom: 12,
+      marginBottom: S.sm,
     },
     roleButtons: {
       flexDirection: 'row',
-      backgroundColor: C.card,
-      borderRadius: 16,
+      backgroundColor: theme.auth.inputBg,
+      borderRadius: 12,
       padding: 4,
-      borderWidth: 2,
-      borderColor: C.border,
+      borderWidth: 1,
+      borderColor: theme.auth.inputBorder,
+      minHeight: 56,
     },
     roleButton: {
       flex: 1,
       height: 48,
-      borderRadius: 12,
+      borderRadius: 8,
       alignItems: 'center',
       justifyContent: 'center',
-      gap: 8,
       marginHorizontal: 2,
     },
     roleButtonSelected: {
@@ -1132,13 +1480,14 @@ function createStyles(theme: Theme, contentMaxWidth: number, sectionPadding: num
       elevation: 2,
     },
     roleButtonContent: {
+      flexDirection: 'row',
       alignItems: 'center',
       justifyContent: 'center',
-      gap: 6,
+      gap: 8,
     },
     roleButtonText: {
-      fontSize: Math.round(F.status * 0.52 * textScale),
-      fontWeight: '700',
+      fontSize: theme.font.base,
+      fontWeight: '600',
       color: C.textMuted,
       textAlign: 'center',
       letterSpacing: 0.3,
@@ -1147,9 +1496,8 @@ function createStyles(theme: Theme, contentMaxWidth: number, sectionPadding: num
       color: '#FFFFFF',
     },
     fieldError: {
-      fontSize: Math.round(F.status * 0.65 * textScale),
+      fontSize: F.base,
       fontWeight: "600",
-      fontFamily: Fonts.primary,
       color: C.logout,
       marginBottom: S.sm,
     },
@@ -1170,7 +1518,7 @@ function createStyles(theme: Theme, contentMaxWidth: number, sectionPadding: num
       shadowRadius: 8,
       elevation: 4,
     },
-    primaryBtnText: { color: "#fff", fontWeight: "600", fontSize: Math.round(F.status * 0.65 * textScale), fontFamily: Fonts.primary, letterSpacing: 0.5 },
+    primaryBtnText: { color: "#fff", fontWeight: "600", fontSize: F.base,  letterSpacing: 0.5 },
     btnDisabled: { opacity: 0.5 },
     pressed: { opacity: 0.9 },
     licenseDivider: {
@@ -1179,15 +1527,13 @@ function createStyles(theme: Theme, contentMaxWidth: number, sectionPadding: num
       marginVertical: S.lg,
     },
     sectionDriver: {
-      fontSize: Math.round(F.status * 0.65 * textScale),
+      fontSize: F.base,
       fontWeight: "800",
-      fontFamily: Fonts.primary,
       color: C.text,
       marginBottom: S.sm,
     },
     helper: {
-      fontSize: Math.round(F.status * 0.65 * textScale),
-      fontFamily: Fonts.primary,
+      fontSize: F.base,
       lineHeight: 18,
       marginBottom: S.sm,
       fontWeight: "500",
@@ -1221,9 +1567,8 @@ function createStyles(theme: Theme, contentMaxWidth: number, sectionPadding: num
       justifyContent: "center",
     },
     modalDoneBtnText: {
-      fontSize: Math.round(F.status * 0.6 * textScale),
+      fontSize: F.base,
       fontWeight: "800",
-      fontFamily: Fonts.primary,
     },
     clearExpiryLink: {
       alignSelf: "flex-start",
@@ -1250,9 +1595,8 @@ function createStyles(theme: Theme, contentMaxWidth: number, sectionPadding: num
       borderBottomColor: C.border,
     },
     iosExpiryToolbarBtn: {
-      fontSize: Math.round(F.status * 0.6 * textScale),
+      fontSize: F.base,
       fontWeight: "600",
-      fontFamily: Fonts.primary,
     },
     photoOptions: {
       gap: S.sm,
@@ -1267,10 +1611,160 @@ function createStyles(theme: Theme, contentMaxWidth: number, sectionPadding: num
       borderRadius: 12,
     },
     photoOptionText: {
-      fontSize: Math.round(F.status * 0.6 * textScale),
+      fontSize: F.base,
       fontWeight: "600",
-      fontFamily: Fonts.primary,
       color: C.text,
+    },
+    // Estilos para vista estática
+    infoSection: {
+      backgroundColor: C.card,
+      borderRadius: R.card,
+      padding: S.lg,
+      marginBottom: S.md,
+      borderWidth: 1,
+      borderColor: C.border,
+    },
+    infoLabel: {
+      fontSize: F.base,
+      fontWeight: "600",
+      color: C.textMuted,
+      marginBottom: S.xs,
+      textTransform: "uppercase",
+      letterSpacing: 0.5,
+    },
+    infoValue: {
+      fontSize: F.base,
+      fontWeight: "700",
+      color: C.text,
+      lineHeight: 24,
+    },
+    // Estilos adicionales para vista estática
+    inputText: {
+      fontSize: F.base,
+      fontWeight: '600',
+      color: theme.auth.text,
+      paddingVertical: 12,
+      paddingHorizontal: 16,
+    },
+    sectionTitle: {
+      fontSize: F.base,
+      fontWeight: "800",
+      color: C.text,
+      marginBottom: S.sm,
+    },
+    // Estilos para texto plano en modo lectura
+    plainText: {
+      fontSize: F.base,
+      fontWeight: '600',
+      color: C.text,
+      marginBottom: S.sm,
+      lineHeight: 20,
+      paddingTop: 6,
+    },
+    plainTextRow: {
+      flexDirection: "row",
+      alignItems: "flex-start",
+      gap: S.md,
+      marginBottom: S.sm,
+    },
+    plainTextContent: {
+      flex: 1,
+    },
+    plainTextSub: {
+      fontSize: F.base,
+      fontWeight: '500',
+      color: C.textMuted,
+      marginTop: 4,
+    },
+    plainTextIcon: {
+      marginTop: 2,
+    },
+    // Estilos para diseño profesional de vista no editable
+    infoCard: {
+      backgroundColor: C.card,
+      borderRadius: R.card,
+      padding: S.lg,
+      marginBottom: S.md,
+      borderWidth: 1,
+      borderColor: C.border,
+      shadowColor: C.text,
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.05,
+      shadowRadius: 8,
+      elevation: 2,
+    },
+    infoHeader: {
+      marginBottom: S.md,
+      paddingBottom: S.sm,
+      borderBottomWidth: 1,
+      borderBottomColor: C.border,
+    },
+    infoTitle: {
+      fontSize: F.base,
+      fontWeight: '700',
+      color: C.text,
+      textTransform: 'uppercase',
+      letterSpacing: 0.5,
+    },
+    infoRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      paddingVertical: S.sm,
+    },
+    infoIconContainer: {
+      width: 40,
+      height: 40,
+      borderRadius: 20,
+      backgroundColor: theme.isDark ? 'rgba(148,163,184,0.1)' : 'rgba(100,116,139,0.1)',
+      alignItems: 'center',
+      justifyContent: 'center',
+      marginRight: S.md,
+    },
+    infoContent: {
+      flex: 1,
+    },
+    infoDivider: {
+      height: 1,
+      backgroundColor: C.border,
+      marginVertical: S.sm,
+    },
+    // Estilos para look and feel de settings
+    settingsSection: {
+      backgroundColor: C.card,
+      borderRadius: R.card,
+      overflow: "hidden",
+      borderWidth: 1,
+      borderColor: theme.isDark ? "rgba(148, 163, 184, 0.15)" : "rgba(226, 232, 240, 0.8)",
+      marginBottom: S.md,
+    },
+    settingsRow: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "space-between",
+      minHeight: 58,
+      paddingVertical: S.md,
+      paddingHorizontal: S.lg,
+      borderBottomWidth: StyleSheet.hairlineWidth,
+      borderBottomColor: C.border,
+    },
+    settingsRowLast: {
+      borderBottomWidth: 0,
+    },
+    settingsRowContent: {
+      flex: 1,
+    },
+    settingsLabel: {
+      fontWeight: '700',
+      fontFamily: theme.fontFamily.primary,
+      color: C.text,
+    },
+    settingsValue: {
+      fontFamily: theme.fontFamily.primary,
+      color: C.textSubtle,
+      marginTop: 2,
+    },
+    settingsIcon: {
+      marginRight: S.md,
     },
   });
 }

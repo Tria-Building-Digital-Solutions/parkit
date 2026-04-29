@@ -14,8 +14,8 @@ import { Redirect, useRouter } from "expo-router";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useAuthStore, useLocaleStore } from "@/lib/store";
 import { t } from "@/lib/i18n";
-import { IconHandStop, IconCarOff, IconArrowUndo, IconHome2 } from "@/components/Icons";
-import { useValetTheme, ticketsA11y, useResponsiveLayout } from "@/theme/valetTheme";
+import { IconHandStop, IconCarOff, IconArrowUndo, IconHome2, IconTicket } from "@/components/Icons";
+import { useValetTheme, useResponsiveLayout } from "@/theme/valetTheme";
 import { useValetProfileSync } from "@/lib/useValetProfileSync";
 import { useCompanyContext } from "@/lib/useCompanyContext";
 import api from "@/lib/api";
@@ -61,7 +61,7 @@ export default function ReturnPickupScreen() {
   const [submitting, setSubmitting] = useState(false);
   const isReception = user?.valetStaffRole !== "DRIVER";
   const C = theme.colors;
-  const M = ticketsA11y.minTouch;
+  const M = theme.minTouch;
   const feedback = useMemo(() => createFeedback(locale), [locale]);
 
   // Wizard tracking
@@ -69,7 +69,8 @@ export default function ReturnPickupScreen() {
     try {
       await api.post("/valets/me/wizard/start", { wizardType: "RETURN" });
     } catch (error) {
-      console.error("Failed to start wizard:", error);
+      // Silently ignore wizard errors - not critical for functionality
+      // Network errors and timeouts are expected in poor connectivity
     }
   }, []);
 
@@ -193,7 +194,7 @@ export default function ReturnPickupScreen() {
       />
       <View style={styles.frame}>
       <View style={[styles.screenHeader, { paddingTop: insets.top + theme.space.md }]}>
-        <View style={{ width: 44 }} />
+        <View style={{ width: 44, height: 44 }} />
         <Text style={styles.screenTitle}>{t(locale, "returnPickup.title")}</Text>
         <Pressable onPress={() => { void endWizard(); router.replace("/home"); }} style={{ width: 44, alignItems: "center", justifyContent: "center" }}>
           <IconHome2 size={24} color={C.text} />
@@ -209,14 +210,17 @@ export default function ReturnPickupScreen() {
         >
           <Text style={styles.sub}>{t(locale, "returnPickup.subtitle")}</Text>
 
-          <TextInput
-            style={styles.input}
-            value={ticketCodeFilter}
-            onChangeText={(x) => setTicketCodeFilter(x.toUpperCase())}
-            placeholder={t(locale, "returnPickup.filterPlaceholder")}
-            placeholderTextColor={C.textSubtle}
-            autoCapitalize="characters"
-          />
+          <View style={styles.inputWrapper}>
+            <IconTicket size={20} color={C.textMuted} style={styles.inputIcon} />
+            <TextInput
+              style={styles.input}
+              value={ticketCodeFilter}
+              onChangeText={(x) => setTicketCodeFilter(x.toUpperCase())}
+              placeholder={t(locale, "returnPickup.filterPlaceholder")}
+              placeholderTextColor={C.textSubtle}
+              autoCapitalize="characters"
+            />
+          </View>
 
           {companyLoading || loading ? (
             <View style={{ alignItems: "center", marginVertical: 24 }}>
@@ -328,7 +332,7 @@ type Theme = ReturnType<typeof useValetTheme>;
 function createStyles(theme: Theme, contentMaxWidth: number, sectionPadding: number) {
   const C = theme.colors;
   const S = theme.space;
-  const F = ticketsA11y.font;
+  const F = theme.font;
   const R = theme.radius;
   const Fonts = theme.fontFamily;
 
@@ -356,7 +360,7 @@ function createStyles(theme: Theme, contentMaxWidth: number, sectionPadding: num
       paddingBottom: S.xl,
     },
     screenTitle: {
-      fontSize: Math.round(F.status * 0.65),
+      fontSize: F.base,
       fontWeight: "800",
       fontFamily: Fonts.primary,
       color: C.text,
@@ -364,10 +368,20 @@ function createStyles(theme: Theme, contentMaxWidth: number, sectionPadding: num
       textAlign: "center",
     },
     sub: {
-      fontSize: Math.round(F.status * 0.65),
+      fontSize: F.base,
       color: C.textMuted,
       marginBottom: S.md,
       lineHeight: 22,
+    },
+    inputWrapper: {
+      position: "relative",
+      marginBottom: S.lg,
+    },
+    inputIcon: {
+      position: "absolute",
+      left: 16,
+      top: 14,
+      zIndex: 1,
     },
     input: {
       backgroundColor: theme.auth.inputBg,
@@ -377,9 +391,8 @@ function createStyles(theme: Theme, contentMaxWidth: number, sectionPadding: num
       paddingHorizontal: 16,
       paddingVertical: 12,
       paddingLeft: 48,
-      fontSize: Math.round(F.status * 0.6),
+      fontSize: F.base,
       color: theme.auth.text,
-      marginBottom: S.lg,
       height: 48,
     },
     ticketCard: {
@@ -395,16 +408,16 @@ function createStyles(theme: Theme, contentMaxWidth: number, sectionPadding: num
       backgroundColor: theme.isDark ? "rgba(59, 130, 246, 0.12)" : "rgba(59, 130, 246, 0.08)",
     },
     plate: {
-      fontSize: Math.round(F.status * 0.85),
+      fontSize: F.base,
       fontWeight: "800",
       fontFamily: Fonts.primary,
       color: C.text,
       letterSpacing: 1,
     },
-    meta: { fontSize: Math.round(F.status * 0.65), fontFamily: Fonts.primary, color: C.textMuted, marginTop: 4 },
-    metaStrong: { fontSize: Math.round(F.status * 0.65), fontFamily: Fonts.primary, color: C.primary, fontWeight: "800", marginBottom: 4 },
+    meta: { fontSize: F.base, fontFamily: Fonts.primary, color: C.textMuted, marginTop: 4 },
+    metaStrong: { fontSize: F.base, fontFamily: Fonts.primary, color: C.primary, fontWeight: "800", marginBottom: 4 },
     sectionLabel: {
-      fontSize: Math.round(F.status * 0.65),
+      fontSize: F.base,
       fontWeight: "800",
       fontFamily: Fonts.primary,
       color: C.textMuted,
@@ -412,7 +425,7 @@ function createStyles(theme: Theme, contentMaxWidth: number, sectionPadding: num
       marginBottom: S.sm,
       textTransform: "uppercase",
     },
-    help: { fontSize: Math.round(F.status * 0.65), fontFamily: Fonts.primary, color: C.textSubtle, marginBottom: S.md },
+    help: { fontSize: F.base, fontFamily: Fonts.primary, color: C.textSubtle, marginBottom: S.md },
     chips: {
       flexDirection: "row",
       flexWrap: "wrap",
@@ -436,7 +449,7 @@ function createStyles(theme: Theme, contentMaxWidth: number, sectionPadding: num
       borderColor: C.primary,
       backgroundColor: theme.isDark ? "rgba(59, 130, 246, 0.2)" : "rgba(59, 130, 246, 0.12)",
     },
-    chipText: { fontSize: Math.round(F.status * 0.65), fontWeight: "700", fontFamily: Fonts.primary, color: C.text },
+    chipText: { fontSize: F.base, fontWeight: "700", fontFamily: Fonts.primary, color: C.text },
     chipTextOn: { color: C.primary },
     chipRow: {
       flexDirection: "row",
@@ -458,7 +471,7 @@ function createStyles(theme: Theme, contentMaxWidth: number, sectionPadding: num
       borderRadius: 11,
     },
     chipAvatarText: {
-      fontSize: Math.round(F.status * 0.45),
+      fontSize: F.base,
       fontWeight: "800",
       letterSpacing: -0.2,
     },
@@ -481,7 +494,7 @@ function createStyles(theme: Theme, contentMaxWidth: number, sectionPadding: num
         android: { elevation: 3 },
       }),
     },
-    primaryBtnText: { color: "#fff", fontWeight: "800", fontFamily: Fonts.primary, fontSize: Math.round(F.status * 0.65) },
+    primaryBtnText: { color: "#fff", fontWeight: "800", fontFamily: Fonts.primary, fontSize: F.base },
     btnDisabled: { opacity: 0.55 },
     pressed: { opacity: 0.9 },
     empty: {
@@ -493,14 +506,14 @@ function createStyles(theme: Theme, contentMaxWidth: number, sectionPadding: num
       minHeight: 400,
     },
     emptyTitle: {
-      fontSize: Math.round(F.status * 0.65),
+      fontSize: F.base,
       fontWeight: "800",
       fontFamily: Fonts.primary,
       color: C.text,
       textAlign: "center",
     },
     emptyHint: {
-      fontSize: Math.round(F.status * 0.65),
+      fontSize: F.base,
       fontFamily: Fonts.primary,
       color: C.textMuted,
       textAlign: "center",
@@ -514,8 +527,8 @@ function createStyles(theme: Theme, contentMaxWidth: number, sectionPadding: num
       alignItems: "center",
       gap: S.md,
     },
-    blockedTitle: { fontSize: Math.round(F.status * 0.85), fontWeight: "800", fontFamily: Fonts.primary, color: C.text, textAlign: "center" },
-    blockedBody: { fontSize: Math.round(F.status * 0.65), fontFamily: Fonts.primary, color: C.textMuted, textAlign: "center", lineHeight: 26 },
+    blockedTitle: { fontSize: F.base, fontWeight: "800", fontFamily: Fonts.primary, color: C.text, textAlign: "center" },
+    blockedBody: { fontSize: F.base, fontFamily: Fonts.primary, color: C.textMuted, textAlign: "center", lineHeight: 26 },
     backBtn: {
       marginTop: S.lg,
       paddingVertical: S.md,

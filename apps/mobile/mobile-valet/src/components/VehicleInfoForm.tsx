@@ -1,5 +1,6 @@
 import React from 'react';
-import { Text, TextInput, Pressable, StyleSheet } from 'react-native';
+import { Text, TextInput, StyleSheet, Pressable } from 'react-native';
+import { useValetTheme } from '@/theme/valetTheme';
 import { t } from '@/lib/i18n';
 import type { Locale } from '@parkit/shared';
 import { IconChevronDown } from '@/components/Icons';
@@ -25,7 +26,14 @@ interface VehicleInfoFormProps {
     text: string;
   };
   fonts: {
-    secondary: number;
+    xs: number;
+    sm: number;
+    base: number;
+    md: number;
+    lg: number;
+    xl: number;
+    xxl: number;
+    xxxl: number;
   };
   space: {
     sm: number;
@@ -50,9 +58,11 @@ export function VehicleInfoForm({
   fonts: F,
   space: S,
 }: VehicleInfoFormProps) {
+  const theme = useValetTheme();
+
   const styles = StyleSheet.create({
     stepExplain: {
-      fontSize: Math.round(F.secondary * 0.65),
+      fontSize: F.base,
       fontWeight: '600',
       color: C.textMuted,
       marginBottom: S.md,
@@ -63,7 +73,8 @@ export function VehicleInfoForm({
       borderRadius: 14,
       paddingHorizontal: S.md,
       paddingVertical: 14,
-      fontSize: Math.round(F.secondary * 0.65),
+      fontSize: F.base,
+      fontWeight: '600',
       color: C.text,
       borderWidth: 2,
       borderColor: C.border,
@@ -78,7 +89,8 @@ export function VehicleInfoForm({
       borderRadius: 14,
       paddingHorizontal: S.md,
       paddingVertical: 14,
-      fontSize: Math.round(F.secondary * 0.65),
+      fontSize: F.base,
+      fontWeight: '600',
       color: C.text,
       borderWidth: 2,
       borderColor: C.border,
@@ -109,7 +121,7 @@ export function VehicleInfoForm({
           pointerEvents={onBrandPress ? 'none' : 'auto'}
         />
         {onBrandPress && (
-          <IconChevronDown size={20} color="#64748B" style={styles.selectIcon} />
+          <IconChevronDown size={theme.icon.sm} color="#64748B" style={styles.selectIcon} />
         )}
       </Pressable>
 
@@ -126,7 +138,7 @@ export function VehicleInfoForm({
           pointerEvents={onModelPress ? 'none' : 'auto'}
         />
         {onModelPress && (
-          <IconChevronDown size={20} color="#64748B" style={styles.selectIcon} />
+          <IconChevronDown size={theme.icon.sm} color="#64748B" style={styles.selectIcon} />
         )}
       </Pressable>
 
@@ -143,7 +155,7 @@ export function VehicleInfoForm({
           pointerEvents={onColorPress ? 'none' : 'auto'}
         />
         {onColorPress && (
-          <IconChevronDown size={20} color="#64748B" style={styles.selectIcon} />
+          <IconChevronDown size={theme.icon.sm} color="#64748B" style={styles.selectIcon} />
         )}
       </Pressable>
 

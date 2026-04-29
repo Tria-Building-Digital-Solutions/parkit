@@ -64,20 +64,15 @@ export const useLocaleStore = create<LocaleStore>((set) => ({
 }));
 
 interface AccessibilityStore {
-  /** Text scale for accessibility (1.0 = normal, 1.5 = maximum) */
-  textScale: number;
   /** Reduced animations for sensitive users */
   reduceMotion: boolean;
-  setTextScale: (scale: number) => void;
   setReduceMotion: (enabled: boolean) => void;
 }
 
 export const useAccessibilityStore = create<AccessibilityStore>()(
   persist(
     (set) => ({
-      textScale: 1,
       reduceMotion: false,
-      setTextScale: (scale) => set({ textScale: Math.max(1, Math.min(1.25, scale)) }),
       setReduceMotion: (enabled) => set({ reduceMotion: enabled }),
     }),
     {

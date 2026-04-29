@@ -19,6 +19,7 @@ import { saveUser } from "@/lib/auth";
 import { setAuthToken } from "@/lib/api";
 import { getHasSeenOnboarding } from "@/lib/onboarding";
 import { GoogleIcon, MicrosoftIcon, FacebookIcon } from "@/components/OAuthIcons";
+import { FONT_SCALE } from "@/lib/fontScale";
 
 const ACCENT = "#3B82F6";
 const TEXT_MUTED = "#64748B";
@@ -110,7 +111,7 @@ export default function WelcomeScreen() {
         logo: { marginBottom: 0 },
         brandLabel: {
           marginTop: 28,
-          fontSize: 15,
+          fontSize: FONT_SCALE.sm,
           fontWeight: "700",
           letterSpacing: 2,
           color: "#F8FAFC",
@@ -129,7 +130,7 @@ export default function WelcomeScreen() {
           alignSelf: "center",
         },
         ctaText: {
-          fontSize: 20,
+          fontSize: FONT_SCALE.xl,
           fontWeight: "600",
           color: "#0F172A",
           marginBottom: 20,
@@ -149,7 +150,7 @@ export default function WelcomeScreen() {
           elevation: 4,
         },
         btnPrimaryText: {
-          fontSize: 16,
+          fontSize: FONT_SCALE.md,
           fontWeight: "600",
           color: "#FFFFFF",
           letterSpacing: 0.5,
@@ -163,14 +164,14 @@ export default function WelcomeScreen() {
           marginBottom: 0,
         },
         btnSecondaryText: {
-          fontSize: 16,
+          fontSize: FONT_SCALE.md,
           fontWeight: "600",
           color: "#FFFFFF",
           letterSpacing: 0.5,
         },
         btnPressed: { opacity: 0.9 },
         versionLabel: {
-          fontSize: 11,
+          fontSize: FONT_SCALE.xs,
           fontWeight: "500",
           color: "#94A3B8",
           textAlign: "center",
@@ -193,7 +194,7 @@ export default function WelcomeScreen() {
         },
         dividerText: {
           marginHorizontal: 10,
-          fontSize: 14,
+          fontSize: FONT_SCALE.sm,
           color: TEXT_MUTED,
           fontWeight: '500',
         },

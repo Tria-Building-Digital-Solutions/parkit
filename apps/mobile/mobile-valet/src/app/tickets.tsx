@@ -24,7 +24,6 @@ import { createFeedback } from "@/lib/feedback";
 import {
   useValetTheme,
   statusVisuals as statusVisualsForTheme,
-  ticketsA11y,
   useResponsiveLayout,
 } from "@/theme/valetTheme";
 import { mapApiAssignmentToDisplay } from "@/lib/ticketUtils";
@@ -35,9 +34,9 @@ type Theme = ReturnType<typeof useValetTheme>;
 function createTicketStyles(theme: Theme, contentMaxWidth: number, sectionPadding: number) {
   const C = theme.colors;
   const S = theme.space;
-  const F = ticketsA11y.font;
+  const F = theme.font;
   const R = theme.radius;
-  const M = ticketsA11y.minTouch;
+  const M = theme.minTouch;
   const Fonts = theme.fontFamily;
 
   return StyleSheet.create({
@@ -69,7 +68,7 @@ function createTicketStyles(theme: Theme, contentMaxWidth: number, sectionPaddin
       paddingBottom: S.md,
     },
     screenTitle: {
-      fontSize: Math.round(F.secondary * 0.85),
+      fontSize: F.base,
       fontWeight: "800",
       fontFamily: Fonts.primary,
       color: C.text,
@@ -77,7 +76,7 @@ function createTicketStyles(theme: Theme, contentMaxWidth: number, sectionPaddin
       textAlign: "center",
     },
     intro: {
-      fontSize: Math.round(F.status * 0.65),
+      fontSize: F.base,
       fontFamily: Fonts.primary,
       color: C.textMuted,
       lineHeight: 20,
@@ -109,13 +108,13 @@ function createTicketStyles(theme: Theme, contentMaxWidth: number, sectionPaddin
       gap: 2,
     },
     queueBannerTitle: {
-      fontSize: Math.round(F.status * 0.65),
+      fontSize: F.base,
       fontWeight: "800",
       fontFamily: Fonts.primary,
       color: C.text,
     },
     queueBannerBody: {
-      fontSize: Math.round(F.status * 0.65),
+      fontSize: F.base,
       fontFamily: Fonts.primary,
       color: C.textMuted,
       lineHeight: 18,
@@ -132,13 +131,13 @@ function createTicketStyles(theme: Theme, contentMaxWidth: number, sectionPaddin
     },
     queueBannerBadgeText: {
       color: "#fff",
-      fontSize: Math.round(F.status * 0.65),
+      fontSize: F.base,
       fontWeight: "800",
       fontFamily: Fonts.primary,
     },
     introSecondary: {
       marginTop: S.xs,
-      fontSize: Math.round(F.status * 0.65),
+      fontSize: F.base,
       fontFamily: Fonts.primary,
       color: C.textSubtle,
       lineHeight: 18,
@@ -188,7 +187,7 @@ function createTicketStyles(theme: Theme, contentMaxWidth: number, sectionPaddin
       height: 3,
     },
     plateLabel: {
-      fontSize: Math.round(F.status * 0.65),
+      fontSize: F.base,
       fontWeight: "800",
       fontFamily: Fonts.primary,
       color: C.textMuted,
@@ -196,7 +195,7 @@ function createTicketStyles(theme: Theme, contentMaxWidth: number, sectionPaddin
       marginBottom: 4,
     },
     vehiclePlate: {
-      fontSize: Math.round(F.status * 0.65),
+      fontSize: F.base,
       fontWeight: "800",
       fontFamily: Fonts.primary,
       color: C.text,
@@ -221,12 +220,12 @@ function createTicketStyles(theme: Theme, contentMaxWidth: number, sectionPaddin
       borderRadius: 12,
     },
     statusPillText: {
-      fontSize: Math.round(F.status * 0.65),
+      fontSize: F.base,
       fontWeight: "800",
       fontFamily: Fonts.primary,
     },
     locationLabel: {
-      fontSize: Math.round(F.status * 0.65),
+      fontSize: F.base,
       fontWeight: "800",
       fontFamily: Fonts.primary,
       color: C.textMuted,
@@ -245,7 +244,7 @@ function createTicketStyles(theme: Theme, contentMaxWidth: number, sectionPaddin
     },
     location: {
       flex: 1,
-      fontSize: Math.round(F.status * 0.65),
+      fontSize: F.base,
       lineHeight: 18,
       fontFamily: Fonts.primary,
       color: C.text,
@@ -272,14 +271,14 @@ function createTicketStyles(theme: Theme, contentMaxWidth: number, sectionPaddin
     },
     metaKey: {
       minWidth: 84,
-      fontSize: Math.round(F.status * 0.65),
+      fontSize: F.base,
       fontFamily: Fonts.primary,
       color: C.textMuted,
       fontWeight: "600",
     },
     metaValue: {
       flex: 1,
-      fontSize: Math.round(F.status * 0.65),
+      fontSize: F.base,
       fontFamily: Fonts.primary,
       color: C.text,
       fontWeight: "700",
@@ -311,7 +310,7 @@ function createTicketStyles(theme: Theme, contentMaxWidth: number, sectionPaddin
       color: C.white,
       fontWeight: "800",
       fontFamily: Fonts.primary,
-      fontSize: Math.round(F.status * 0.65),
+      fontSize: F.base,
       textAlign: "center",
       flexShrink: 1,
     },
@@ -329,7 +328,7 @@ function createTicketStyles(theme: Theme, contentMaxWidth: number, sectionPaddin
     },
     completedText: {
       flex: 1,
-      fontSize: Math.round(F.status * 0.65),
+      fontSize: F.base,
       fontWeight: "700",
       fontFamily: Fonts.primary,
       color: C.success,
@@ -347,21 +346,21 @@ function createTicketStyles(theme: Theme, contentMaxWidth: number, sectionPaddin
       flex: 1,
     },
     loadingText: {
-      fontSize: Math.round(F.status * 0.65),
+      fontSize: F.base,
       fontFamily: Fonts.primary,
       color: C.textMuted,
       fontWeight: "600",
       textAlign: "center",
     },
     emptyTitle: {
-      fontSize: Math.round(F.secondary * 0.85),
+      fontSize: F.sm,
       fontWeight: "800",
       fontFamily: Fonts.primary,
       color: C.text,
       textAlign: "center",
     },
     emptyHint: {
-      fontSize: Math.round(F.status * 0.65),
+      fontSize: F.base,
       fontFamily: Fonts.primary,
       lineHeight: 18,
       color: C.textMuted,
@@ -863,7 +862,7 @@ export default function TicketsScreen() {
         <View style={styles.contentFrame}>
         <View style={styles.header}>
           <View style={[styles.screenHeader, { paddingTop: insets.top + theme.space.md }]}>
-            <View style={{ width: 44 }} />
+            <View style={{ width: 44, height: 44 }} />
             <Text style={styles.screenTitle}>
               {isDriverUi
                 ? queueMode === "parking"

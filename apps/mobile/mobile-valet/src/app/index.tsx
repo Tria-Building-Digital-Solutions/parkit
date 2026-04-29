@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState, useMemo } from "react";
 import { View, StyleSheet, Animated, StatusBar } from "react-native";
 import { useRouter } from "expo-router";
-import { useAuthStore, useAccessibilityStore } from "@/lib/store";
+import { useAuthStore } from "@/lib/store";
 import { WelcomeContent } from "./welcome";
 import { AnimatedAuthBackground } from "@/components/AnimatedAuthBackground";
 import { useIsDark } from "@/lib/useIsDark";
@@ -16,8 +16,7 @@ export default function Index() {
   const theme = useValetTheme();
   const F = theme.font;
   const Fonts = theme.fontFamily;
-  const { textScale } = useAccessibilityStore();
-  const styles = useMemo(() => createStyles(F, Fonts, theme, textScale), [F, Fonts, theme, textScale]);
+  const styles = useMemo(() => createStyles(F, Fonts, theme), [F, Fonts, theme]);
   
   const router = useRouter();
   const { user } = useAuthStore();
@@ -98,7 +97,7 @@ export default function Index() {
   );
 }
 
-function createStyles(F: { secondary: number }, Fonts: { primary: string }, theme: any, textScale: number) {
+function createStyles(F: any, Fonts: { primary: string }, theme: any) {
   return StyleSheet.create({
     content: {
       flex: 1,
@@ -112,7 +111,7 @@ function createStyles(F: { secondary: number }, Fonts: { primary: string }, them
     logo: { marginBottom: 0 },
     valetLabel: {
       marginTop: 0,
-      fontSize: Math.round(F.secondary * textScale),
+      fontSize: F.sm,
       fontWeight: "700",
       letterSpacing: 2,
       color: theme.auth.authHeroValetLabel,

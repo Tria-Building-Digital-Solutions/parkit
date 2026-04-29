@@ -96,7 +96,20 @@ export class ValetsService {
     if (valet.isInWizard) return true;
 
     // Fallback: check active tickets
-    const activeCount = await ValetsService.countActiveTicketAssignments(valetId);
+    // For RECEPTIONIST: only count REQUEST_PARKING tickets
+    // For DRIVER: count all active tickets
+    let activeCount: number;
+    if (valet.staffRole === ValetStaffRole.RECEPTIONIST) {
+      activeCount = await prisma.ticketAssignment.count({
+        where: {
+          valetId,
+          ticket: { status: TicketStatus.REQUEST_PARKING },
+        },
+      });
+    } else {
+      activeCount = await ValetsService.countActiveTicketAssignments(valetId);
+    }
+
     return activeCount > 0;
   }
 
@@ -256,14 +269,26 @@ export class ValetsService {
   static async endMyWizard(userId: string) {
     const v = await prisma.valet.findUnique({
       where: { userId },
-      select: { id: true },
+      select: { id: true, staffRole: true },
     });
     if (!v) {
       throw new Error("User is not a valet");
     }
 
     // Check if has active tickets to determine final status
-    const activeCount = await ValetsService.countActiveTicketAssignments(v.id);
+    // For RECEPTIONIST: only count REQUEST_PARKING tickets
+    // For DRIVER: count all active tickets
+    let activeCount: number;
+    if (v.staffRole === ValetStaffRole.RECEPTIONIST) {
+      activeCount = await prisma.ticketAssignment.count({
+        where: {
+          valetId: v.id,
+          ticket: { status: TicketStatus.REQUEST_PARKING },
+        },
+      });
+    } else {
+      activeCount = await ValetsService.countActiveTicketAssignments(v.id);
+    }
 
     const updated = await prisma.valet.update({
       where: { id: v.id },
@@ -289,11 +314,24 @@ export class ValetsService {
         isInWizard: true,
         wizardStartedAt: { lt: cutoff },
       },
-      select: { id: true },
+      select: { id: true, staffRole: true },
     });
 
     for (const valet of abandonedValets) {
-      const activeCount = await ValetsService.countActiveTicketAssignments(valet.id);
+      // For RECEPTIONIST: only count REQUEST_PARKING tickets
+      // For DRIVER: count all active tickets
+      let activeCount: number;
+      if (valet.staffRole === ValetStaffRole.RECEPTIONIST) {
+        activeCount = await prisma.ticketAssignment.count({
+          where: {
+            valetId: valet.id,
+            ticket: { status: TicketStatus.REQUEST_PARKING },
+          },
+        });
+      } else {
+        activeCount = await ValetsService.countActiveTicketAssignments(valet.id);
+      }
+
       await prisma.valet.update({
         where: { id: valet.id },
         data: {
@@ -693,15 +731,20 @@ export class ValetsService {
       ? { companyId, parkingId }
       : { companyId };
 
-    // Active tickets (active processes)
-    const activeProcesses = await prisma.ticket.count({
-      where: {
-        ...where,
-        status: {
-          in: [TicketStatus.PARKED, TicketStatus.REQUEST_PARKING, TicketStatus.REQUEST_DELIVERY],
-        },
-      },
-    });
+    // Active tickets by status (detailed breakdown)
+    const [requestParkingCount, parkedCount, requestDeliveryCount] = await Promise.all([
+      prisma.ticket.count({
+        where: { ...where, status: TicketStatus.REQUEST_PARKING },
+      }),
+      prisma.ticket.count({
+        where: { ...where, status: TicketStatus.PARKED },
+      }),
+      prisma.ticket.count({
+        where: { ...where, status: TicketStatus.REQUEST_DELIVERY },
+      }),
+    ]);
+
+    const activeProcesses = requestParkingCount + parkedCount + requestDeliveryCount;
 
     // Tickets completed today
     const completedToday = await prisma.ticket.count({
@@ -713,20 +756,133 @@ export class ValetsService {
     });
 
     // Pending tickets (in queue)
-    const pendingTasks = await prisma.ticket.count({
+    const pendingTasks = requestParkingCount + requestDeliveryCount;
+
+    // Valet availability
+    const presenceSince = new Date(Date.now() - VALET_PRESENCE_MAX_AGE_MS);
+    const [availableValets, busyValets, awayValets] = await Promise.all([
+      prisma.valet.count({
+        where: {
+          ...where,
+          currentStatus: ValetStatus.AVAILABLE,
+          lastPresenceAt: { gte: presenceSince },
+          user: { isActive: true },
+        },
+      }),
+      prisma.valet.count({
+        where: {
+          ...where,
+          currentStatus: ValetStatus.BUSY,
+          lastPresenceAt: { gte: presenceSince },
+          user: { isActive: true },
+        },
+      }),
+      prisma.valet.count({
+        where: {
+          ...where,
+          currentStatus: ValetStatus.AWAY,
+          user: { isActive: true },
+        },
+      }),
+    ]);
+
+    // Average service time (completed tickets today)
+    const completedTicketsToday = await prisma.ticket.findMany({
+      where: {
+        ...where,
+        status: TicketStatus.DELIVERED,
+        exitTime: { gte: startOfDay },
+      },
+      select: { entryTime: true, exitTime: true },
+    });
+
+    let avgServiceMinutes = 0;
+    if (completedTicketsToday.length > 0) {
+      const totalMinutes = completedTicketsToday.reduce((sum, ticket) => {
+        const diff = ticket.exitTime!.getTime() - ticket.entryTime.getTime();
+        return sum + diff / 60000;
+      }, 0);
+      avgServiceMinutes = Math.round(totalMinutes / completedTicketsToday.length);
+    }
+
+    // Recent active tickets (last 5 for preview)
+    const recentTickets = await prisma.ticket.findMany({
       where: {
         ...where,
         status: {
-          in: [TicketStatus.REQUEST_PARKING, TicketStatus.REQUEST_DELIVERY],
+          in: [TicketStatus.PARKED, TicketStatus.REQUEST_PARKING, TicketStatus.REQUEST_DELIVERY],
         },
       },
+      select: {
+        id: true,
+        ticketCode: true,
+        status: true,
+        entryTime: true,
+        vehicle: {
+          select: {
+            plate: true,
+            brand: true,
+            model: true,
+            color: true,
+          },
+        },
+        parking: {
+          select: {
+            name: true,
+          },
+        },
+      },
+      orderBy: { entryTime: "desc" },
+      take: 5,
     });
+
+    // Throughput (tickets per hour in the last 3 hours)
+    const threeHoursAgo = new Date(now.getTime() - 3 * 60 * 60 * 1000);
+    const completedLast3Hours = await prisma.ticket.count({
+      where: {
+        ...where,
+        status: TicketStatus.DELIVERED,
+        exitTime: { gte: threeHoursAgo },
+      },
+    });
+    const throughputPerHour = (completedLast3Hours / 3).toFixed(1);
 
     return {
       activeProcesses,
       completedToday,
       pendingTasks,
       lastUpdated: now.toISOString(),
+      // Enhanced metrics
+      breakdown: {
+        requestParking: requestParkingCount,
+        parked: parkedCount,
+        requestDelivery: requestDeliveryCount,
+      },
+      valets: {
+        available: availableValets,
+        busy: busyValets,
+        away: awayValets,
+        total: availableValets + busyValets + awayValets,
+      },
+      performance: {
+        avgServiceMinutes,
+        throughputPerHour: parseFloat(throughputPerHour),
+      },
+      recentTickets: recentTickets.map((t) => ({
+        id: t.id,
+        ticketCode: t.ticketCode,
+        status: t.status,
+        entryTime: t.entryTime.toISOString(),
+        vehicle: {
+          plate: t.vehicle?.plate,
+          brand: t.vehicle?.brand,
+          model: t.vehicle?.model,
+          color: t.vehicle?.color,
+        },
+        parking: {
+          name: t.parking?.name,
+        },
+      })),
     };
   }
 

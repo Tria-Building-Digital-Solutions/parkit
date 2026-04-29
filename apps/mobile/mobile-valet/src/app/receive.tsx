@@ -1,7 +1,6 @@
 import {
   View,
   Text,
-  StyleSheet,
   TextInput,
   Pressable,
   Platform,
@@ -13,11 +12,12 @@ import {
   RefreshControl,
   StatusBar,
   ScrollView,
+  StyleSheet,
 } from "react-native";
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import { Redirect, useRouter, useLocalSearchParams } from "expo-router";
 import * as Linking from "expo-linking";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import React, { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import { formatPlate, getVehicleColorOptions, formatVehicleColorLabel, normalizeVehicleColorValue } from "@parkit/shared";
 import { 
   IconHandStop, 
@@ -32,21 +32,23 @@ import {
   IconLocationFilled, 
   IconCamera, 
   IconGallery, 
-  IconCircleX, 
-  IconUser, 
-  IconHourglass, 
-  IconCar, 
-  IconTag, 
+  IconCircleX,
+  IconUser,
+  IconHourglass,
+  IconCar,
+  IconTag,
   IconPalette,
   IconKey,
-  IconHome2
+  IconHome2,
+  IconRulerMeasure2
 } from "@/components/Icons";
 import { ValetChipAvatar } from "@/components/ValetChipAvatar";
-import { useAuthStore, useLocaleStore, useCompanyStore, useAccessibilityStore } from "@/lib/store";
+import { TicketSuccessModal } from "@/components/TicketSuccessModal";
+import { useAuthStore, useLocaleStore, useCompanyStore } from "@/lib/store";
 import { t } from "@/lib/i18n";
 import type { Locale as _Locale } from "@parkit/shared";
 import type { ReactNode } from "react";
-import { useValetTheme, ticketsA11y, useResponsiveLayout } from "@/theme/valetTheme";
+import { useValetTheme, useResponsiveLayout } from "@/theme/valetTheme";
 import { useValetProfileSync } from "@/lib/useValetProfileSync";
 import api from "@/lib/api";
 import { messageFromAxios } from "@parkit/shared";
@@ -114,7 +116,8 @@ export default function ReceiveScreen() {
     try {
       await api.post("/valets/me/wizard/start", { wizardType: "RECEIVE" });
     } catch (error) {
-      console.error("Failed to start wizard:", error);
+      // Silently ignore wizard errors - not critical for functionality
+      // Network errors and timeouts are expected in poor connectivity
     }
   }, []);
 
@@ -136,6 +139,7 @@ export default function ReceiveScreen() {
   const [lookupLoading, setLookupLoading] = useState(false);
   const [lookupReadyForPlate, setLookupReadyForPlate] = useState("");
   const [vehicle, setVehicle] = useState<VehicleLookup | null>(null);
+  const [foundVehicle, setFoundVehicle] = useState<VehicleLookup | null>(null);
 
   type ValetWithVariant = ValetOpt & { variant: 'available' | 'away' | 'busy' };
   const [vehicleResolved, setVehicleResolved] = useState(false);
@@ -206,13 +210,23 @@ export default function ReceiveScreen() {
 
   const [receiveManualParkingId, setReceiveManualParkingId] = useState<string | null>(null);
   const [valetSelectModalOpen, setValetSelectModalOpen] = useState(false);
+  const [ticketConfirmModalVisible, setTicketConfirmModalVisible] = useState(false);
+  const [pendingTicketData, setPendingTicketData] = useState<{
+    ticketCode: string;
+    vehiclePlate: string;
+    vehicleBrand: string;
+    vehicleModel: string;
+    driverName: string;
+    valetName: string;
+    parkingName: string;
+    createdAt: string;
+  } | null>(null);
   const reservationParkingPreselectedRef = useRef<string | null>(null);
   const qrNoCompanyAlertShownRef = useRef(false);
 
   const isReception = user?.valetStaffRole !== "DRIVER";
   const C = theme.colors;
-  const M = ticketsA11y.minTouch;
-  const { textScale } = useAccessibilityStore();
+  const M = theme.minTouch;
   const feedback = useMemo(() => createFeedback(locale), [locale]);
 
   const _startCardVerification = useCallback(async () => {
@@ -465,6 +479,12 @@ export default function ReceiveScreen() {
     }
   }, [valets, driverValetId]);
 
+  useEffect(() => {
+    if (wizardStep === valetStepNum) {
+      setValetSelectModalOpen(true);
+    }
+  }, [wizardStep, valetStepNum]);
+
   const loadReceiveMeta = useCallback(
     async (opts?: { silent?: boolean }) => {
       if (!user) return;
@@ -534,37 +554,41 @@ export default function ReceiveScreen() {
     setLookupLoading(true);
     setVehicleResolved(false);
     setVehicle(null);
+    setFoundVehicle(null);
     if (!reservationFlow) setBookingCheck(null);
+    let v: VehicleLookup | null = null;
     try {
       const res = await api.get<{ data: VehicleLookup }>("/vehicles/valet/by-plate", {
         params: { plate: formatted, countryCode: COUNTRY_CR },
       });
-      const v = res.data?.data;
+      v = res.data?.data;
       if (v) {
-        setVehicle(v);
+        setVehicle({ ...v });
+        setFoundVehicle({ ...v });
+        setVehicleResolved(true);
         if (v.owners?.length) {
           const o = v.owners[0];
-          setLoadedOwnerUserId(o.client.user.id ?? null);
-          setDriverFirst(o.client.user.firstName);
-          setDriverLast(o.client.user.lastName);
-          const ownerEmail = o.client.user.email?.trim() ?? "";
-          const ownerPhone = o.client.user.phone?.trim() ?? "";
+          setLoadedOwnerUserId(o.customer.user.id ?? null);
+          setDriverFirst(o.customer.user.firstName);
+          setDriverLast(o.customer.user.lastName);
+          const ownerEmail = o.customer.user.email?.trim() ?? "";
+          const ownerPhone = o.customer.user.phone?.trim() ?? "";
           if (ownerEmail || ownerPhone) {
             setDriverEmail(ownerEmail);
             setDriverPhone(formatPhoneWithCountryCode(ownerPhone, getDeviceCountryCode()));
             setLoadedDriverSnapshot({
-              firstName: o.client.user.firstName,
-              lastName: o.client.user.lastName,
+              firstName: o.customer.user.firstName,
+              lastName: o.customer.user.lastName,
               email: ownerEmail,
               phone: formatPhoneInternational(ownerPhone),
             });
           } else {
-            const fallbackContact = await findClientContact(o.client.id);
+            const fallbackContact = await findClientContact(o.customer.id);
             setDriverEmail(fallbackContact.email ?? "");
             setDriverPhone(formatPhoneInternational(fallbackContact.phone ?? ""));
             setLoadedDriverSnapshot({
-              firstName: o.client.user.firstName,
-              lastName: o.client.user.lastName,
+              firstName: o.customer.user.firstName,
+              lastName: o.customer.user.lastName,
               email: fallbackContact.email ?? "",
               phone: formatPhoneWithCountryCode(fallbackContact.phone ?? "", getDeviceCountryCode()),
             });
@@ -616,11 +640,15 @@ export default function ReceiveScreen() {
       setVehYear("");
     } finally {
       setLookupLoading(false);
-      setVehicleResolved(true);
+      // Only set vehicleResolved if not already set in the if (v) block
+      if (!v) {
+        setVehicleResolved(true);
+      }
       setLookupReadyForPlate(formatted);
       if (advanceStep) setWizardStep(driverStepNum);
     }
   };
+
 
   useEffect(() => {
     if (wizardStep !== plateStepNum || reservationFlow) return;
@@ -706,7 +734,7 @@ export default function ReceiveScreen() {
   }, [wizardStep, reservationFlow, metaLoading, companyIdForBooking, feedback, locale]);
 
   const resolveClientAndVehicleIds = async (): Promise<{
-    clientId: string;
+    customerId: string;
     vehicleId: string;
   } | null> => {
     const cid = useCompanyStore.getState().companyId;
@@ -714,7 +742,7 @@ export default function ReceiveScreen() {
 
     if (reservationFlow && bookingCheck && bookingCheck !== "invalid") {
       return {
-        clientId: bookingCheck.clientId,
+        customerId: bookingCheck.clientId,
         vehicleId: bookingCheck.vehicleId,
       };
     }
@@ -764,7 +792,7 @@ export default function ReceiveScreen() {
         }
       }
       return {
-        clientId: vehicle.owners[0].client.id,
+        customerId: vehicle.owners[0].customer.id,
         vehicleId: vehicle.id,
       };
     }
@@ -796,14 +824,14 @@ export default function ReceiveScreen() {
         });
         const userId = uRes.data?.data?.id;
         if (!userId) throw new Error("User create failed");
-        const linkRes = await api.post<{ data: { clientId?: string } }>(
+        const linkRes = await api.post<{ data: { customerId?: string } }>(
           `/users/${userId}/vehicles`,
           { vehicleId: vehicle.id, isPrimary: true }
         );
-        const clientId =
-          linkRes.data?.data?.clientId ?? (await findClientIdForUser(userId));
-        if (!clientId) throw new Error("Client link failed");
-        return { clientId, vehicleId: vehicle.id };
+        const customerId =
+          linkRes.data?.data?.customerId ?? (await findClientIdForUser(userId));
+        if (!customerId) throw new Error("Client link failed");
+        return { customerId, vehicleId: vehicle.id };
       } catch (e) {
         const msg = messageFromAxios(e);
         feedback.error(msg || t(locale, "receive.errorSubmit"));
@@ -847,17 +875,17 @@ export default function ReceiveScreen() {
       const vid = vehRes.data?.data?.id;
       if (!vid) throw new Error("Vehicle create failed");
 
-      const linkRes = await api.post<{ data: { clientId?: string } }>(
+      const linkRes = await api.post<{ data: { customerId?: string } }>(
         `/users/${userId}/vehicles`,
         {
           vehicleId: vid,
           isPrimary: true,
         }
       );
-      const clientId =
-        linkRes.data?.data?.clientId ?? (await findClientIdForUser(userId));
-      if (!clientId) throw new Error("Client link failed");
-      return { clientId, vehicleId: vid };
+      const customerId =
+        linkRes.data?.data?.customerId ?? (await findClientIdForUser(userId));
+      if (!customerId) throw new Error("Client link failed");
+      return { customerId, vehicleId: vid };
     } catch (e) {
       const msg = messageFromAxios(e);
       feedback.error(msg || t(locale, "receive.errorSubmit"));
@@ -869,7 +897,7 @@ export default function ReceiveScreen() {
     try {
       const res = await api.get<{
         data: Array<{ id: string; user?: { id: string } }>;
-      }>("/clients");
+      }>("/customers");
       const list = Array.isArray(res.data?.data) ? res.data.data : [];
       const row = list.find((c) => c.user?.id === uid);
       return row?.id ?? null;
@@ -879,10 +907,10 @@ export default function ReceiveScreen() {
   }
 
   async function findClientContact(
-    clientId: string
+    customerId: string
   ): Promise<{ email: string | null; phone: string | null }> {
     try {
-      const res = await api.get<{ data: ClientByIdLookup }>(`/clients/${clientId}`);
+      const res = await api.get<{ data: ClientByIdLookup }>(`/customers/${customerId}`);
       const email = res.data?.data?.user?.email;
       const phone = res.data?.data?.user?.phone;
       return {
@@ -929,7 +957,7 @@ export default function ReceiveScreen() {
         companyId: "",
         owners: [
           {
-            client: {
+            customer: {
               id: b.clientId,
               user: {
                 firstName: u?.firstName ?? "",
@@ -1004,18 +1032,36 @@ export default function ReceiveScreen() {
       feedback.error(t(locale, "receive.damagePhotoLimit", { max: String(MAX_DAMAGE_PHOTOS) }));
       return;
     }
-    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (status !== "granted") {
-      feedback.error(t(locale, "profile.photoPermissionDenied"));
-      return;
+    
+    try {
+      // First check current permission status
+      const { status: currentStatus } = await ImagePicker.getMediaLibraryPermissionsAsync();
+      
+      let status = currentStatus;
+      
+      // Only request if not already granted
+      if (currentStatus !== 'granted') {
+        const { status: requestedStatus } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+        status = requestedStatus;
+      }
+      
+      if (status !== 'granted') {
+        feedback.error(t(locale, "profile.photoPermissionDenied"));
+        return;
+      }
+      
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsEditing: false,
+        quality: 0.88,
+      });
+      
+      if (result.canceled || !result.assets?.[0]?.uri) return;
+      await processAndAddDamagePhoto(result.assets[0].uri);
+    } catch (error) {
+      console.error("Error in pickDamageFromLibrary:", error);
+      feedback.error(t(locale, "profile.photoProcessError"));
     }
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      allowsEditing: false,
-      quality: 0.88,
-    });
-    if (result.canceled || !result.assets?.[0]?.uri) return;
-    await processAndAddDamagePhoto(result.assets[0].uri);
   }, [feedback, locale, processAndAddDamagePhoto]);
 
   const takeDamagePhoto = useCallback(async () => {
@@ -1023,17 +1069,35 @@ export default function ReceiveScreen() {
       feedback.error(t(locale, "receive.damagePhotoLimit", { max: String(MAX_DAMAGE_PHOTOS) }));
       return;
     }
-    const { status } = await ImagePicker.requestCameraPermissionsAsync();
-    if (status !== "granted") {
-      feedback.error(t(locale, "profile.photoCameraDenied"));
-      return;
+    
+    try {
+      // First check current permission status
+      const { status: currentStatus } = await ImagePicker.getCameraPermissionsAsync();
+      
+      let status = currentStatus;
+      
+      // Only request if not already granted
+      if (currentStatus !== 'granted') {
+        const { status: requestedStatus } = await ImagePicker.requestCameraPermissionsAsync();
+        status = requestedStatus;
+      }
+      
+      if (status !== 'granted') {
+        feedback.error(t(locale, "profile.photoCameraDenied"));
+        return;
+      }
+      
+      const result = await ImagePicker.launchCameraAsync({
+        allowsEditing: false,
+        quality: 0.88,
+      });
+      
+      if (result.canceled || !result.assets?.[0]?.uri) return;
+      await processAndAddDamagePhoto(result.assets[0].uri);
+    } catch (error) {
+      console.error("Error in takeDamagePhoto:", error);
+      feedback.error(t(locale, "profile.photoProcessError"));
     }
-    const result = await ImagePicker.launchCameraAsync({
-      allowsEditing: false,
-      quality: 0.88,
-    });
-    if (result.canceled || !result.assets?.[0]?.uri) return;
-    await processAndAddDamagePhoto(result.assets[0].uri);
   }, [feedback, locale, processAndAddDamagePhoto]);
 
   const removeDamagePhotoAt = useCallback((index: number) => {
@@ -1061,6 +1125,43 @@ export default function ReceiveScreen() {
         return;
       }
     }
+    const tc = manualTicketCode.trim();
+    const kc = keyCodesUnlinked ? manualKeyCode.trim() : tc;
+    if (tc.length < 2 || kc.length < 2) {
+      feedback.error(t(locale, "receive.errorTicketCodesRequired"));
+      return;
+    }
+    if (!MANUAL_TICKET_CODE_RE.test(tc) || !MANUAL_TICKET_CODE_RE.test(kc)) {
+      feedback.error(t(locale, "receive.errorTicketCodesFormat"));
+      return;
+    }
+
+    // Get parking name
+    const parkingObj = parkings.find((p) => p.id === parkingId);
+    const parkingName = parkingObj?.name || "";
+    
+    // Get valet name
+    const valetObj = valets.find((v) => v.id === driverValetId);
+    const valetName = valetObj 
+      ? `${valetObj.user.firstName} ${valetObj.user.lastName}`
+      : "";
+    
+    setPendingTicketData({
+      ticketCode: tc,
+      vehiclePlate: formatPlate(plate),
+      vehicleBrand: vehBrand,
+      vehicleModel: vehModel,
+      driverName: `${driverFirst} ${driverLast}`,
+      valetName,
+      parkingName,
+      createdAt: new Date().toISOString(),
+    });
+    setTicketConfirmModalVisible(true);
+  };
+
+  const handleConfirmTicket = async () => {
+    if (!pendingTicketData) return;
+    
     setSubmitting(true);
     try {
       const ids = await resolveClientAndVehicleIds();
@@ -1068,21 +1169,12 @@ export default function ReceiveScreen() {
         setSubmitting(false);
         return;
       }
-      const tc = manualTicketCode.trim();
+
+      const tc = pendingTicketData.ticketCode;
       const kc = keyCodesUnlinked ? manualKeyCode.trim() : tc;
-      if (tc.length < 2 || kc.length < 2) {
-        feedback.error(t(locale, "receive.errorTicketCodesRequired"));
-        setSubmitting(false);
-        return;
-      }
-      if (!MANUAL_TICKET_CODE_RE.test(tc) || !MANUAL_TICKET_CODE_RE.test(kc)) {
-        feedback.error(t(locale, "receive.errorTicketCodesFormat"));
-        setSubmitting(false);
-        return;
-      }
 
       const payload: Record<string, unknown> = {
-        clientId: ids.clientId,
+        clientId: ids.customerId,
         vehicleId: ids.vehicleId,
         parkingId,
         receptorValetId,
@@ -1102,12 +1194,12 @@ export default function ReceiveScreen() {
       }
 
       await api.post("/tickets", payload);
-      await endWizard();
-      feedback.success(t(locale, "receive.success"), {
-        title: t(locale, "receive.successTitle"),
-        okText: t(locale, "common.close"),
-        onPress: () => router.replace("/home"),
-      });
+      setTicketConfirmModalVisible(false);
+      // Show toast and redirect immediately
+      feedback.success(t(locale, "receive.success"));
+      router.replace("/home");
+      // End wizard in background - don't block UI
+      void endWizard();
     } catch (e) {
       const msg = messageFromAxios(e);
       feedback.error(
@@ -1296,14 +1388,15 @@ export default function ReceiveScreen() {
           translucent={Platform.OS === "android"}
         />
         <View style={styles.frame}>
-        <View style={[styles.screenHeader, { paddingTop: safeInsets.top + theme.space.md }]}>
-          {wizardStep !== typeStepNum && (
+        <View style={[wizardStep === typeStepNum ? styles.screenHeaderType : styles.screenHeader, { paddingTop: safeInsets.top + theme.space.md }]}>
+          {wizardStep === typeStepNum ? (
+            <View style={{ width: 44, height: 44 }} />
+          ) : (
             <ValetBackButton
               onPress={handleBack}
               accessibilityLabel={t(locale, "common.back")}
             />
           )}
-          {wizardStep === typeStepNum && <View style={{ width: 44 }} />}
           <Text style={styles.screenTitle}>{receiveTitle}</Text>
           <Pressable onPress={() => { void endWizard(); router.replace("/home"); }} style={{ width: 44, alignItems: "center", justifyContent: "center" }}>
             <IconHome2 size={24} color={C.text} />
@@ -1669,14 +1762,15 @@ export default function ReceiveScreen() {
         translucent={Platform.OS === "android"}
       />
       <View style={styles.frame}>
-      <View style={[styles.screenHeader, { paddingTop: safeInsets.top + theme.space.md }]}>
-        {wizardStep !== typeStepNum && (
+      <View style={[wizardStep === typeStepNum ? styles.screenHeaderType : styles.screenHeader, { paddingTop: safeInsets.top + theme.space.md }]}>
+        {wizardStep === typeStepNum ? (
+          <View style={{ width: 44, height: 44 }} />
+        ) : (
           <ValetBackButton
             onPress={handleBack}
             accessibilityLabel={t(locale, "common.back")}
           />
         )}
-        {wizardStep === typeStepNum && <View style={{ width: 44 }} />}
         <Text style={styles.screenTitle}>{receiveTitle}</Text>
         <Pressable onPress={() => { void endWizard(); router.replace("/home"); }} style={{ width: 44, alignItems: "center", justifyContent: "center" }}>
           <IconHome2 size={24} color={C.text} />
@@ -1739,7 +1833,7 @@ export default function ReceiveScreen() {
                           onChangeText={setBookingCode}
                           placeholder={t(locale, "receive.placeholderBooking")}
                           placeholderTextColor={C.textSubtle}
-                          maxFontSizeMultiplier={2}
+                          maxFontSizeMultiplier={1.5}
                         />
                         <Pressable
                           style={({ pressed }) => [
@@ -1881,11 +1975,14 @@ export default function ReceiveScreen() {
                   border: C.border,
                 }}
                 fonts={{
-                  secondary: theme.a11yFont.secondary,
-                  body: theme.a11yFont.body,
-                  button: theme.a11yFont.button,
-                  title: theme.a11yFont.title,
-                  status: theme.a11yFont.status,
+                  xs: theme.font.xs,
+                  sm: theme.font.sm,
+                  base: theme.font.base,
+                  md: theme.font.md,
+                  lg: theme.font.lg,
+                  xl: theme.font.xl,
+                  xxl: theme.font.xxl,
+                  xxxl: theme.font.xxxl,
                 }}
                 space={{
                   sm: theme.space.sm,
@@ -2002,13 +2099,14 @@ export default function ReceiveScreen() {
                 setVehicleResolved(false);
                 setLookupReadyForPlate('');
                 setVehicle(null);
+                setFoundVehicle(null);
                 setLoadedOwnerUserId(null);
                 setLoadedDriverSnapshot(null);
                 setLoadedVehicleSnapshot(null);
               }}
               lookupLoading={lookupLoading}
               vehicleResolved={vehicleResolved}
-              vehicle={vehicle}
+              vehicle={foundVehicle}
               plateLooksValid={plateLooksValid}
               colors={{
                 primary: C.primary,
@@ -2023,9 +2121,14 @@ export default function ReceiveScreen() {
                 inputBorder: theme.auth.inputBorder,
               }}
               fonts={{
-                secondary: theme.a11yFont.secondary,
-                body: theme.a11yFont.body,
-                status: theme.a11yFont.secondary,
+                xs: theme.font.xs,
+                sm: theme.font.sm,
+                base: theme.font.base,
+                md: theme.font.md,
+                lg: theme.font.lg,
+                xl: theme.font.xl,
+                xxl: theme.font.xxl,
+                xxxl: theme.font.xxxl,
               }}
               space={{
                 sm: theme.space.sm,
@@ -2058,9 +2161,14 @@ export default function ReceiveScreen() {
                 inputBorder: theme.auth.inputBorder,
               }}
               fonts={{
-                secondary: theme.a11yFont.secondary,
-                body: theme.a11yFont.body,
-                status: theme.a11yFont.secondary,
+                xs: theme.font.xs,
+                sm: theme.font.sm,
+                base: theme.font.base,
+                md: theme.font.md,
+                lg: theme.font.lg,
+                xl: theme.font.xl,
+                xxl: theme.font.xxl,
+                xxxl: theme.font.xxxl,
               }}
               space={{
                 sm: theme.space.sm,
@@ -2077,9 +2185,9 @@ export default function ReceiveScreen() {
               {manualBrandMode ? (
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: theme.space.sm }}>
                   <View style={{ position: 'relative', flex: 1 }}>
-                    <IconCar size={20} color={C.textMuted} style={{ position: 'absolute', left: 16, top: '50%', marginTop: -16, zIndex: 1 }} />
+                    <IconCar size={20} color={C.textMuted} style={{ position: 'absolute', left: 16, top: '50%', marginTop: -10, zIndex: 1 }} />
                     <TextInput
-                      style={[styles.input, { paddingLeft: 48, fontSize: Math.round(theme.font.status * 0.6 * textScale) }]}
+                      style={[styles.input, { paddingLeft: 48 }]}
                       value={vehBrand}
                       onChangeText={(v) => {
                         setVehBrand(v);
@@ -2087,7 +2195,7 @@ export default function ReceiveScreen() {
                       }}
                       placeholder={t(locale, "receive.placeholderBrand")}
                       placeholderTextColor={C.textSubtle}
-                      maxFontSizeMultiplier={2}
+                      maxFontSizeMultiplier={1.5}
                     />
                   </View>
                   <Pressable
@@ -2107,9 +2215,9 @@ export default function ReceiveScreen() {
                 >
                   <IconCar size={20} color={C.textMuted} style={{ position: 'absolute', left: 16, top: '50%', marginTop: 0, zIndex: 1 }} />
                   <Text
-                    style={[styles.selectorInputText, !vehBrand && styles.selectorInputPlaceholder, { paddingTop: 4, fontSize: Math.round(theme.font.status * 0.6 * textScale), textAlignVertical: 'center' }]}
+                    style={[styles.selectorInputText, !vehBrand && styles.selectorInputPlaceholder, { paddingTop: 4, textAlignVertical: 'center' }]}
                     numberOfLines={1}
-                    maxFontSizeMultiplier={2}
+                    maxFontSizeMultiplier={1.5}
                   >
                     {vehBrand || t(locale, "receive.placeholderBrand")}
                   </Text>
@@ -2122,14 +2230,14 @@ export default function ReceiveScreen() {
               {manualModelMode ? (
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: theme.space.sm }}>
                   <View style={{ position: 'relative', flex: 1 }}>
-                    <IconTag size={20} color={C.textMuted} style={{ position: 'absolute', left: 16, top: '50%', marginTop: -16, zIndex: 1 }} />
+                    <IconTag size={20} color={C.textMuted} style={{ position: 'absolute', left: 16, top: '50%', marginTop: -10, zIndex: 1 }} />
                     <TextInput
-                      style={[styles.input, { paddingLeft: 48, fontSize: Math.round(theme.font.status * 0.6 * textScale) }]}
+                      style={[styles.input, { paddingLeft: 48 }]}
                       value={vehModel}
                       onChangeText={setVehModel}
                       placeholder={t(locale, "receive.placeholderModel")}
                       placeholderTextColor={C.textSubtle}
-                      maxFontSizeMultiplier={2}
+                      maxFontSizeMultiplier={1.5}
                     />
                   </View>
                   <Pressable
@@ -2158,9 +2266,9 @@ export default function ReceiveScreen() {
                 >
                   <IconTag size={20} color={C.textMuted} style={{ position: 'absolute', left: 16, top: '50%', marginTop: 0, zIndex: 1 }} />
                   <Text
-                    style={[styles.selectorInputText, !vehModel && styles.selectorInputPlaceholder, { paddingTop: 4, fontSize: Math.round(theme.font.status * 0.6 * textScale), textAlignVertical: 'center' }]}
+                    style={[styles.selectorInputText, !vehModel && styles.selectorInputPlaceholder, { paddingTop: 4, textAlignVertical: 'center' }]}
                     numberOfLines={1}
-                    maxFontSizeMultiplier={2}
+                    maxFontSizeMultiplier={1.5}
                   >
                     {vehModel || t(locale, "receive.placeholderModel")}
                   </Text>
@@ -2178,9 +2286,9 @@ export default function ReceiveScreen() {
               >
                 <IconPalette size={20} color={C.textMuted} style={{ position: 'absolute', left: 16, top: '50%', marginTop: 0, zIndex: 1 }} />
                 <Text
-                  style={[styles.selectorInputText, !vehColor && styles.selectorInputPlaceholder, { paddingTop: 4, fontSize: Math.round(theme.font.status * 0.6 * textScale), textAlignVertical: 'center' }]}
+                  style={[styles.selectorInputText, !vehColor && styles.selectorInputPlaceholder, { paddingTop: 4, textAlignVertical: 'center' }]}
                   numberOfLines={1}
-                  maxFontSizeMultiplier={2}
+                  maxFontSizeMultiplier={1.5}
                 >
                   {formatVehicleColorLabel(vehColor, locale) || t(locale, "receive.placeholderColor")}
                 </Text>
@@ -2191,7 +2299,7 @@ export default function ReceiveScreen() {
               <View style={{ position: 'relative' }}>
                 <IconCalendar size={20} color={C.textMuted} style={{ position: 'absolute', left: 16, top: '50%', marginTop: -16, zIndex: 1 }} />
                 <TextInput
-                  style={[styles.input, { paddingLeft: 48, fontSize: Math.round(theme.font.status * 0.6 * textScale) }]}
+                  style={[styles.input, { paddingLeft: 48 }]}
                   value={vehYear}
                   onChangeText={(text) => {
                     const numericText = text.replace(/[^0-9]/g, '');
@@ -2203,7 +2311,7 @@ export default function ReceiveScreen() {
                   placeholderTextColor={C.textSubtle}
                   keyboardType="number-pad"
                   maxLength={4}
-                  maxFontSizeMultiplier={2}
+                  maxFontSizeMultiplier={1.5}
                 />
               </View>
 
@@ -2211,35 +2319,35 @@ export default function ReceiveScreen() {
                 <View style={[styles.card, styles.vehicleFoundCard, { marginTop: theme.space.md }]}>
                   <View style={styles.vehicleFoundHeader}>
                     <View style={styles.vehicleFoundIcon}>
-                      <IconCircleCheck size={20} color={C.success} />
+                      <IconRulerMeasure2 size={20} color={C.success} />
                     </View>
                     <View style={{ flex: 1 }}>
-                      <Text style={[styles.vehicleFoundTitle, { fontSize: Math.round(theme.font.secondary * 0.7 * textScale) }]} numberOfLines={1} maxFontSizeMultiplier={2}>{t(locale, "receive.vehicleDimensionsTitle")}</Text>
-                      <Text style={[styles.vehicleFoundSubtitle, { fontSize: Math.round(theme.font.secondary * 0.6 * textScale) }]} numberOfLines={1} maxFontSizeMultiplier={2}>{vehBrand} {vehModel}</Text>
+                      <Text style={styles.vehicleFoundTitle} numberOfLines={1} maxFontSizeMultiplier={2}>{t(locale, "receive.vehicleDimensionsTitle")}</Text>
+                      <Text style={styles.vehicleFoundSubtitle} numberOfLines={1} maxFontSizeMultiplier={2}>{vehBrand} {vehModel}</Text>
                     </View>
                   </View>
                   {catalogDimensions.lengthCm && (
                     <View style={styles.vehicleSummaryRow}>
-                      <Text style={[styles.vehicleSummaryLabel, { fontSize: Math.round(theme.font.secondary * 0.6 * textScale) }]} maxFontSizeMultiplier={2}>{t(locale, "receive.dimensionLength")}</Text>
-                      <Text style={[styles.vehicleSummaryValue, { fontSize: Math.round(theme.font.secondary * 0.6 * textScale) }]} maxFontSizeMultiplier={2}>{(catalogDimensions.lengthCm / 100).toFixed(2)} m</Text>
+                      <Text style={styles.vehicleSummaryLabel} maxFontSizeMultiplier={2}>{t(locale, "receive.dimensionLength")}</Text>
+                      <Text style={styles.vehicleSummaryValue} maxFontSizeMultiplier={2}>{(catalogDimensions.lengthCm / 100).toFixed(2)} m</Text>
                     </View>
                   )}
                   {catalogDimensions.widthCm && (
                     <View style={styles.vehicleSummaryRow}>
-                      <Text style={[styles.vehicleSummaryLabel, { fontSize: Math.round(theme.font.secondary * 0.6 * textScale) }]} maxFontSizeMultiplier={2}>{t(locale, "receive.dimensionWidth")}</Text>
-                      <Text style={[styles.vehicleSummaryValue, { fontSize: Math.round(theme.font.secondary * 0.6 * textScale) }]} maxFontSizeMultiplier={2}>{(catalogDimensions.widthCm / 100).toFixed(2)} m</Text>
+                      <Text style={styles.vehicleSummaryLabel} maxFontSizeMultiplier={2}>{t(locale, "receive.dimensionWidth")}</Text>
+                      <Text style={styles.vehicleSummaryValue} maxFontSizeMultiplier={2}>{(catalogDimensions.widthCm / 100).toFixed(2)} m</Text>
                     </View>
                   )}
                   {catalogDimensions.heightCm && (
                     <View style={styles.vehicleSummaryRow}>
-                      <Text style={[styles.vehicleSummaryLabel, { fontSize: Math.round(theme.font.secondary * 0.6 * textScale) }]} maxFontSizeMultiplier={2}>{t(locale, "receive.dimensionHeight")}</Text>
-                      <Text style={[styles.vehicleSummaryValue, { fontSize: Math.round(theme.font.secondary * 0.6 * textScale) }]} maxFontSizeMultiplier={2}>{(catalogDimensions.heightCm / 100).toFixed(2)} m</Text>
+                      <Text style={styles.vehicleSummaryLabel} maxFontSizeMultiplier={2}>{t(locale, "receive.dimensionHeight")}</Text>
+                      <Text style={styles.vehicleSummaryValue} maxFontSizeMultiplier={2}>{(catalogDimensions.heightCm / 100).toFixed(2)} m</Text>
                     </View>
                   )}
                   {catalogDimensions.weightKg && (
                     <View style={[styles.vehicleSummaryRow, styles.vehicleSummaryRowLast]}>
-                      <Text style={[styles.vehicleSummaryLabel, { fontSize: Math.round(theme.font.secondary * 0.6 * textScale) }]} maxFontSizeMultiplier={2}>{t(locale, "receive.dimensionWeight")}</Text>
-                      <Text style={[styles.vehicleSummaryValue, { fontSize: Math.round(theme.font.secondary * 0.6 * textScale) }]} maxFontSizeMultiplier={2}>{catalogDimensions.weightKg} kg</Text>
+                      <Text style={styles.vehicleSummaryLabel} maxFontSizeMultiplier={2}>{t(locale, "receive.dimensionWeight")}</Text>
+                      <Text style={styles.vehicleSummaryValue} maxFontSizeMultiplier={2}>{catalogDimensions.weightKg} kg</Text>
                     </View>
                   )}
                 </View>
@@ -2249,9 +2357,9 @@ export default function ReceiveScreen() {
 
           {wizardStep === ticketStepNum && (
             <>
-              <Text style={styles.stepExplain}>{t(locale, "receive.wizardTicketHelp")}</Text>
+              <Text style={styles.stepExplain} maxFontSizeMultiplier={1.5}>{t(locale, "receive.wizardTicketHelp")}</Text>
 
-              <Text style={styles.inputFieldLabel}>
+              <Text style={styles.inputLabel} maxFontSizeMultiplier={1.5}>
                 {keyCodesUnlinked
                   ? t(locale, "receive.ticketCodeOnlyLabel")
                   : t(locale, "receive.ticketCodeFieldLabel")}
@@ -2272,7 +2380,7 @@ export default function ReceiveScreen() {
                   keyboardType="number-pad"
                   inputMode="numeric"
                   maxLength={64}
-                  maxFontSizeMultiplier={2}
+                  maxFontSizeMultiplier={1.5}
                 />
               </View>
 
@@ -2288,14 +2396,8 @@ export default function ReceiveScreen() {
                   });
                 }}
                 style={({ pressed }) => [styles.ticketCodeToggle, pressed && styles.pressed]}
-                accessibilityRole="button"
-                accessibilityLabel={
-                  keyCodesUnlinked
-                    ? t(locale, "receive.ticketKeySameToggle")
-                    : t(locale, "receive.ticketKeySeparateToggle")
-                }
               >
-                <Text style={styles.ticketCodeToggleText}>
+                <Text style={[styles.inputLabel, { color: C.primary }]} maxFontSizeMultiplier={1.5}>
                   {keyCodesUnlinked
                     ? t(locale, "receive.ticketKeySameToggle")
                     : t(locale, "receive.ticketKeySeparateToggle")}
@@ -2304,7 +2406,7 @@ export default function ReceiveScreen() {
 
               {keyCodesUnlinked ? (
                 <>
-                  <Text style={[styles.inputFieldLabel, { marginTop: theme.space.md }]}>
+                  <Text style={[styles.inputLabel, { marginTop: theme.space.md }]} maxFontSizeMultiplier={1.5}>
                     {t(locale, "receive.keyCodeFieldLabel")}
                   </Text>
                   <View style={{ position: 'relative' }}>
@@ -2320,7 +2422,7 @@ export default function ReceiveScreen() {
                       keyboardType="number-pad"
                       inputMode="numeric"
                       maxLength={64}
-                      maxFontSizeMultiplier={2}
+                      maxFontSizeMultiplier={1.5}
                     />
                   </View>
                 </>
@@ -2330,124 +2432,119 @@ export default function ReceiveScreen() {
 
           {wizardStep === parkingStepNum && (
             <>
-              <Text style={styles.stepExplain}>{t(locale, "receive.wizardParkingHelp")}</Text>
+              <Text style={styles.stepExplain} maxFontSizeMultiplier={2}>{t(locale, "receive.wizardParkingHelp")}</Text>
 
               <View style={styles.bottomCard}>
-                <Pressable
-                  style={({ pressed }) => [styles.bottomCardInner, pressed && styles.pressed]}
-                  onPress={() => setReceiveParkingModalOpen(true)}
-                  accessibilityRole="button"
-                  accessibilityLabel={t(locale, "home.chooseParking")}
-                >
-                  <View style={styles.bottomIconWrap}>
-                    <IconLocationFilled size={Math.round(14 * textScale)} fill={C.primary} color={C.primary} />
-                  </View>
-                  <View style={styles.bottomTextCol}>
-                    <View style={styles.bottomTitleRow}>
-                      <Text style={styles.bottomTitle} numberOfLines={1}>
-                        {t(locale, "home.nearestTitle")}
-                      </Text>
-                      {allParkings.length > 0 && locStatus !== "loading" && locStatus !== "unavailable" && (
-                        <IconList size={Math.round(18 * textScale)} color={C.primary} />
-                      )}
-                    </View>
-                    {locStatus === "loading" && (
-                      <View style={styles.bottomLoadingRow}>
-                        <ActivityIndicator size="small" color={C.primary} />
-                        <Text style={styles.bottomMeta}>{t(locale, "home.nearestLoading")}</Text>
-                      </View>
-                    )}
-                    {locStatus === "unavailable" && (
-                      <Text style={styles.bottomMeta}>{t(locale, "home.nearestNoCoords")}</Text>
-                    )}
-                    {locStatus === "denied" && (
-                      <Text style={styles.bottomMeta}>{t(locale, "home.nearestDenied")}</Text>
-                    )}
-                    {(locStatus === "ready" || locStatus === "denied") && displayedReceiveParking && (
-                      <>
-                        {displayedReceiveParking.isManual && (
-                          <Text style={[styles.bottomManualHint, { color: C.textMuted }]}>
-                            {t(locale, "home.manualParkingHint")}
-                          </Text>
-                        )}
-                        <Text style={styles.bottomName} numberOfLines={2}>
-                          {displayedReceiveParking.parking.name}
-                        </Text>
-                        {displayedReceiveParking.parking.company && (
-                          <Text style={styles.bottomCompany} numberOfLines={1}>
-                            {displayedReceiveParking.parking.company.commercialName?.trim() ||
-                              displayedReceiveParking.parking.company.legalName?.trim() ||
-                              "—"}
-                          </Text>
-                        )}
-                        {displayedReceiveParking.distanceKm != null && (
-                          <Text style={styles.bottomMeta}>
-                            {t(locale, "home.nearestKm", {
-                              km:
-                                displayedReceiveParking.distanceKm < 10
-                                  ? displayedReceiveParking.distanceKm.toFixed(1)
-                                  : String(Math.round(displayedReceiveParking.distanceKm)),
-                            })}
-                          </Text>
-                        )}
-                        <Text style={styles.bottomAddr} numberOfLines={3}>
-                          {displayedReceiveParking.parking.address}
-                        </Text>
-                        {displayedReceiveParking.isManual && (
-                          <Pressable
-                            style={({ pressed }) => [styles.bottomUseNearestBtn, pressed && styles.pressed]}
-                            onPress={() => setReceiveManualParkingId(null)}
-                          >
-                            <Text style={[styles.bottomUseNearestText, { color: C.primary }]}>
-                              {t(locale, "home.useNearestParking")}
-                            </Text>
-                          </Pressable>
-                        )}
-                      </>
-                    )}
-                  </View>
-                </Pressable>
+          <Pressable
+            style={({ pressed }) => [styles.bottomCardInner, pressed && styles.pressed]}
+            onPress={() => setReceiveParkingModalOpen(true)}
+            accessibilityRole="button"
+            accessibilityLabel={t(locale, "home.chooseParking")}
+          >
+            <View style={styles.bottomIconWrap}>
+              <IconLocationFilled size={theme.icon.xs} fill={C.primary}  color={C.primary} />
+            </View>
+            <View style={styles.bottomTextCol}>
+              <View style={styles.bottomTitleRow}>
+                <Text style={styles.bottomTitle} numberOfLines={1} maxFontSizeMultiplier={1.5} adjustsFontSizeToFit={true}>
+                  {t(locale, "home.nearestTitle")}
+                </Text>
+                {allParkings.length > 0 && locStatus !== "loading" && locStatus !== "unavailable" && (
+                  <IconList size={theme.icon.sm} color={C.primary} />
+                )}
               </View>
+              {locStatus === "loading" && (
+                <View style={styles.bottomLoadingRow}>
+                  <ActivityIndicator size="small" color={C.primary} />
+                  <Text style={styles.bottomMeta} maxFontSizeMultiplier={1.5}>{t(locale, "home.nearestLoading")}</Text>
+                </View>
+              )}
+              {locStatus === "unavailable" && (
+                <Text style={styles.bottomMeta} maxFontSizeMultiplier={1.5}>{t(locale, "home.nearestNoCoords")}</Text>
+              )}
+              {locStatus === "denied" && (
+                <Text style={styles.bottomMeta} maxFontSizeMultiplier={1.5}>{t(locale, "home.nearestDenied")}</Text>
+              )}
+              {(locStatus === "ready" || locStatus === "denied") && displayedReceiveParking && (
+                <>
+                  {displayedReceiveParking.isManual && (
+                    <Text style={[styles.bottomManualHint, { color: C.textMuted }]} maxFontSizeMultiplier={1.5}>
+                      {t(locale, "home.manualParkingHint")}
+                    </Text>
+                  )}
+                  <Text style={styles.bottomName} numberOfLines={2} maxFontSizeMultiplier={1.5} adjustsFontSizeToFit={true}>
+                    {displayedReceiveParking.parking.name}
+                  </Text>
+                  {displayedReceiveParking.parking.company && (
+                    <Text style={styles.bottomCompany} numberOfLines={1} maxFontSizeMultiplier={1.5} adjustsFontSizeToFit={true}>
+                      {displayedReceiveParking.parking.company.commercialName?.trim() ||
+                        displayedReceiveParking.parking.company.legalName?.trim() ||
+                        "—"}
+                    </Text>
+                  )}
+                  {displayedReceiveParking.distanceKm != null && (
+                    <Text style={styles.bottomMeta} maxFontSizeMultiplier={1.5}>
+                      {t(locale, "home.nearestKm", {
+                        km:
+                          displayedReceiveParking.distanceKm < 10
+                            ? displayedReceiveParking.distanceKm.toFixed(1)
+                            : String(Math.round(displayedReceiveParking.distanceKm)),
+                      })}
+                    </Text>
+                  )}
+                  <Text style={styles.bottomAddr} maxFontSizeMultiplier={1.5}>
+                    {displayedReceiveParking.parking.address}
+                  </Text>
+                  {displayedReceiveParking.isManual && (
+                    <Pressable
+                      style={({ pressed }) => [styles.bottomUseNearestBtn, pressed && styles.pressed]}
+                      onPress={() => setReceiveManualParkingId(null)}
+                    >
+                      <Text style={[styles.bottomUseNearestText, { color: C.primary }]} maxFontSizeMultiplier={1.5}>
+                        {t(locale, "home.useNearestParking")}
+                      </Text>
+                    </Pressable>
+                  )}
+                </>
+              )}
+            </View>
+          </Pressable>
+        </View>
             </>
           )}
 
           {wizardStep === damageStepNum && (
             <>
-              <Text style={styles.stepExplain}>{t(locale, "receive.damageHeroSub")}</Text>
+              <Text style={styles.stepExplain} maxFontSizeMultiplier={1.5}>{t(locale, "receive.damageHeroSub")}</Text>
 
               <View style={styles.damageActionsRow}>
                 <Pressable
                   style={({ pressed }) => [
-                    styles.primaryBtn,
-                    styles.damageActionBtnFlex,
+                    styles.footerSecondaryBtn,
                     damagePhotoBusy && styles.btnDisabled,
                     pressed && styles.pressed,
                   ]}
                   onPress={() => void takeDamagePhoto()}
                   disabled={damagePhotoBusy}
-                  accessibilityLabel={t(locale, "receive.damageCameraA11y")}
                 >
-                  <IconCamera size={20} color="#fff" />
-                  <Text style={styles.primaryBtnText}>{t(locale, "receive.damageTakePhoto")}</Text>
+                  <IconCamera size={20} color={C.text} />
+                  <Text style={styles.footerSecondaryBtnText} maxFontSizeMultiplier={1.5}>{t(locale, "receive.damageTakePhoto")}</Text>
                 </Pressable>
                 <Pressable
                   style={({ pressed }) => [
                     styles.footerSecondaryBtn,
-                    styles.damageActionBtnFlex,
-                    styles.damageGalleryBtn,
                     damagePhotoBusy && styles.btnDisabled,
                     pressed && styles.pressed,
                   ]}
                   onPress={() => void pickDamageFromLibrary()}
                   disabled={damagePhotoBusy}
-                  accessibilityLabel={t(locale, "receive.damageGalleryA11y")}
                 >
-                  <IconGallery size={20} color={C.textMuted} />
-                  <Text style={styles.footerSecondaryBtnText}>{t(locale, "receive.damageFromGallery")}</Text>
+                  <IconGallery size={20} color={C.text} />
+                  <Text style={styles.footerSecondaryBtnText} maxFontSizeMultiplier={1.5}>{t(locale, "receive.damageFromGallery")}</Text>
                 </Pressable>
               </View>
 
-              <Text style={styles.damageCountMeta}>
+              <Text style={styles.sectionTitle} maxFontSizeMultiplier={1.5}>
                 {t(locale, "receive.damagePhotoCount", {
                   current: String(damagePhotoDataUrls.length),
                   max: String(MAX_DAMAGE_PHOTOS),
@@ -2472,17 +2569,16 @@ export default function ReceiveScreen() {
                     ]}
                     onPress={() => void takeDamagePhoto()}
                     disabled={damagePhotoBusy}
-                    accessibilityLabel={t(locale, "receive.damageCameraA11y")}
                   >
                     <IconGallery size={32} color={C.textMuted} />
-                    <Text style={styles.damagePlaceholderText}>
+                    <Text style={styles.helpText} maxFontSizeMultiplier={1.5}>
                       {t(locale, "receive.damagePlaceholderText")}
                     </Text>
                   </Pressable>
                 ) : null}
 
                 {damagePhotoDataUrls.length === 0 && (
-                  <Text style={styles.stepExplain}>
+                  <Text style={styles.localeHint} maxFontSizeMultiplier={1.5}>
                     {t(locale, "receive.damagePhotosHelp")}
                   </Text>
                 )}
@@ -2511,7 +2607,6 @@ export default function ReceiveScreen() {
                       <Pressable
                         style={({ pressed }) => [styles.damageRemoveBtn, pressed && styles.pressed]}
                         onPress={() => removeDamagePhotoAt(index)}
-                        accessibilityLabel={t(locale, "receive.damageRemovePhotoA11y")}
                       >
                         <IconCircleX size={24} color="rgba(255,255,255,0.95)" />
                       </Pressable>
@@ -2524,23 +2619,25 @@ export default function ReceiveScreen() {
                 <ActivityIndicator color={C.primary} style={{ marginBottom: theme.space.md }} />
               ) : null}
 
-              <Text style={styles.inputFieldLabel}>{t(locale, "receive.damageNoteLabel")}</Text>
-              <Text style={styles.stepExplain}>
-                {t(locale, "receive.damageNoteOptional")}
-              </Text>
-              <TextInput
-                style={[styles.input, styles.damageNoteInput]}
-                value={damageNote}
-                onChangeText={setDamageNote}
-                placeholder={t(locale, "receive.damageNotePlaceholder")}
-                placeholderTextColor={C.textSubtle}
-                multiline
-                maxFontSizeMultiplier={2}
-              />
+              <View style={{ marginTop: theme.space.md }}>
+                <Text style={styles.localeLabel} maxFontSizeMultiplier={1.5}>{t(locale, "receive.damageNoteLabel")}</Text>
+                <Text style={[styles.localeHint, { marginBottom: theme.space.sm }]} maxFontSizeMultiplier={1.5}>
+                  Detalles adicionales
+                </Text>
+                <TextInput
+                  style={[styles.input, styles.damageNoteInput]}
+                  value={damageNote}
+                  onChangeText={setDamageNote}
+                  placeholder="Describe los daños observados..."
+                  placeholderTextColor={C.textSubtle}
+                  multiline
+                  maxFontSizeMultiplier={1.5}
+                />
+              </View>
             </>
           )}
 
-          {wizardStep === valetStepNum && (
+          {(wizardStep as number) === valetStepNum && (
             <>
               <Text style={styles.stepExplain}>{t(locale, "receive.wizardValetStepHelp")}</Text>
 
@@ -2584,7 +2681,7 @@ export default function ReceiveScreen() {
                   </View>
                   <View style={styles.bottomTextCol}>
                     <View style={styles.bottomTitleRow}>
-                      <Text style={styles.bottomTitle} numberOfLines={1}>
+                      <Text style={styles.bottomTitle} numberOfLines={1} maxFontSizeMultiplier={2}>
                         {t(locale, "receive.driverValetSection")}
                       </Text>
                       <IconList size={16} color={C.primary} />
@@ -2663,11 +2760,11 @@ export default function ReceiveScreen() {
               accessibilityLabel={t(locale, "common.cancel")}
             />
             <View style={[styles.modalSheet, { backgroundColor: C.card, borderColor: C.border }]}>
-              <Text style={[styles.modalTitle, { color: C.text, fontSize: Math.round(theme.font.status * 0.6 * textScale) }]}>{t(locale, "receive.placeholderBrand")}</Text>
+              <Text style={[styles.modalTitle, { color: C.text, fontSize: theme.font.base }]}>{t(locale, "receive.placeholderBrand")}</Text>
               {loadingCatalogMakes ? (
                 <View style={{ paddingVertical: theme.space.lg, alignItems: "center" }}>
                   <ActivityIndicator color={C.primary} />
-                  <Text style={{ color: C.textMuted, marginTop: theme.space.sm, fontSize: Math.round(theme.font.secondary * 0.65 * textScale) }}>
+                  <Text style={{ color: C.textMuted, marginTop: theme.space.sm, fontSize: theme.font.base }}>
                     Cargando marcas...
                   </Text>
                 </View>
@@ -2690,7 +2787,7 @@ export default function ReceiveScreen() {
                         setVehicleBrandModalOpen(false);
                       }}
                     >
-                      <Text style={[styles.parkingRowName, { color: C.primary, fontSize: Math.round(theme.font.status * 0.6 * textScale) }]}>
+                      <Text style={[styles.parkingRowName, { color: C.primary, fontSize: theme.font.base }]}>
                         {t(locale, "receive.manualEntry")}
                       </Text>
                     </Pressable>
@@ -2713,7 +2810,7 @@ export default function ReceiveScreen() {
                         }}
                       >
                         <View style={styles.parkingRowText}>
-                          <Text style={[styles.parkingRowName, { color: C.text, fontSize: Math.round(theme.font.status * 0.6 * textScale) }]} numberOfLines={2}>
+                          <Text style={[styles.parkingRowName, { color: C.text, fontSize: theme.font.base }]} numberOfLines={2}>
                             {item.name}
                           </Text>
                         </View>
@@ -2722,7 +2819,7 @@ export default function ReceiveScreen() {
                     );
                   }}
                   ListEmptyComponent={
-                    <Text style={{ color: C.textMuted, padding: theme.space.md, fontSize: Math.round(theme.font.secondary * 0.65 * textScale) }}>
+                    <Text style={{ color: C.textMuted, padding: theme.space.md, fontSize: theme.font.base }}>
                       {t(locale, "receive.brandPickerEmpty")}
                     </Text>
                   }
@@ -2745,11 +2842,11 @@ export default function ReceiveScreen() {
               accessibilityLabel={t(locale, "common.cancel")}
             />
             <View style={[styles.modalSheet, { backgroundColor: C.card, borderColor: C.border }]}>
-              <Text style={[styles.modalTitle, { color: C.text, fontSize: Math.round(theme.font.status * 0.6 * textScale) }]}>{t(locale, "receive.placeholderModel")}</Text>
+              <Text style={[styles.modalTitle, { color: C.text, fontSize: theme.font.base }]}>{t(locale, "receive.placeholderModel")}</Text>
               {loadingCatalogModels ? (
                 <View style={{ paddingVertical: theme.space.lg, alignItems: "center" }}>
                   <ActivityIndicator color={C.primary} />
-                  <Text style={{ color: C.textMuted, marginTop: theme.space.sm, fontSize: Math.round(theme.font.secondary * 0.65 * textScale) }}>
+                  <Text style={{ color: C.textMuted, marginTop: theme.space.sm, fontSize: theme.font.base }}>
                     Cargando modelos...
                   </Text>
                 </View>
@@ -2771,7 +2868,7 @@ export default function ReceiveScreen() {
                         setVehicleModelModalOpen(false);
                       }}
                     >
-                      <Text style={[styles.parkingRowName, { color: C.primary, fontSize: Math.round(theme.font.status * 0.6 * textScale) }]}>
+                      <Text style={[styles.parkingRowName, { color: C.primary, fontSize: theme.font.base }]}>
                         {t(locale, "receive.manualEntry")}
                       </Text>
                     </Pressable>
@@ -2792,7 +2889,7 @@ export default function ReceiveScreen() {
                         }}
                       >
                         <View style={styles.parkingRowText}>
-                          <Text style={[styles.parkingRowName, { color: C.text, fontSize: Math.round(theme.font.status * 0.6 * textScale) }]} numberOfLines={2}>
+                          <Text style={[styles.parkingRowName, { color: C.text, fontSize: theme.font.base }]} numberOfLines={2}>
                             {item.name}
                           </Text>
                         </View>
@@ -2801,7 +2898,7 @@ export default function ReceiveScreen() {
                     );
                   }}
                   ListEmptyComponent={
-                    <Text style={{ color: C.textMuted, padding: theme.space.md, fontSize: Math.round(theme.font.secondary * 0.65 * textScale) }}>
+                    <Text style={{ color: C.textMuted, padding: theme.space.md, fontSize: theme.font.base }}>
                       {t(locale, "receive.modelPickerEmpty")}
                     </Text>
                   }
@@ -2824,7 +2921,7 @@ export default function ReceiveScreen() {
               accessibilityLabel={t(locale, "common.cancel")}
             />
             <View style={[styles.modalSheet, { backgroundColor: C.card, borderColor: C.border }]}>
-              <Text style={[styles.modalTitle, { color: C.text, fontSize: Math.round(theme.font.status * 0.6 * textScale) }]}>{t(locale, "receive.placeholderColor")}</Text>
+              <Text style={[styles.modalTitle, { color: C.text, fontSize: theme.font.base }]}>{t(locale, "receive.placeholderColor")}</Text>
               <FlatList
                 data={getVehicleColorOptions(locale).sort((a, b) => a.label.localeCompare(b.label))}
                 keyExtractor={(item) => item.value}
@@ -2842,7 +2939,7 @@ export default function ReceiveScreen() {
                       setVehicleColorModalOpen(false);
                     }}
                   >
-                    <Text style={[styles.parkingRowName, { color: C.primary, fontSize: Math.round(theme.font.status * 0.6 * textScale) }]}>
+                    <Text style={[styles.parkingRowName, { color: C.primary, fontSize: theme.font.base }]}>
                       {t(locale, "receive.noColorOption")}
                     </Text>
                   </Pressable>
@@ -2862,7 +2959,7 @@ export default function ReceiveScreen() {
                       }}
                     >
                       <View style={styles.parkingRowText}>
-                        <Text style={[styles.parkingRowName, { color: C.text, fontSize: Math.round(theme.font.status * 0.6 * textScale) }]} numberOfLines={2}>
+                        <Text style={[styles.parkingRowName, { color: C.text, fontSize: theme.font.base }]} numberOfLines={2}>
                           {item.label}
                         </Text>
                       </View>
@@ -2871,7 +2968,7 @@ export default function ReceiveScreen() {
                   );
                 }}
                 ListEmptyComponent={
-                  <Text style={{ color: C.textMuted, padding: theme.space.md, fontSize: Math.round(theme.font.secondary * 0.65 * textScale) }}>
+                  <Text style={{ color: C.textMuted, padding: theme.space.md, fontSize: theme.font.base }}>
                     {t(locale, "receive.colorPickerEmpty")}
                   </Text>
                 }
@@ -2893,7 +2990,7 @@ export default function ReceiveScreen() {
               accessibilityLabel={t(locale, "common.cancel")}
             />
             <View style={[styles.modalSheet, { backgroundColor: C.card, borderColor: C.border }]}>
-              <Text style={[styles.modalTitle, { color: C.text, fontSize: Math.round(theme.font.status * 0.6 * textScale) }]}>
+              <Text style={[styles.modalTitle, { color: C.text, fontSize: theme.font.base }]}>
                 {t(locale, "receive.valetSelectPlaceholder")}
               </Text>
               <FlatList
@@ -2916,22 +3013,23 @@ export default function ReceiveScreen() {
                       isBusy={isBusy}
                       isDisabled={isDisabled}
                       onPress={() => {
-                        if (isDisabled) return;
                         setDriverValetId(item.id);
                         setValetSelectModalOpen(false);
                       }}
                       locale={locale}
                       theme={theme}
                       styles={createValetRowStyles(theme)}
-                      statusMeta=""
+                      statusMeta={isBusy && !hasAvailable ? t(locale, "receive.valetWillQueue") : ""}
                       badgeVariant={item.variant}
                     />
                   );
                 }}
                 ListEmptyComponent={
-                  <Text style={{ color: C.textMuted, padding: theme.space.md, fontSize: Math.round(theme.font.secondary * 0.65 * textScale) }}>
-                    {t(locale, "receive.valetDriversEmpty")}
-                  </Text>
+                  <View style={{ alignItems: 'center', justifyContent: 'center', padding: theme.space.md }}>
+                    <Text style={{ color: C.textMuted, textAlign: 'center', fontSize: theme.font.base }}>
+                      {t(locale, "receive.valetDriversEmpty")}
+                    </Text>
+                  </View>
                 }
                 ItemSeparatorComponent={() => <View style={{ height: theme.space.sm }} />}
                 contentContainerStyle={{ paddingBottom: theme.space.xl }}
@@ -2953,7 +3051,7 @@ export default function ReceiveScreen() {
               accessibilityLabel={t(locale, "common.cancel")}
             />
             <View style={[styles.modalSheet, { backgroundColor: C.card, borderColor: C.border }]}>
-              <Text style={[styles.modalTitle, { color: C.text, fontSize: Math.round(theme.font.status * 0.6 * textScale) }]}>
+              <Text style={[styles.modalTitle, { color: C.text, fontSize: theme.font.base }]}>
                 {t(locale, "home.parkingPickerTitle")}
               </Text>
               <FlatList
@@ -2976,10 +3074,10 @@ export default function ReceiveScreen() {
                       }}
                     >
                       <View style={styles.parkingRowText}>
-                        <Text style={[styles.parkingRowName, { color: C.text, fontSize: Math.round(theme.font.status * 0.6 * textScale) }]} numberOfLines={2}>
+                        <Text style={[styles.parkingRowName, { color: C.text, fontSize: theme.font.base }]} numberOfLines={2}>
                           {item.name}
                         </Text>
-                        <Text style={[styles.parkingRowAddr, { color: C.textMuted, fontSize: Math.round(theme.font.status * 0.6 * textScale) }]} numberOfLines={2}>
+                        <Text style={[styles.parkingRowAddr, { color: C.textMuted, fontSize: theme.font.base }]} numberOfLines={2}>
                           {item.address}
                         </Text>
                       </View>
@@ -2998,6 +3096,16 @@ export default function ReceiveScreen() {
         </Modal>
       </View>
       </View>
+      
+      {pendingTicketData && (
+        <TicketSuccessModal
+          visible={ticketConfirmModalVisible}
+          ticketData={pendingTicketData}
+          onConfirm={handleConfirmTicket}
+          onCancel={() => setTicketConfirmModalVisible(false)}
+          submitting={submitting}
+        />
+      )}
     </SafeAreaView>
   );
 }
@@ -3007,7 +3115,6 @@ type Theme = ReturnType<typeof useValetTheme>;
 function createStyles(theme: Theme, contentMaxWidth: number, sectionPadding: number) {
   const C = theme.colors;
   const S = theme.space;
-  const F = ticketsA11y.font;
   const R = theme.radius;
   const Fonts = theme.fontFamily;
 
@@ -3023,7 +3130,17 @@ function createStyles(theme: Theme, contentMaxWidth: number, sectionPadding: num
       alignItems: "center",
       justifyContent: "space-between",
       paddingHorizontal: sectionPadding,
-      paddingVertical: S.xs,
+      paddingVertical: S.md,
+      borderBottomWidth: StyleSheet.hairlineWidth,
+      borderBottomColor: C.border,
+      backgroundColor: C.card,
+    },
+    screenHeaderType: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "space-between",
+      paddingHorizontal: sectionPadding,
+      paddingVertical: S.md,
       borderBottomWidth: StyleSheet.hairlineWidth,
       borderBottomColor: C.border,
       backgroundColor: C.card,
@@ -3031,7 +3148,7 @@ function createStyles(theme: Theme, contentMaxWidth: number, sectionPadding: num
     scroll: { padding: sectionPadding, paddingBottom: S.xl },
     primaryBtnSticky: { marginTop: 0, marginBottom: 0 },
     screenTitle: {
-      fontSize: Math.round(F.status * 0.65),
+      fontSize: theme.font.base,
       fontWeight: "800",
       fontFamily: Fonts.primary,
       color: C.text,
@@ -3039,21 +3156,55 @@ function createStyles(theme: Theme, contentMaxWidth: number, sectionPadding: num
       textAlign: "center",
     },
     sectionLabel: {
-      fontSize: Math.round(F.status * 0.65),
+      fontSize: theme.font.xs,
       fontWeight: "800",
       color: C.textMuted,
       marginBottom: S.sm,
       textTransform: "uppercase",
       letterSpacing: 0.6,
     },
-    help: {
-      fontSize: Math.round(F.status * 0.65),
+    /** Estilos de settings para subtítulos y textos descriptivos */
+    sectionTitle: {
+      fontWeight: '600',
+      color: C.textMuted,
+      marginTop: S.md,
+      marginBottom: S.sm,
+      lineHeight: 22,
+    },
+    /** Subtítulo menos bold para textos descriptivos estándar */
+    subtitle: {
+      fontWeight: '500',
+      color: C.textMuted,
+      marginTop: S.sm,
+      marginBottom: S.sm,
+      lineHeight: 20,
+    },
+    helpText: {
+      fontFamily: Fonts.primary,
+      lineHeight: 18,
+      color: C.textMuted,
+      fontWeight: "600",
+      marginBottom: S.md,
+    },
+    localeLabel: {
+      fontWeight: '700',
+      fontFamily: Fonts.primary,
+      color: C.text,
+    },
+    localeHint: {
+      fontFamily: Fonts.primary,
       color: C.textSubtle,
+      marginTop: 2,
+    },
+    help: {
+      fontSize: theme.font.xs,
+      fontWeight: "400",
+      color: "#94A3B8",
       marginBottom: S.md,
       lineHeight: 22,
     },
     inlineLoadingText: {
-      fontSize: F.secondary,
+      fontSize: theme.font.sm,
       color: C.textSubtle,
       lineHeight: 20,
       marginBottom: 0,
@@ -3078,7 +3229,7 @@ function createStyles(theme: Theme, contentMaxWidth: number, sectionPadding: num
     footerSecondaryBtnText: {
       color: C.text,
       fontWeight: "800",
-      fontSize: Math.round(F.status * 0.65),
+      fontSize: theme.font.base,
     },
     input: {
       backgroundColor: theme.auth.inputBg,
@@ -3088,7 +3239,7 @@ function createStyles(theme: Theme, contentMaxWidth: number, sectionPadding: num
       paddingHorizontal: 16,
       paddingVertical: 12,
       paddingLeft: 48,
-      fontSize: Math.round(F.status * 0.6),
+      fontSize: theme.font.base,
       color: theme.auth.text,
       marginBottom: S.sm,
       height: 48,
@@ -3101,7 +3252,7 @@ function createStyles(theme: Theme, contentMaxWidth: number, sectionPadding: num
     },
     selectorInputText: {
       color: C.text,
-      fontSize: Math.round(F.status * 0.6),
+      fontSize: theme.font.base,
       fontWeight: "600",
     },
     selectorInputPlaceholder: {
@@ -3131,7 +3282,7 @@ function createStyles(theme: Theme, contentMaxWidth: number, sectionPadding: num
     primaryBtnText: {
       color: "#fff",
       fontWeight: "800",
-      fontSize: Math.round(F.status * 0.65),
+      fontSize: theme.font.base,
     },
     secondaryBtn: {
       paddingHorizontal: S.md,
@@ -3150,6 +3301,7 @@ function createStyles(theme: Theme, contentMaxWidth: number, sectionPadding: num
       marginBottom: S.lg,
     },
     typeCard: {
+      width: "100%",
       backgroundColor: theme.isDark ? "rgba(30, 41, 59, 0.6)" : "rgba(255, 255, 255, 0.9)",
       borderRadius: 20,
       borderWidth: 1,
@@ -3158,6 +3310,7 @@ function createStyles(theme: Theme, contentMaxWidth: number, sectionPadding: num
       justifyContent: "center",
       alignItems: "center",
       gap: S.sm,
+      height: "auto",
       ...Platform.select({
         ios: {
           shadowColor: "#0F172A",
@@ -3208,13 +3361,13 @@ function createStyles(theme: Theme, contentMaxWidth: number, sectionPadding: num
       backgroundColor: C.primary,
     },
     typeCardTitle: {
-      fontSize: Math.round(F.status * 0.65),
+      fontSize: theme.font.base,
       fontWeight: "800",
       color: C.text,
       textAlign: "center",
     },
     typeCardBody: {
-      fontSize: Math.round(F.status * 0.65),
+      fontSize: theme.font.base,
       color: C.textMuted,
       textAlign: "center",
       lineHeight: 20,
@@ -3229,9 +3382,9 @@ function createStyles(theme: Theme, contentMaxWidth: number, sectionPadding: num
       borderColor: C.border,
       marginBottom: S.lg,
     },
-    cardTitle: { fontSize: F.secondary - 1, fontWeight: "800", color: C.text, marginBottom: S.xs },
-    cardLine: { fontSize: F.secondary - 1, fontWeight: "700", color: C.text },
-    cardHint: { fontSize: F.secondary, color: C.textMuted, marginTop: S.sm, lineHeight: 22 },
+    cardTitle: { fontSize: theme.font.base, fontWeight: "800", color: C.text, marginBottom: S.xs },
+    cardLine: { fontSize: theme.font.base, fontWeight: "700", color: C.text },
+    cardHint: { fontSize: theme.font.sm, color: C.textMuted, marginTop: S.sm, lineHeight: 22 },
     vehicleFoundCard: {
       borderColor: theme.isDark ? "rgba(16, 185, 129, 0.45)" : "rgba(16, 185, 129, 0.35)",
       backgroundColor: theme.isDark ? "rgba(16, 185, 129, 0.08)" : "rgba(16, 185, 129, 0.06)",
@@ -3252,16 +3405,17 @@ function createStyles(theme: Theme, contentMaxWidth: number, sectionPadding: num
       marginRight: S.sm,
     },
     vehicleFoundTitle: {
-      fontSize: Math.round(F.secondary * 0.75),
-      fontWeight: "700",
+      fontSize: theme.font.base,
+      fontWeight: "800",
       color: C.text,
-      marginBottom: 4,
+      marginBottom: -4,
       flex: 1,
     },
     vehicleFoundSubtitle: {
-      fontSize: Math.round(F.secondary * 0.65),
+      fontSize: theme.font.base,
       fontWeight: "500",
       color: C.success,
+      marginTop: -4,
     },
     vehicleFoundBadge: {
       flexDirection: "row",
@@ -3273,7 +3427,7 @@ function createStyles(theme: Theme, contentMaxWidth: number, sectionPadding: num
       backgroundColor: theme.isDark ? "rgba(16, 185, 129, 0.15)" : "rgba(16, 185, 129, 0.12)",
     },
     vehicleFoundBadgeText: {
-      fontSize: Math.round(F.status * 0.7),
+      fontSize: theme.font.sm,
       fontWeight: "800",
       color: C.success,
       textTransform: "uppercase",
@@ -3294,7 +3448,7 @@ function createStyles(theme: Theme, contentMaxWidth: number, sectionPadding: num
     },
     vehicleSummaryLabel: {
       flexShrink: 1,
-      fontSize: Math.round(F.secondary * 0.75),
+      fontSize: theme.font.sm,
       fontWeight: "700",
       color: C.textMuted,
       letterSpacing: 0.4,
@@ -3302,7 +3456,7 @@ function createStyles(theme: Theme, contentMaxWidth: number, sectionPadding: num
     vehicleSummaryValue: {
       flex: 1,
       textAlign: "right",
-      fontSize: F.secondary,
+      fontSize: theme.font.sm,
       fontWeight: "800",
       color: C.text,
     },
@@ -3320,7 +3474,7 @@ function createStyles(theme: Theme, contentMaxWidth: number, sectionPadding: num
       backgroundColor: theme.isDark ? "rgba(249, 115, 22, 0.18)" : "rgba(249, 115, 22, 0.12)",
     },
     vehicleNotFoundBadgeText: {
-      fontSize: Math.round(F.status * 0.7),
+      fontSize: theme.font.sm,
       fontWeight: "800",
       color: C.warning,
       textTransform: "uppercase",
@@ -3337,14 +3491,14 @@ function createStyles(theme: Theme, contentMaxWidth: number, sectionPadding: num
       borderWidth: 1,
       borderColor: "rgba(245, 158, 11, 0.35)",
     },
-    warnText: { flex: 1, color: "#B45309", fontWeight: "600", fontSize: F.secondary },
+    warnText: { flex: 1, color: "#B45309", fontWeight: "600", fontSize: theme.font.sm },
     okBanner: {
       flexDirection: "row",
       gap: S.sm,
       alignItems: "center",
       marginBottom: S.md,
     },
-    okText: { flex: 1, color: C.success, fontWeight: "700", fontSize: F.secondary },
+    okText: { flex: 1, color: C.success, fontWeight: "700", fontSize: theme.font.sm },
     errInline: { color: "#DC2626", marginBottom: S.md, fontWeight: "600" },
     reservationQrOverlay: {
       ...StyleSheet.absoluteFillObject,
@@ -3379,7 +3533,7 @@ function createStyles(theme: Theme, contentMaxWidth: number, sectionPadding: num
       flex: 1,
       color: "#FDE68A",
       fontWeight: "600",
-      fontSize: F.secondary,
+      fontSize: theme.font.sm,
       lineHeight: 22,
     },
     reservationQrSuccessCard: {
@@ -3397,7 +3551,7 @@ function createStyles(theme: Theme, contentMaxWidth: number, sectionPadding: num
       flex: 1,
       color: "#6EE7B7",
       fontWeight: "700",
-      fontSize: F.secondary,
+      fontSize: theme.font.sm,
       lineHeight: 22,
     },
     reservationBookingErrorShell: {
@@ -3449,27 +3603,27 @@ function createStyles(theme: Theme, contentMaxWidth: number, sectionPadding: num
       gap: 4,
     },
     reservationBookingErrorEyebrow: {
-      fontSize: Math.round(F.status * 0.55),
+      fontSize: theme.font.xs,
       fontWeight: "700",
       letterSpacing: 3.2,
       color: "rgba(203, 213, 225, 0.65)",
       textTransform: "uppercase",
     },
     reservationBookingErrorTitle: {
-      fontSize: F.title - 4,
+      fontSize: theme.font.xxl - 4,
       fontWeight: "700",
       color: "#F8FAFC",
       letterSpacing: -0.6,
     },
     reservationBookingErrorBody: {
-      fontSize: F.secondary,
+      fontSize: theme.font.sm,
       fontWeight: "500",
       color: "rgba(226, 232, 240, 0.9)",
       lineHeight: 24,
       letterSpacing: 0.1,
     },
     reservationBookingErrorHint: {
-      fontSize: F.secondary - 1,
+      fontSize: theme.font.xs,
       fontWeight: "600",
       color: "rgba(148, 163, 184, 0.88)",
       lineHeight: 21,
@@ -3480,7 +3634,7 @@ function createStyles(theme: Theme, contentMaxWidth: number, sectionPadding: num
       paddingTop: S.sm,
     },
     inputFieldLabel: {
-      fontSize: Math.round(F.status * 0.65),
+      fontSize: theme.font.xs,
       fontWeight: "700",
       color: C.textMuted,
       marginBottom: S.xs,
@@ -3488,22 +3642,24 @@ function createStyles(theme: Theme, contentMaxWidth: number, sectionPadding: num
     ticketCodeToggle: {
       alignSelf: "flex-start",
       paddingVertical: S.xs,
+      marginTop: S.md,
       marginBottom: S.md,
     },
     ticketCodeToggleText: {
-      fontSize: Math.round(F.status * 0.65),
+      fontSize: theme.font.xs,
       fontWeight: "700",
       color: C.primary,
     },
     stepExplain: {
-      fontSize: Math.round(F.status * 0.65),
-      color: C.textSubtle,
+      fontSize: theme.font.base,
+      fontWeight: '600',
+      color: C.textMuted,
       marginTop: -4,
       marginBottom: S.md,
       lineHeight: 22,
     },
     inputLabel: {
-      fontSize: Math.round(F.status * 0.6),
+      fontSize: theme.font.base,
       fontWeight: '500',
       color: C.text,
       marginBottom: 6,
@@ -3517,7 +3673,7 @@ function createStyles(theme: Theme, contentMaxWidth: number, sectionPadding: num
     },
     ackRowText: {
       flex: 1,
-      fontSize: F.body,
+      fontSize: theme.font.base,
       color: C.text,
       fontWeight: "600",
       lineHeight: 22,
@@ -3529,7 +3685,10 @@ function createStyles(theme: Theme, contentMaxWidth: number, sectionPadding: num
       paddingHorizontal: S.lg,
       paddingBottom: S.sm,
       paddingTop: S.xs,
-      marginHorizontal: -sectionPadding,
+      marginLeft: -sectionPadding,
+      marginRight: -sectionPadding,
+      paddingLeft: sectionPadding,
+      paddingRight: sectionPadding,
     },
     bottomCardInner: {
       flexDirection: "row",
@@ -3565,9 +3724,7 @@ function createStyles(theme: Theme, contentMaxWidth: number, sectionPadding: num
       marginBottom: 4,
     },
     bottomTitle: {
-      fontSize: Math.round(F.status * 0.65),
       fontWeight: "600",
-      fontFamily: Fonts.primary,
       color: C.textMuted,
       letterSpacing: 0.6,
       flex: 1,
@@ -3582,11 +3739,11 @@ function createStyles(theme: Theme, contentMaxWidth: number, sectionPadding: num
       flexShrink: 0,
     },
     bottomChooseBtnText: {
-      fontSize: Math.round(F.secondary * 0.7),
+      fontSize: theme.font.xs,
       fontWeight: "800",
     },
     bottomManualHint: {
-      fontSize: Math.round(F.status * 0.65),
+      fontSize: theme.font.xs,
       fontWeight: "700",
       fontFamily: Fonts.primary,
       marginBottom: 4,
@@ -3597,7 +3754,7 @@ function createStyles(theme: Theme, contentMaxWidth: number, sectionPadding: num
       paddingVertical: 4,
     },
     bottomUseNearestText: {
-      fontSize: Math.round(F.status * 0.65),
+      fontSize: theme.font.base,
       fontWeight: "600",
       fontFamily: Fonts.primary,
     },
@@ -3607,36 +3764,36 @@ function createStyles(theme: Theme, contentMaxWidth: number, sectionPadding: num
       paddingVertical: 4,
     },
     bottomLinkText: {
-      fontSize: Math.round(F.status * 0.65),
+      fontSize: theme.font.base,
       fontWeight: "600",
       fontFamily: Fonts.primary,
     },
     bottomName: {
-      fontSize: Math.round(F.status * 0.65),
+      fontSize: theme.font.base,
       fontWeight: "600",
       fontFamily: Fonts.primary,
       color: C.text,
     },
     bottomCompany: {
-      fontSize: Math.round(F.status * 0.65),
+      fontSize: theme.font.base,
       fontWeight: "600",
       fontFamily: Fonts.primary,
       color: C.textMuted,
       marginTop: 2,
     },
     bottomMeta: {
-      fontSize: Math.round(F.status * 0.65),
+      fontSize: theme.font.base,
       fontWeight: "700",
       fontFamily: Fonts.primary,
       color: C.primary,
       marginTop: 2,
     },
     bottomAddr: {
-      fontSize: Math.round(F.status * 0.65),
+      fontSize: theme.font.base,
       fontFamily: Fonts.primary,
       color: C.textSubtle,
       marginTop: 4,
-      lineHeight: Math.round(F.status * 0.95),
+      lineHeight: Math.round(theme.font.md * 0.95),
     },
     bottomLoadingRow: {
       flexDirection: "row",
@@ -3662,7 +3819,7 @@ function createStyles(theme: Theme, contentMaxWidth: number, sectionPadding: num
       paddingBottom: S.lg,
     },
     modalTitle: {
-      fontSize: Math.round(F.secondary * 0.9),
+      fontSize: theme.font.sm,
       fontWeight: "600",
       textAlign: "center",
       marginBottom: S.sm,
@@ -3682,13 +3839,13 @@ function createStyles(theme: Theme, contentMaxWidth: number, sectionPadding: num
       flex: 1,
     },
     parkingRowName: {
-      fontSize: Math.round(F.secondary * 0.65),
-      fontWeight: "500",
+      fontSize: theme.font.xs,
+      fontWeight: "600",
     },
     parkingRowAddr: {
-      fontSize: Math.round(F.status * 0.7),
+      fontSize: theme.font.xs,
       marginTop: 4,
-      lineHeight: Math.round(F.status * 0.95),
+      lineHeight: Math.round(theme.font.md * 0.95),
     },
     cardVerifyOnHold: {
       backgroundColor: theme.isDark ? "rgba(2, 6, 23, 0.82)" : "rgba(255, 255, 255, 0.96)",
@@ -3716,13 +3873,13 @@ function createStyles(theme: Theme, contentMaxWidth: number, sectionPadding: num
     },
     cardVerifyOnHoldTextCol: { flex: 1, minWidth: 0 },
     cardVerifyOnHoldTitle: {
-      fontSize: F.secondary - 1,
+      fontSize: theme.font.xs,
       fontWeight: "800",
       color: C.text,
       marginBottom: S.xs,
     },
     cardVerifyOnHoldBody: {
-      fontSize: F.secondary,
+      fontSize: theme.font.sm,
       color: C.textMuted,
       lineHeight: 22,
     },
@@ -3740,7 +3897,7 @@ function createStyles(theme: Theme, contentMaxWidth: number, sectionPadding: num
       flexWrap: "wrap",
     },
     cardVerifyBadgeText: {
-      fontSize: F.secondary - 1,
+      fontSize: theme.font.xs,
       fontWeight: "800",
       color: C.textMuted,
       textTransform: "uppercase",
@@ -3758,7 +3915,7 @@ function createStyles(theme: Theme, contentMaxWidth: number, sectionPadding: num
       borderColor: theme.isDark ? "rgba(52, 211, 153, 0.35)" : "rgba(16, 185, 129, 0.25)",
     },
     cardVerifyStartedBadgeText: {
-      fontSize: F.secondary - 1,
+      fontSize: theme.font.xs,
       fontWeight: "800",
       color: C.success,
       textTransform: "uppercase",
@@ -3772,7 +3929,7 @@ function createStyles(theme: Theme, contentMaxWidth: number, sectionPadding: num
     },
     stepCardStripeBtnBg: {
       width: "100%",
-      minHeight: ticketsA11y.minTouch,
+      minHeight: theme.minTouch,
       borderRadius: R.button + 2,
       alignItems: "center",
       justifyContent: "center",
@@ -3786,13 +3943,13 @@ function createStyles(theme: Theme, contentMaxWidth: number, sectionPadding: num
       gap: S.sm,
     },
     cardVerifyHintText: {
-      fontSize: F.secondary,
+      fontSize: theme.font.sm,
       color: C.textSubtle,
       lineHeight: 22,
       marginBottom: S.md,
     },
     modalBody: {
-      fontSize: F.secondary,
+      fontSize: theme.font.sm,
       color: C.textMuted,
       lineHeight: 20,
       marginTop: S.xs,
@@ -3813,14 +3970,14 @@ function createStyles(theme: Theme, contentMaxWidth: number, sectionPadding: num
       borderColor: C.primary,
       backgroundColor: theme.isDark ? "rgba(59, 130, 246, 0.2)" : "rgba(59, 130, 246, 0.12)",
     },
-    chipText: { fontSize: F.secondary, fontWeight: "700", color: C.text },
+    chipText: { fontSize: theme.font.sm, fontWeight: "700", color: C.text },
     chipTextOn: { color: C.primary },
     valetDriverList: {
       marginBottom: S.lg,
       gap: S.sm,
     },
     valetSectionTitle: {
-      fontSize: Math.round(F.status * 0.6),
+      fontSize: theme.font.xs,
       fontWeight: "500",
       fontFamily: Fonts.primary,
       color: C.text,
@@ -3842,7 +3999,7 @@ function createStyles(theme: Theme, contentMaxWidth: number, sectionPadding: num
     valetQueueCardText: {
       flex: 1,
       color: C.text,
-      fontSize: F.secondary,
+      fontSize: theme.font.sm,
       lineHeight: 20,
       fontWeight: "600",
     },
@@ -3879,12 +4036,12 @@ function createStyles(theme: Theme, contentMaxWidth: number, sectionPadding: num
       minWidth: 0,
     },
     valetDriverRowText: {
-      fontSize: F.secondary - 1,
+      fontSize: theme.font.xs,
       fontWeight: "700",
       color: C.text,
     },
     valetDriverRowMeta: {
-      fontSize: F.secondary - 1,
+      fontSize: theme.font.xs,
       color: C.textSubtle,
       marginTop: 2,
     },
@@ -3897,7 +4054,7 @@ function createStyles(theme: Theme, contentMaxWidth: number, sectionPadding: num
       paddingHorizontal: S.sm,
     },
     valetStatusBadgeAvailableText: {
-      fontSize: Math.round(F.status * 0.65),
+      fontSize: theme.font.xs,
       fontWeight: "800",
       color: theme.isDark ? "#86EFAC" : "#166534",
       textTransform: "uppercase",
@@ -3912,7 +4069,7 @@ function createStyles(theme: Theme, contentMaxWidth: number, sectionPadding: num
       paddingHorizontal: S.sm,
     },
     valetStatusBadgeBusyText: {
-      fontSize: Math.round(F.status * 0.65),
+      fontSize: theme.font.xs,
       fontWeight: "800",
       color: theme.isDark ? "#FCD34D" : "#92400E",
       textTransform: "uppercase",
@@ -3933,7 +4090,7 @@ function createStyles(theme: Theme, contentMaxWidth: number, sectionPadding: num
       borderRadius: 24,
     },
     valetAvatarText: {
-      fontSize: Math.round(F.secondary),
+      fontSize: theme.font.sm,
       fontWeight: "800",
       letterSpacing: -0.3,
     },
@@ -3984,25 +4141,25 @@ function createStyles(theme: Theme, contentMaxWidth: number, sectionPadding: num
       gap: 4,
     },
     valetEtaKicker: {
-      fontSize: Math.round(F.status * 0.65),
+      fontSize: theme.font.xs,
       fontWeight: "800",
       color: C.warning,
       textTransform: "uppercase",
       letterSpacing: 0.7,
     },
     valetEtaTitle: {
-      fontSize: F.secondary - 1,
+      fontSize: theme.font.xs,
       fontWeight: "800",
       color: C.text,
     },
     valetEtaBody: {
-      fontSize: F.secondary,
+      fontSize: theme.font.sm,
       color: C.textMuted,
       lineHeight: 22,
       fontWeight: "600",
     },
     valetEtaFootnote: {
-      fontSize: F.secondary - 1,
+      fontSize: theme.font.xs,
       color: C.textSubtle,
       lineHeight: 20,
       marginTop: 4,
@@ -4041,7 +4198,7 @@ function createStyles(theme: Theme, contentMaxWidth: number, sectionPadding: num
       elevation: 2,
     },
     damageCountMeta: {
-      fontSize: Math.round(F.status * 0.65),
+      fontSize: theme.font.xs,
       fontWeight: "700",
       color: C.textMuted,
       marginBottom: S.md,
@@ -4077,20 +4234,18 @@ function createStyles(theme: Theme, contentMaxWidth: number, sectionPadding: num
       gap: S.sm,
     },
     damagePlaceholderText: {
-      fontSize: Math.round(F.status * 0.6),
       color: C.textMuted,
       textAlign: "center",
       marginTop: S.xs,
     },
     damageNoteOptional: {
-      fontSize: Math.round(F.status * 0.65),
       marginTop: -6,
       marginBottom: S.sm,
       lineHeight: 20,
     },
     damageNoteInput: {
       width: "100%",
-      minHeight: 120,
+      minHeight: 180,
       textAlignVertical: "top",
       paddingTop: 10,
       paddingLeft: 16,
@@ -4102,8 +4257,8 @@ function createStyles(theme: Theme, contentMaxWidth: number, sectionPadding: num
       alignItems: "center",
       gap: S.md,
     },
-    blockedTitle: { fontSize: F.title, fontWeight: "800", color: C.text, textAlign: "center" },
-    blockedBody: { fontSize: F.body, color: C.textMuted, textAlign: "center", lineHeight: 26 },
+    blockedTitle: { fontSize: theme.font.xxl, fontWeight: "800", color: C.text, textAlign: "center" },
+    blockedBody: { fontSize: theme.font.base, color: C.textMuted, textAlign: "center", lineHeight: 26 },
     backBtn: {
       marginTop: S.lg,
       paddingVertical: S.md,

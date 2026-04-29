@@ -4,7 +4,7 @@ import { Redirect, useRouter } from "expo-router";
 import { useMemo } from "react";
 import { useAuthStore, useLocaleStore } from "@/lib/store";
 import { t } from "@/lib/i18n";
-import { useValetTheme, ticketsA11y, useResponsiveLayout } from "@/theme/valetTheme";
+import { useValetTheme, useResponsiveLayout } from "@/theme/valetTheme";
 import { ValetBackButton } from "@/components/ValetBackButton";
 
 export default function HelpScreen() {
@@ -16,7 +16,7 @@ export default function HelpScreen() {
   const insets = useSafeAreaInsets();
   const C = theme.colors;
   const S = theme.space;
-  const Fa = ticketsA11y.font;
+  const Fa = theme.font;
   const Fonts = theme.fontFamily;
   const isDriver = user?.valetStaffRole === "DRIVER";
 
@@ -43,7 +43,7 @@ export default function HelpScreen() {
         title: {
           flex: 1,
           textAlign: "center",
-          fontSize: Math.round(Fa.secondary * 0.85),
+          fontSize: Fa.sm,
           fontWeight: "800",
           fontFamily: Fonts.primary,
           color: C.text,
@@ -55,14 +55,14 @@ export default function HelpScreen() {
           paddingBottom: 48,
         },
         subtitle: {
-          fontSize: Math.round(Fa.status * 0.65),
+          fontSize: Fa.sm,
           fontFamily: Fonts.primary,
           color: C.textMuted,
           marginBottom: S.md,
           lineHeight: 24,
         },
         sectionTitle: {
-          fontSize: Fa.secondary,
+          fontSize: Fa.sm,
           fontWeight: Platform.OS === "android" ? "normal" : "800",
           color: C.primary,
           marginBottom: S.md,
@@ -84,13 +84,13 @@ export default function HelpScreen() {
         },
         stepBadgeText: {
           color: "#fff",
-          fontSize: Math.round(Fa.status * 0.65),
+          fontSize: Fa.sm,
           fontWeight: "800",
           fontFamily: Fonts.primary,
         },
         stepText: {
           flex: 1,
-          fontSize: Math.round(Fa.status * 0.65),
+          fontSize: Fa.sm,
           fontFamily: Fonts.primary,
           color: C.text,
           lineHeight: 22,

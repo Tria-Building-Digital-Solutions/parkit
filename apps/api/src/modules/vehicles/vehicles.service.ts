@@ -1,5 +1,6 @@
 import { prisma } from "../../shared/prisma";
 import type { Prisma } from "@prisma/client";
+import { formatPlate } from "../../shared/utils/plate";
 
 interface CreateVehicleDTO {
   plate: string;
@@ -183,7 +184,18 @@ export class VehiclesService {
         countryCode,
         companyId,
       },
-      include: {
+      select: {
+        id: true,
+        plate: true,
+        brand: true,
+        model: true,
+        color: true,
+        year: true,
+        countryCode: true,
+        companyId: true,
+        createdAt: true,
+        updatedAt: true,
+        dimensions: true,
         owners: {
           include: {
             customer: {
@@ -208,14 +220,26 @@ export class VehiclesService {
 
   /** Global search by plate+country (unique in DB). Valets rotate between companies. */
   static async getByPlateGlobal(plate: string, countryCode: string = "CR") {
-    return prisma.vehicle.findUnique({
+    // Try exact match first
+    let vehicle = await prisma.vehicle.findUnique({
       where: {
         plate_countryCode: {
           plate,
           countryCode: countryCode || "CR",
         },
       },
-      include: {
+      select: {
+        id: true,
+        plate: true,
+        brand: true,
+        model: true,
+        color: true,
+        year: true,
+        countryCode: true,
+        companyId: true,
+        createdAt: true,
+        updatedAt: true,
+        dimensions: true,
         owners: {
           include: {
             customer: {
@@ -236,5 +260,81 @@ export class VehiclesService {
         },
       },
     });
+    // If not found, try without dash (in case DB has no dash but search has dash)
+    if (!vehicle) {
+      const plateWithoutDash = plate.replace(/-/g, "");
+      vehicle = await prisma.vehicle.findUnique({
+        where: {
+          plate_countryCode: {
+            plate: plateWithoutDash,
+            countryCode: countryCode || "CR",
+          },
+        },
+        include: {
+          owners: {
+            include: {
+              customer: {
+                select: {
+                  id: true,
+                  user: {
+                    select: {
+                      id: true,
+                      firstName: true,
+                      lastName: true,
+                      email: true,
+                      phone: true,
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+      });
+    }
+
+    // If still not found, try with dash (in case DB has dash but search has no dash)
+    if (!vehicle && !plate.includes("-")) {
+      const plateWithDash = formatPlate(plate);
+      vehicle = await prisma.vehicle.findUnique({
+        where: {
+          plate_countryCode: {
+            plate: plateWithDash,
+            countryCode: countryCode || "CR",
+          },
+        },
+        include: {
+          owners: {
+            include: {
+              customer: {
+                select: {
+                  id: true,
+                  user: {
+                    select: {
+                      id: true,
+                      firstName: true,
+                      lastName: true,
+                      email: true,
+                      phone: true,
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+      });
+    }
+
+    // Also try to list all vehicles for debugging
+    if (!vehicle) {
+      const _allVehicles = await prisma.vehicle.findMany({
+        where: { countryCode: countryCode || "CR" },
+        select: { plate: true, id: true },
+        take: 10,
+      });
+    }
+
+    return vehicle;
   }
 }

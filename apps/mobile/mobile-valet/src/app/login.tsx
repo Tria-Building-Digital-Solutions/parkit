@@ -1,13 +1,12 @@
 import { View, Text, StyleSheet, Pressable, StatusBar, ActivityIndicator, TextInput, KeyboardAvoidingView, ScrollView, Platform, Keyboard } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
-import { useLocaleStore, useAccessibilityStore, useAuthStore } from "@/lib/store";
+import { useLocaleStore, useAuthStore } from "@/lib/store";
 import { t } from "@/lib/i18n";
 import { useMemo, useState, useRef, useEffect } from "react";
 import { AnimatedAuthBackground } from "@/components/AnimatedAuthBackground";
 import { AnimatedFormCard } from "@/components/AnimatedFormCard";
-import { AnimatedBackButton } from "@/components/AnimatedBackButton";
-import { useValetTheme, ACCENT, useResponsiveLayout } from "@/theme/valetTheme";
+import { useValetTheme, ACCENT } from "@/theme/valetTheme";
 import { Logo, getAppVersionString } from "@parkit/shared";
 import { login, getStoredCredentials, translateError } from "@/lib/auth";
 import { GoogleIcon as _GoogleIcon, MicrosoftIcon as _MicrosoftIcon, FacebookIcon as _FacebookIcon } from "@/components/OAuthIcons";
@@ -23,11 +22,8 @@ export default function LoginScreen() {
   const locale = useLocaleStore((s) => s.locale);
   const insets = useSafeAreaInsets();
   const theme = useValetTheme();
-  const responsive = useResponsiveLayout();
-  const { textScale } = useAccessibilityStore();
   const { setUser } = useAuthStore();
   const { auth: a } = theme;
-  const F = theme.font;
   const [_oauthLoading, _setOauthLoading] = useState<string | null>(null);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -66,17 +62,6 @@ export default function LoginScreen() {
     loadCredentials();
   }, []);
 
-  const handleBackPress = () => {
-    if (formCardRef.current) {
-      formCardRef.current(); // Start exit animation
-      setTimeout(() => {
-        router.replace("/welcome");
-      }, 450); // Wait for premium animation to complete
-    } else {
-      router.replace("/welcome");
-    }
-  };
-
   const styles = useMemo(
     () =>
       StyleSheet.create({
@@ -84,20 +69,9 @@ export default function LoginScreen() {
         heroStrip: {
           flex: 1,
         },
-        topBar: {
-          flexDirection: "row",
-          alignItems: "center",
-          paddingHorizontal: Math.max(12, responsive.horizontalPadding - 12),
-          paddingTop: 8,
-          paddingBottom: 8,
-          width: "100%",
-          maxWidth: responsive.formMaxWidth,
-          alignSelf: "center",
-          backgroundColor: 'transparent',
-        },
         hero: {
           position: 'absolute',
-          top: 140,
+          top: 200,
           left: 0,
           right: 0,
           alignItems: 'center',
@@ -106,7 +80,6 @@ export default function LoginScreen() {
         logo: { marginBottom: 0 },
         valetLabel: {
           marginTop: 0,
-          fontSize: Math.round(F.secondary * textScale),
           fontWeight: "700",
           letterSpacing: 2,
           color: a.authHeroValetLabel,
@@ -117,16 +90,14 @@ export default function LoginScreen() {
           borderTopLeftRadius: 28,
           borderTopRightRadius: 28,
           ...a.authFormSheetSeparator,
-          paddingHorizontal: responsive.horizontalPadding,
+          paddingHorizontal: 20,
           paddingTop: 28,
           paddingBottom: 0,
           alignItems: "stretch",
           width: "100%",
-          maxWidth: responsive.formMaxWidth,
           alignSelf: "center",
         },
         ctaText: {
-          fontSize: Math.round(F.status * 0.6 * textScale),
           fontWeight: "600",
           color: a.text,
           marginBottom: 20,
@@ -146,7 +117,6 @@ export default function LoginScreen() {
           elevation: 4,
         },
         btnPrimaryText: {
-          fontSize: Math.round(F.status * 0.6 * textScale),
           fontWeight: "600",
           color: a.btnLoginText,
           letterSpacing: 0.5,
@@ -160,7 +130,6 @@ export default function LoginScreen() {
           marginBottom: 0,
         },
         btnSecondaryText: {
-          fontSize: Math.round(F.status * 0.6 * textScale),
           fontWeight: "600",
           color: a.btnSignupText,
           letterSpacing: 0.5,
@@ -168,7 +137,6 @@ export default function LoginScreen() {
         btnPressed: { opacity: 0.9 },
         versionLabel: {
           marginTop: 24,
-          fontSize: Math.round(F.status * 0.6 * textScale),
           fontWeight: "500",
           color: a.textMuted,
           textAlign: "center",
@@ -186,7 +154,6 @@ export default function LoginScreen() {
         },
         dividerText: {
           marginHorizontal: 10,
-          fontSize: Math.round(F.status * 0.6 * textScale),
           color: a.textMuted,
           fontWeight: '500',
         },
@@ -222,7 +189,6 @@ export default function LoginScreen() {
           paddingVertical: 12,
           paddingLeft: 48,
           paddingRight: 48,
-          fontSize: Math.round(F.status * 0.6 * textScale),
           color: a.text,
           height: CONTROL_HEIGHT - 8,
         },
@@ -234,7 +200,6 @@ export default function LoginScreen() {
           zIndex: 1,
         },
 inputLabel: {
-          fontSize: Math.round(F.status * 0.6),
           fontWeight: "500",
           color: a.text,
           marginBottom: 6,
@@ -248,23 +213,30 @@ inputLabel: {
           zIndex: 1,
         },
         forgotPasswordLink: {
-          fontSize: Math.round(F.status * 0.6 * textScale),
           color: a.btnLoginBg,
           fontWeight: '600',
+          fontSize: theme.font.base,
+        },
+        signupLink: {
+          color: a.btnLoginBg,
+          fontWeight: '600',
+          fontSize: theme.font.base,
+          marginTop: 16,
+          marginBottom: 8,
+          textAlign: 'center',
         },
         formActions: {
           flexDirection: 'row',
           justifyContent: 'space-between',
           alignItems: 'center',
           marginTop: 12,
-          marginBottom: 28,
+          marginBottom: 16,
         },
         rememberMeContainer: {
           flexDirection: 'row',
           alignItems: 'center',
         },
         rememberMeText: {
-          fontSize: Math.round(F.status * 0.6 * textScale),
           color: a.text,
           fontWeight: '500',
         },
@@ -272,7 +244,7 @@ inputLabel: {
           opacity: 0.6,
         },
       }),
-    [a, responsive.formMaxWidth, responsive.horizontalPadding, F, textScale]
+    [a, theme.font.base]
   );
 
   const _versionLabel = t(locale, "welcome.version", {
@@ -292,21 +264,12 @@ inputLabel: {
         >
           <View style={styles.rootColumn}>
             <View style={styles.heroStrip}>
-          <View style={[styles.topBar, { paddingTop: Math.max(insets.top, 12) }]}>
-            <View style={{ position: 'absolute', left: Math.max(12, responsive.horizontalPadding - 12), top: 56 }}>
-              <AnimatedBackButton
-                onPress={handleBackPress}
-                accessibilityLabel={t(locale, "common.back")}
-                appearance="auth"
-              />
-            </View>
-          </View>
           <View style={styles.hero}>
             <View style={styles.logoWrap}>
               {!isKeyboardVisible && (
                 <>
                   <Logo size={LOGO_SIZE} style={styles.logo} variant={theme.isDark ? "onDark" : "onLight"} />
-                  <Text style={styles.valetLabel}>valet</Text>
+                  <Text style={styles.valetLabel} maxFontSizeMultiplier={1.5}>valet</Text>
                 </>
               )}
             </View>
@@ -316,9 +279,9 @@ inputLabel: {
         <View>
           <AnimatedFormCard ref={formCardRef} isVisible={true} animationType="slide_from_bottom">
             <View style={[styles.bottomSection, { paddingBottom: Math.max(insets.bottom, 12) }]}>
-              <Text style={styles.ctaText}>Acceso para Personal de Valet</Text>
+              <Text style={styles.ctaText} maxFontSizeMultiplier={1.5}>{t(locale, "login.headline")}</Text>
               
-<Text style={styles.inputLabel}>Correo Electrónico</Text>
+<Text style={styles.inputLabel} maxFontSizeMultiplier={1.5}>{t(locale, "login.email")}</Text>
               <View style={styles.inputContainer}>
                 <IconMail 
                   size={20} 
@@ -334,12 +297,14 @@ inputLabel: {
                   keyboardType="email-address"
                   autoCapitalize="none"
                   autoCorrect={false}
-                  textContentType="emailAddress"
+                  spellCheck={false}
+                  textContentType="none"
                   autoComplete="email"
+                  dataDetectorTypes="none"
                 />
               </View>
               
-<Text style={styles.inputLabel}>Contraseña</Text>
+<Text style={styles.inputLabel} maxFontSizeMultiplier={1.5}>{t(locale, "login.password")}</Text>
               <View style={styles.inputContainer}>
                 <IconLock 
                   size={20} 
@@ -378,11 +343,11 @@ inputLabel: {
                   ) : (
                     <IconSquareRounded size={20} color={a.inputBorder} style={{ marginRight: 8 }} />
                   )}
-                  <Text style={styles.rememberMeText}>Recordarme</Text>
+                  <Text style={styles.rememberMeText} maxFontSizeMultiplier={1.5}>{t(locale, "login.rememberMe")}</Text>
                 </Pressable>
                 
                 <Pressable onPress={() => router.push("/forgot-password")}>
-                  <Text style={styles.forgotPasswordLink}>¿Olvidaste tu contraseña?</Text>
+                  <Text style={styles.forgotPasswordLink} maxFontSizeMultiplier={1.5}>{t(locale, "login.forgetPassword")}</Text>
                 </Pressable>
               </View>
               
@@ -409,13 +374,17 @@ inputLabel: {
               {isLoading ? (
                 <ActivityIndicator size="small" color={a.btnLoginText} />
               ) : (
-                <Text style={styles.btnPrimaryText}>Iniciar Sesión</Text>
+                <Text style={styles.btnPrimaryText} maxFontSizeMultiplier={1.5}>{t(locale, "login.submit")}</Text>
               )}
             </Pressable>
             
             {error && (
               <AuthMessage type="error" message={error} />
             )}
+            
+            <Pressable onPress={() => router.push("/signup")}>
+              <Text style={styles.signupLink} maxFontSizeMultiplier={1.5}>{t(locale, "login.noAccount")}</Text>
+            </Pressable>
                         </View>
           </AnimatedFormCard>
             </View>

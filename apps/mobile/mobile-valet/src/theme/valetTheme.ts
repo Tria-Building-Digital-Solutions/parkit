@@ -3,10 +3,9 @@
  * If `dark`, `null` or indeterminate → dark theme (background #020617, etc.).
  */
 import type { ViewStyle } from "react-native";
-import { Platform, useColorScheme, useWindowDimensions } from "react-native";
+import { useColorScheme, useWindowDimensions } from "react-native";
 import { useMemo } from "react";
 import { useThemeStore } from "@/lib/themeStore";
-import { useAccessibilityStore } from '@/lib/store';
 
 /** Same blue as welcome.btnPrimary */
 export const ACCENT = "#3B82F6";
@@ -137,59 +136,73 @@ function homeColors(isDark: boolean): HomeThemeColors {
   };
 }
 
-const ANDROID_FONT_DELTA = Platform.OS === "android" ? -4 : 0;
-const fontSize = (value: number) => Math.max(10, value + ANDROID_FONT_DELTA);
-
-/** Applies accessibility scale factor to all font sizes */
-function applyTextScale(fonts: typeof valetStaticTokens.font, scale: number) {
-  return {
-    title: Math.round(fonts.title * scale),
-    subtitle: Math.round(fonts.subtitle * scale),
-    hero: Math.round(fonts.hero * scale),
-    body: Math.round(fonts.body * scale),
-    secondary: Math.round(fonts.secondary * scale),
-    button: Math.round(fonts.button * scale),
-    status: Math.round(fonts.status * scale),
-  };
-}
+// Standardized font scale - consistent across platforms
+// Base scale: optimized for mobile with proper readability
+const FONT_SCALE = {
+  xs: 10,    // Small labels, captions
+  sm: 12,    // Secondary text, helper text
+  base: 14,  // Body text, standard
+  md: 16,    // Emphasized body, subtitles
+  lg: 18,    // Important text, card titles
+  xl: 20,    // Section headers
+  xxl: 24,   // Page titles
+  xxxl: 28,  // Hero titles
+} as const;
 
 export const valetStaticTokens = {
   minTouch: 56,
   radius: { card: 16, button: 14 },
   space: { xs: 8, sm: 12, md: 16, lg: 20, xl: 24, xxl: 32 },
   font: {
-    title: fontSize(26),
-    subtitle: fontSize(17),
-    hero: fontSize(28),
-    body: fontSize(18),
-    secondary: fontSize(16),
-    button: fontSize(19),
-    status: fontSize(16),
+    // Standardized sizes
+    xs: FONT_SCALE.xs,
+    sm: FONT_SCALE.sm,
+    base: FONT_SCALE.base,
+    md: FONT_SCALE.md,
+    lg: FONT_SCALE.lg,
+    xl: FONT_SCALE.xl,
+    xxl: FONT_SCALE.xxl,
+    xxxl: FONT_SCALE.xxxl,
   },
   fontFamily: {
     primary: "System",
     secondary: "System",
   } as const,
+  icon: {
+    xs: 12,
+    sm: 16,
+    md: 20,
+    lg: 24,
+    xl: 28,
+    xxl: 36,
+  },
 } as const;
 
 
 export const ticketsA11y = {
   minTouch: 60,
   font: {
-    title: fontSize(30),
-    subtitle: fontSize(20),
-    hero: fontSize(34),
-    body: fontSize(20),
-    secondary: fontSize(18),
-    button: fontSize(22),
-    status: fontSize(18),
+    title: 34,
+    subtitle: 20,
+    hero: 34,
+    body: 20,
+    secondary: 18,
+    button: 22,
+    status: 18,
+    xs: 12,
+    sm: 14,
+    base: 16,
+    md: 18,
+    lg: 20,
+    xl: 24,
+    xxl: 28,
+    xxxl: 34,
   },
 } as const;
 
 export function useValetTheme() {
   const systemScheme = useColorScheme();
   const preference = useThemeStore((s) => s.preference);
-  const { textScale } = useAccessibilityStore();
   const isDark =
     preference === "dark"
       ? true
@@ -203,10 +216,10 @@ export function useValetTheme() {
       auth: authColors(isDark),
       colors: homeColors(isDark),
       ...valetStaticTokens,
-      font: applyTextScale(valetStaticTokens.font, textScale),
-      a11yFont: applyTextScale(ticketsA11y.font, textScale),
+      font: valetStaticTokens.font,
+      a11yFont: ticketsA11y.font,
     }),
-    [isDark, textScale]
+    [isDark]
   );
 }
 

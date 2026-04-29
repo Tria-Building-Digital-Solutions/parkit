@@ -1,14 +1,27 @@
 {
   "files": [],
-  "exclude": ["node_modules"],
+  "exclude": [
+    "node_modules"
+  ],
   "references": [
-    { "path": "./apps/api" },
-    { "path": "./apps/web" },
-    { "path": "./apps/mobile/mobile-valet" },
-    { "path": "./apps/mobile/mobile-customer" },
-    { "path": "./packages/shared" }
+    {
+      "path": "./apps/api"
+    },
+    {
+      "path": "./apps/web"
+    },
+    {
+      "path": "./apps/mobile/mobile-valet"
+    },
+    {
+      "path": "./apps/mobile/mobile-customer"
+    },
+    {
+      "path": "./packages/shared"
+    }
   ],
   "compilerOptions": {
     "skipLibCheck": true
-  }
+  },
+  "extends": "expo/tsconfig.base"
 }

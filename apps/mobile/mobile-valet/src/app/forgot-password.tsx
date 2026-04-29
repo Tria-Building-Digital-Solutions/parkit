@@ -1,13 +1,12 @@
 import { View, Text, StyleSheet, Pressable, StatusBar, TextInput, KeyboardAvoidingView, ScrollView, Platform, ActivityIndicator, Keyboard } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
-import { useLocaleStore, useAccessibilityStore } from "@/lib/store";
+import { useLocaleStore } from "@/lib/store";
 import { t } from "@/lib/i18n";
 import { useMemo, useState, useRef, useEffect } from "react";
 import { AnimatedAuthBackground } from "@/components/AnimatedAuthBackground";
 import { AnimatedFormCard } from "@/components/AnimatedFormCard";
-import { AnimatedBackButton } from "@/components/AnimatedBackButton";
-import { useValetTheme, ACCENT, useResponsiveLayout } from "@/theme/valetTheme";
+import { useValetTheme, ACCENT } from "@/theme/valetTheme";
 import { Logo, getAppVersionString } from "@parkit/shared";
 import { forgotPassword, translateError } from "@/lib/auth";
 import { GoogleIcon as _GoogleIcon, MicrosoftIcon as _MicrosoftIcon, FacebookIcon as _FacebookIcon } from "@/components/OAuthIcons";
@@ -23,10 +22,7 @@ export default function ForgotPasswordScreen() {
   const locale = useLocaleStore((s) => s.locale);
   const insets = useSafeAreaInsets();
   const theme = useValetTheme();
-  const responsive = useResponsiveLayout();
-  const { textScale } = useAccessibilityStore();
   const { auth: a } = theme;
-  const F = theme.font;
   const [_oauthLoading, _setOauthLoading] = useState<string | null>(null);
   const [email, setEmail] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -52,17 +48,6 @@ export default function ForgotPasswordScreen() {
 
   const _heroMinHeight = Math.round(140 + LOGO_SIZE + 16);
 
-  const handleBackPress = () => {
-    if (formCardRef.current) {
-      formCardRef.current(); // Start exit animation
-      setTimeout(() => {
-        router.replace("/welcome");
-      }, 450); // Wait for premium animation to complete
-    } else {
-      router.replace("/welcome");
-    }
-  };
-
   const styles = useMemo(
     () =>
       StyleSheet.create({
@@ -70,20 +55,9 @@ export default function ForgotPasswordScreen() {
         heroStrip: {
           flex: 1,
         },
-        topBar: {
-          flexDirection: "row",
-          alignItems: "center",
-          paddingHorizontal: Math.max(12, responsive.horizontalPadding - 12),
-          paddingTop: 8,
-          paddingBottom: 8,
-          width: "100%",
-          maxWidth: responsive.formMaxWidth,
-          alignSelf: "center",
-          backgroundColor: 'transparent',
-        },
         hero: {
           position: 'absolute',
-          top: 140,
+          top: 200,
           left: 0,
           right: 0,
           alignItems: 'center',
@@ -92,7 +66,6 @@ export default function ForgotPasswordScreen() {
         logo: { marginBottom: 0 },
         valetLabel: {
           marginTop: 0,
-          fontSize: Math.round(F.secondary * textScale),
           fontWeight: "700",
           letterSpacing: 2,
           color: a.authHeroValetLabel,
@@ -103,16 +76,14 @@ export default function ForgotPasswordScreen() {
           borderTopLeftRadius: 28,
           borderTopRightRadius: 28,
           ...a.authFormSheetSeparator,
-          paddingHorizontal: responsive.horizontalPadding,
+          paddingHorizontal: 20,
           paddingTop: 28,
           paddingBottom: 0,
           alignItems: "stretch",
           width: "100%",
-          maxWidth: responsive.formMaxWidth,
           alignSelf: "center",
         },
         ctaText: {
-          fontSize: Math.round(F.status * 0.65 * textScale),
           fontWeight: "600",
           color: a.text,
           marginBottom: 20,
@@ -132,7 +103,6 @@ export default function ForgotPasswordScreen() {
           elevation: 4,
         },
         btnPrimaryText: {
-          fontSize: Math.round(F.status * 0.65 * textScale),
           fontWeight: "600",
           color: a.btnLoginText,
           letterSpacing: 0.5,
@@ -146,7 +116,6 @@ export default function ForgotPasswordScreen() {
           marginBottom: 0,
         },
         btnSecondaryText: {
-          fontSize: Math.round(F.status * 0.65 * textScale),
           fontWeight: "600",
           color: a.btnSignupText,
           letterSpacing: 0.5,
@@ -164,7 +133,6 @@ export default function ForgotPasswordScreen() {
           paddingHorizontal: 16,
           paddingVertical: 12,
           paddingLeft: 48,
-          fontSize: Math.round(F.status * 0.6 * textScale),
           color: a.text,
           height: CONTROL_HEIGHT - 8,
         },
@@ -176,30 +144,26 @@ export default function ForgotPasswordScreen() {
           zIndex: 1,
         },
 inputLabel: {
-          fontSize: Math.round(F.status * 0.6 * textScale),
           fontWeight: "500",
           color: a.text,
           marginBottom: 6,
         },
         explanationText: {
-          fontSize: Math.round(F.status * 0.6 * textScale),
           fontWeight: "400",
           color: a.textMuted,
           textAlign: "left",
           marginBottom: 20,
-          lineHeight: Math.round(F.status * 0.9),
         },
         forgotPasswordLink: {
           textAlign: 'center',
-          fontSize: Math.round(F.status * 0.6 * textScale),
           color: a.btnLoginBg,
           fontWeight: '600',
+          fontSize: theme.font.base,
           marginTop: 16,
-          marginBottom: 20,
+          marginBottom: 8,
         },
         versionLabel: {
           marginTop: 24,
-          fontSize: Math.round(F.status * 0.65 * textScale),
           fontWeight: "500",
           color: a.textMuted,
           textAlign: "center",
@@ -217,7 +181,6 @@ inputLabel: {
         },
         dividerText: {
           marginHorizontal: 10,
-          fontSize: Math.round(F.status * 0.65 * textScale),
           color: a.textMuted,
           fontWeight: '500',
         },
@@ -244,7 +207,7 @@ inputLabel: {
           opacity: 0.6,
         },
       }),
-    [a, responsive.formMaxWidth, responsive.horizontalPadding, F, textScale]
+    [a, theme.font.base]
   );
 
   const _versionLabel = t(locale, "welcome.version", {
@@ -264,21 +227,12 @@ inputLabel: {
         >
           <View style={styles.rootColumn}>
             <View style={styles.heroStrip}>
-          <View style={[styles.topBar, { paddingTop: Math.max(insets.top, 12) }]}>
-            <View style={{ position: 'absolute', left: Math.max(12, responsive.horizontalPadding - 12), top: 56 }}>
-              <AnimatedBackButton
-                onPress={handleBackPress}
-                accessibilityLabel={t(locale, "common.back")}
-                appearance="auth"
-              />
-            </View>
-          </View>
           <View style={styles.hero}>
             <View style={styles.logoWrap}>
               {!isKeyboardVisible && (
                 <>
                   <Logo size={LOGO_SIZE} style={styles.logo} variant={theme.isDark ? "onDark" : "onLight"} />
-                  <Text style={styles.valetLabel}>valet</Text>
+                  <Text style={styles.valetLabel} maxFontSizeMultiplier={1.5}>valet</Text>
                 </>
               )}
             </View>
@@ -288,13 +242,13 @@ inputLabel: {
         <View>
           <AnimatedFormCard ref={formCardRef} isVisible={true} animationType="slide_from_bottom">
             <View style={[styles.bottomSection, { paddingBottom: Math.max(insets.bottom, 12) }]}>
-            <Text style={styles.ctaText}>Recupera tu Acceso de Valet</Text>
+            <Text style={styles.ctaText} maxFontSizeMultiplier={1.5}>{t(locale, "forgot.recoveryTitle")}</Text>
             
-            <Text style={styles.explanationText}>
-              Ingresa tu correo electrónico y te enviaremos un enlace para que puedas restablecer tu contraseña.
+            <Text style={styles.explanationText} maxFontSizeMultiplier={1.5}>
+              {t(locale, "forgot.recoveryDescription")}
             </Text>
             
-<Text style={styles.inputLabel}>Correo Electrónico</Text>
+<Text style={styles.inputLabel} maxFontSizeMultiplier={1.5}>{t(locale, "forgot.emailLabel")}</Text>
             <View style={styles.inputContainer}>
                 <IconMail 
                   size={20} 
@@ -310,11 +264,15 @@ inputLabel: {
                   keyboardType="email-address"
                   autoCapitalize="none"
                   autoCorrect={false}
-                  textContentType="emailAddress"
+                  spellCheck={false}
+                  textContentType="none"
                   autoComplete="email"
+                  dataDetectorTypes="none"
                 />
             </View>
             
+            <View style={{ marginBottom: 16 }} />
+
             <Pressable
               onPress={async () => {
                 setError(null);
@@ -339,7 +297,7 @@ inputLabel: {
               {isLoading ? (
                 <ActivityIndicator size="small" color={a.btnLoginText} />
               ) : (
-                <Text style={styles.btnPrimaryText}>Enviar Enlace de Recuperación</Text>
+                <Text style={styles.btnPrimaryText} maxFontSizeMultiplier={1.5}>{t(locale, "forgot.sendRecoveryLink")}</Text>
               )}
             </Pressable>
             
@@ -347,11 +305,11 @@ inputLabel: {
               <AuthMessage type="error" message={error} />
             )}
             {success && (
-              <AuthMessage type="success" message="Se ha enviado un enlace de recuperación a tu correo." />
+              <AuthMessage type="success" message={t(locale, "forgot.recoverySent")} />
             )}
             
             <Pressable onPress={() => router.push("/login")}>
-              <Text style={styles.forgotPasswordLink}>Volver al Inicio de Sesión</Text>
+              <Text style={styles.forgotPasswordLink} maxFontSizeMultiplier={1.5}>{t(locale, "forgot.backToLoginText")}</Text>
             </Pressable>
 
             </View>

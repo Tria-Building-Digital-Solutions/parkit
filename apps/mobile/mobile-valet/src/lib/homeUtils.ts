@@ -99,16 +99,14 @@ export const AVATAR_PRESENCE_RING = 3;
 
 /**
  * Calculates proportional sizes for header elements based on logo size
- * and accessibility text scale
  */
-export function getHeaderSizes(logoSize: number, textScale: number) {
-  // Logo scales with textScale but with a more moderate factor
-  const scaledLogoSize = Math.round(logoSize * (0.9 + (textScale - 1) * 0.3));
+export function getHeaderSizes(logoSize: number) {
+  const scaledLogoSize = logoSize;
   
   // Avatar proportional to logo (1.4x logo size)
   const avatarSize = Math.round(scaledLogoSize * 1.4);
   
-  // Text sizes based on logo and accessibility scale
+  // Text sizes based on logo
   const displayNameSize = Math.round(scaledLogoSize * 0.65);
   const roleSize = Math.round(scaledLogoSize * 0.45);
   
@@ -118,7 +116,7 @@ export function getHeaderSizes(logoSize: number, textScale: number) {
   
   // Badge for notifications
   const badgeSize = Math.max(14, Math.round(avatarSize * 0.45));
-  const badgeFontSize = Math.max(10, Math.round(avatarSize * 0.3 * textScale));
+  const badgeFontSize = Math.max(10, Math.round(avatarSize * 0.35));
   
   // Proportional spacing
   const gap = Math.round(scaledLogoSize * 0.3);

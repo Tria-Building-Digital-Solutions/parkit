@@ -101,7 +101,7 @@ export default function SplashScreen() {
     logo: { marginBottom: 0 },
     valetLabel: {
       marginTop: 0,
-      fontSize: Math.round(F.secondary),
+      fontSize: F.base,
       fontWeight: "700",
       letterSpacing: 2,
       color: a.authHeroValetLabel,

@@ -14,7 +14,6 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import TextRecognition from '@react-native-ml-kit/text-recognition';
 import { t } from '@/lib/i18n';
 import type { Locale } from '@parkit/shared';
-import { useAccessibilityStore } from '@/lib/store';
 
 interface CardScannerProps {
   locale: Locale;
@@ -36,11 +35,14 @@ interface CardScannerProps {
     border: string;
   };
   fonts: {
-    secondary: number;
-    body: number;
-    button: number;
-    title: number;
-    status: number;
+    xs: number;
+    sm: number;
+    base: number;
+    md: number;
+    lg: number;
+    xl: number;
+    xxl: number;
+    xxxl: number;
   };
   space: {
     sm: number;
@@ -73,7 +75,6 @@ export function CardScanner({
   const [scanning, setScanning] = useState(false);
   const [guideText, setGuideText] = useState(t(locale, 'receive.cardScannerSubtitle'));
   const cameraRef = useRef<CameraView>(null);
-  const { textScale } = useAccessibilityStore();
 
   const CORNER_LEN = 32;
   const CORNER_THICK = 2.5;
@@ -107,7 +108,7 @@ export function CardScanner({
       backgroundColor: '#020617',
     },
     screenTitle: {
-      fontSize: F.secondary - 1,
+      fontSize: F.md,
       fontWeight: '800',
       color: '#F8FAFC',
       flex: 1,
@@ -195,7 +196,7 @@ export function CardScanner({
       ...StyleSheet.absoluteFillObject,
     },
     headerTitle: {
-      fontSize: Math.round(F.status * 0.85),
+      fontSize: F.lg,
       fontWeight: '800',
       color: '#F8FAFC',
       letterSpacing: -0.5,
@@ -364,7 +365,7 @@ export function CardScanner({
     primaryBtnText: {
       color: '#fff',
       fontWeight: '800',
-      fontSize: F.secondary - 1,
+      fontSize: F.md,
     },
     pressed: {
       opacity: 0.9,
@@ -527,7 +528,7 @@ export function CardScanner({
     <View style={styles.permissionOverlay}>
       <View style={styles.permissionSheet}>
         <View style={styles.permissionSheetHeader}>
-          <Text style={[styles.permissionSheetTitle, { fontSize: Math.round(F.status * 0.65 * textScale) }]}>
+          <Text style={[styles.permissionSheetTitle, { fontSize: F.base }]}>
             {t(locale, 'receive.cameraPermissionNeeded')}
           </Text>
         </View>
@@ -535,7 +536,7 @@ export function CardScanner({
           style={({ pressed }) => [styles.permissionActionBtn, pressed && { opacity: 0.9 }]}
           onPress={requestPermission}
         >
-          <Text style={[styles.permissionActionText, { fontSize: Math.round(F.status * 0.65 * textScale) }]}>
+          <Text style={[styles.permissionActionText, { fontSize: F.base }]}>
             {t(locale, 'common.allow')}
           </Text>
         </Pressable>
@@ -543,7 +544,7 @@ export function CardScanner({
           style={({ pressed }) => [styles.permissionCancelBtn, pressed && { opacity: 0.8 }]}
           onPress={handleCancel}
         >
-          <Text style={[styles.permissionCancelText, { fontSize: Math.round(F.status * 0.65 * textScale) }]}>
+          <Text style={[styles.permissionCancelText, { fontSize: F.base }]}>
             {t(locale, 'common.cancel')}
           </Text>
         </Pressable>
@@ -592,7 +593,7 @@ export function CardScanner({
           colors={['rgba(2,6,23,0.88)', 'rgba(2,6,23,0)']}
           style={styles.headerGradient}
         />
-        <Text style={[styles.headerSubtitle, { fontSize: Math.round(F.status * 0.65 * textScale) }]} numberOfLines={2}>
+        <Text style={[styles.headerSubtitle, { fontSize: F.base }]} numberOfLines={2}>
           {t(locale, 'receive.cardScannerSubtitle')}
         </Text>
       </View>
@@ -602,19 +603,19 @@ export function CardScanner({
         <View style={styles.fakeCardContainer} pointerEvents="none">
           <View style={styles.fakeCard}>
             <View style={styles.fakeCardChip} />
-            <Text style={[styles.fakeCardNumber, styles.fakeCardNumberScanned, { fontSize: Math.round(F.secondary * 0.9 * textScale) }]}>
+            <Text style={[styles.fakeCardNumber, styles.fakeCardNumberScanned, { fontSize: F.md }]}>
               {formatCardNumber(scannedCardData.number)}
             </Text>
             <View style={styles.fakeCardRow}>
               <View>
-                <Text style={[styles.fakeCardLabel, { fontSize: Math.round(F.status * 0.65 * textScale) }]}>{t(locale, 'receive.cardHolderLabel')}</Text>
-                <Text style={[styles.fakeCardValue, styles.fakeCardValueScanned, { fontSize: Math.round(F.secondary * 0.8 * textScale) }]}>
+                <Text style={[styles.fakeCardLabel, { fontSize: F.base }]}>{t(locale, 'receive.cardHolderLabel')}</Text>
+                <Text style={[styles.fakeCardValue, styles.fakeCardValueScanned, { fontSize: F.md }]}>
                   {t(locale, 'receive.cardHolderPlaceholder')}
                 </Text>
               </View>
               <View>
-                <Text style={[styles.fakeCardLabel, { fontSize: Math.round(F.status * 0.65 * textScale) }]}>{t(locale, 'receive.cardExpiresLabel')}</Text>
-                <Text style={[styles.fakeCardValue, styles.fakeCardValueScanned, { fontSize: Math.round(F.secondary * 0.8 * textScale) }]}>
+                <Text style={[styles.fakeCardLabel, { fontSize: F.base }]}>{t(locale, 'receive.cardExpiresLabel')}</Text>
+                <Text style={[styles.fakeCardValue, styles.fakeCardValueScanned, { fontSize: F.md }]}>
                   {scannedCardData.expiryMonth}/{scannedCardData.expiryYear.slice(-2)}
                 </Text>
               </View>
@@ -630,7 +631,7 @@ export function CardScanner({
       )}
 
       <View style={[styles.guideTextContainer, embedded && { top: '65%' }]} pointerEvents="none">
-        <Text style={[styles.guideText, { fontSize: Math.round(F.status * 0.65 * textScale) }]}>
+        <Text style={[styles.guideText, { fontSize: F.base }]}>
           {guideText}
         </Text>
       </View>
@@ -645,7 +646,7 @@ export function CardScanner({
             {scanning ? (
               <ActivityIndicator color="#fff" size={20} />
             ) : (
-              <Text style={[styles.scanButtonText, { fontSize: Math.round(F.status * 0.65 * textScale) }]}>{t(locale, 'receive.scanCardButton')}</Text>
+              <Text style={[styles.scanButtonText, { fontSize: F.base }]}>{t(locale, 'receive.scanCardButton')}</Text>
             )}
           </Pressable>
         </View>

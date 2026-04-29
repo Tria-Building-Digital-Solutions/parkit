@@ -12,7 +12,7 @@ export default function HeaderTestScreen() {
       <Text style={styles.subtitle}>Testing proportional sizing with different text scales</Text>
       
       {textScales.map((scale) => {
-        const sizes = getHeaderSizes(HEADER_LOGO_BASE_SIZE, scale);
+        const sizes = getHeaderSizes(HEADER_LOGO_BASE_SIZE);
         
         return (
           <View key={scale} style={styles.testRow}>

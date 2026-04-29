@@ -6,6 +6,7 @@ import {
   ValetStatus,
   ValetStaffRole,
   NotificationType,
+  NotificationTicketType,
   CardType,
 } from "@prisma/client";
 import type { CreateTicketDTO } from "./tickets.types";
@@ -331,18 +332,32 @@ export class TicketsService {
           }),
           tx.vehicle.findUnique({
             where: { id: data.vehicleId },
-            select: { plate: true },
+            select: { plate: true, brand: true, model: true, color: true },
           }),
         ]);
         if (driver?.userId) {
-          const plate = vehicle?.plate?.trim() || "vehiculo";
+          const plate = vehicle?.plate?.trim() || "vehículo";
+          const vehicleInfo = vehicle 
+            ? `${vehicle.brand} ${vehicle.model}${vehicle.color ? ` ${vehicle.color}` : ''}`.trim()
+            : "";
+          const body = vehicleInfo 
+            ? `Tienes una nueva asignación: vehículo ${vehicleInfo}, placa ${plate}. Por favor revisa tu cola de trabajo.`
+            : `Tienes una nueva asignación: vehículo placa ${plate}. Por favor revisa tu cola de trabajo.`;
+          
           await tx.notificationLog.create({
             data: {
               userId: driver.userId,
               type: NotificationType.PUSH,
-              title: `Nuevo servicio asignado`,
-              body: `Te asignaron el vehiculo ${plate}. Revisa tu cola de trabajo.`,
+              ticketType: NotificationTicketType.PARKING,
+              title: `Nueva asignación de vehículo`,
+              body,
             },
+          });
+          // Send push notification (non-blocking)
+          void PushNotificationsService.sendPushNotification({
+            userId: driver.userId,
+            title: `Nueva asignación de vehículo`,
+            body,
           });
         }
       }
@@ -699,16 +714,20 @@ export class TicketsService {
       if (created.valet.userId) {
         const vehicle = await tx.vehicle.findUnique({
           where: { id: ticket.vehicleId },
-          select: { plate: true },
+          select: { plate: true, brand: true, model: true, color: true },
         });
         
         if (vehicle?.plate) {
           const plate = vehicle.plate.trim();
           const isCheckout = ticket.status === TicketStatus.REQUEST_DELIVERY;
-          const title = isCheckout ? "Solicitud de devolución asignada" : "Nuevo servicio asignado";
-          const body = isCheckout 
-            ? `Te asignaron la devolución del vehículo ${plate}. Revisa tu cola de trabajo.`
-            : `Te asignaron el vehículo ${plate}. Revisa tu cola de trabajo.`;
+          const vehicleInfo = vehicle 
+            ? `${vehicle.brand} ${vehicle.model}${vehicle.color ? ` ${vehicle.color}` : ''}`.trim()
+            : "";
+          
+          const title = isCheckout ? "Nueva asignación de devolución" : "Nueva asignación de vehículo";
+          const body = vehicleInfo 
+            ? `Tienes una nueva asignación: vehículo ${vehicleInfo}, placa ${plate}. Por favor revisa tu cola de trabajo.`
+            : `Tienes una nueva asignación: vehículo placa ${plate}. Por favor revisa tu cola de trabajo.`;
           
           await tx.notificationLog.create({
             data: {

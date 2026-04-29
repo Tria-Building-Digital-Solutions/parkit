@@ -1,6 +1,7 @@
 import { View, Text, ScrollView, Pressable, StyleSheet, FlatList } from "react-native";
 import { useState } from "react";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
+import { FONT_SCALE } from "@/lib/fontScale";
 
 const MOCK_VEHICLES = [
   { id: "1", plate: "SJD-123", brand: "Toyota", model: "Corolla", year: 2023, isPrimary: true },
@@ -67,7 +68,7 @@ const styles = StyleSheet.create({
     borderBottomColor: "#eee",
   },
   headerTitle: {
-    fontSize: 20,
+    fontSize: FONT_SCALE.xl,
     fontWeight: "bold",
   },
   addButton: {
@@ -90,18 +91,18 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   plate: {
-    fontSize: 18,
+    fontSize: FONT_SCALE.lg,
     fontWeight: "bold",
     marginBottom: 4,
   },
   model: {
-    fontSize: 14,
+    fontSize: FONT_SCALE.sm,
     color: "#666",
   },
   primaryBadge: {
     backgroundColor: "#34C759",
     color: "#fff",
-    fontSize: 12,
+    fontSize: FONT_SCALE.xs,
     fontWeight: "600",
     paddingHorizontal: 8,
     paddingVertical: 4,
@@ -122,7 +123,7 @@ const styles = StyleSheet.create({
     borderColor: "#eee",
   },
   actionText: {
-    fontSize: 12,
+    fontSize: FONT_SCALE.xs,
     color: "#0066FF",
     fontWeight: "500",
   },

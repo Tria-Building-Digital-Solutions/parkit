@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet, ViewStyle, TextStyle } from 'react-native';
 import { IconAlertCircle, IconCircleCheck, IconHelpCircle } from '@/components/Icons';
+import { FONT_SCALE } from '@/lib/fontScale';
 
 type MessageType = 'error' | 'success' | 'warning' | 'info';
 
@@ -19,7 +20,7 @@ export const AuthMessage: React.FC<AuthMessageProps> = ({
   textStyle,
   fontSize,
 }) => {
-  const messageFontSize = fontSize || 14;
+  const messageFontSize = fontSize || FONT_SCALE.base;
   const iconSize = 20;
 
   const getIcon = () => {

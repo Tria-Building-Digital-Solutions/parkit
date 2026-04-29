@@ -1,5 +1,5 @@
 export interface VehicleOwnerRow {
-  client: {
+  customer: {
     id: string;
     user: {
       id?: string;
@@ -9,6 +9,13 @@ export interface VehicleOwnerRow {
       phone?: string | null;
     };
   };
+}
+
+export interface VehicleDimensions {
+  lengthCm?: number;
+  widthCm?: number;
+  heightCm?: number;
+  weightKg?: number;
 }
 
 export interface VehicleLookup {
@@ -21,6 +28,7 @@ export interface VehicleLookup {
   countryCode: string;
   companyId: string;
   owners: VehicleOwnerRow[];
+  dimensions?: VehicleDimensions | null;
 }
 
 export interface CatalogMake {

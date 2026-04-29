@@ -49,7 +49,7 @@ export function FormWizard({
 
   const step = steps[current];
   const isLast = current === steps.length - 1;
-  const canAdvance = step.badge === "optional" ? true : step.isValid();
+  const canAdvance = step?.badge === "optional" ? true : step?.isValid() ?? false;
 
   const goTo = (next: number, dir: "forward" | "back") => {
     if (animating) return;
@@ -114,20 +114,20 @@ export function FormWizard({
           {/* Step header */}
           <div className="mb-6">
             <div className="flex items-center gap-2 mb-1">
-              <h2 className="text-base premium-section-title">{step.title}</h2>
-              {step.badge === "required" && (
+              <h2 className="text-base premium-section-title">{step?.title}</h2>
+              {step?.badge === "required" && (
                 <span className="text-[11px] font-medium px-2 py-0.5 rounded-full bg-red-500/10 text-red-500">
                   {t("common.requiredBadge")}
                 </span>
               )}
             </div>
-            {step.description && (
+            {step?.description && (
               <p className="text-sm premium-subtitle">{step.description}</p>
             )}
           </div>
 
           {/* Content */}
-          <div>{step.content}</div>
+          <div>{step?.content}</div>
         </div>
       </div>
 
@@ -140,7 +140,7 @@ export function FormWizard({
               {footerNote}
             </p>
           )}
-          {step.badge === "required" && (
+          {step?.badge === "required" && (
             <p className="text-xs text-text-muted/50">
               {t("common.requiredNote")}
             </p>
@@ -181,8 +181,10 @@ export function FormWizard({
                     {i < steps.length - 1 && (
                       <div className="flex-1 min-w-[48px] md:min-w-[96px] max-w-[180px] h-[1px] rounded-full overflow-hidden bg-slate-200 dark:bg-slate-600/60 shrink-0">
                         <div
-                          className="h-full rounded-full bg-company-primary transition-all duration-500 ease-out"
-                          style={{ width: i < current ? "100%" : "0%" }}
+                          className={[
+                            "h-full rounded-full bg-company-primary transition-all duration-500 ease-out",
+                            i < current ? "w-full" : "w-0"
+                          ].join(" ")}
                         />
                       </div>
                     )}

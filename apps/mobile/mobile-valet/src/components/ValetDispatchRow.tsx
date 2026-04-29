@@ -148,13 +148,13 @@ export function createValetRowStyles(theme: Theme) {
       marginTop: 8,
     },
     bottomName: {
-      fontSize: Math.round(F.status * 0.65),
+      fontSize: F.sm,
       fontWeight: "600",
       fontFamily: "System",
       color: C.text,
     },
     bottomMeta: {
-      fontSize: Math.round(F.status * 0.65),
+      fontSize: F.sm,
       fontWeight: "600",
       fontFamily: "System",
       color: C.textMuted,
