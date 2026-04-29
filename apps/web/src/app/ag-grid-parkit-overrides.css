@@ -510,3 +510,8 @@
   margin-top: 0 !important;
   border-top: none !important;
 }
+
+/* DataTable dynamic height */
+.data-table-container {
+  height: var(--data-table-height, 600px);
+}

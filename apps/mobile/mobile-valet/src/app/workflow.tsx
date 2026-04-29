@@ -68,7 +68,7 @@ export default function WorkflowScreen() {
       const response = await api.get<WorkflowStatus>("/valets/workflow-status");
       setWorkflowData(response.data);
     } catch (error) {
-      console.error("Error loading workflow data:", error);
+      // Silently handle error - workflow data will remain null
     } finally {
       setLoading(false);
       setRefreshing(false);

@@ -143,7 +143,7 @@ export function ReservationQrPanel({
     );
   }
 
-  // Modal bottom sheet para permisos (igual que CardScanner)
+  // Modal bottom sheet for permissions (same as CardScanner)
   const permissionModal = !permission.granted ? (
     <Modal
       visible={permissionModalOpen}
@@ -556,7 +556,7 @@ export function createQrStyles(theme: Theme, safeInsets: { bottom: number }, lay
       fontWeight: "800",
       fontSize: F.sm,
     },
-    // Bottom sheet styles para permisos
+    // Bottom sheet styles for permissions
     permissionOverlay: {
       flex: 1,
       backgroundColor: 'rgba(0, 0, 0, 0.4)',

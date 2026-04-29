@@ -460,7 +460,6 @@ export default function ParkFlowScreen() {
       if (result.canceled || !result.assets?.[0]?.uri) return;
       await processAndAddDamagePhoto(result.assets[0].uri);
     } catch (error) {
-      console.error("Error in pickDamageFromLibrary:", error);
       feedback.error(t(locale, "profile.photoProcessError"));
     }
   }, [damagePhotoDataUrls.length, feedback, locale, processAndAddDamagePhoto]);
@@ -496,7 +495,6 @@ export default function ParkFlowScreen() {
       if (result.canceled || !result.assets?.[0]?.uri) return;
       await processAndAddDamagePhoto(result.assets[0].uri);
     } catch (error) {
-      console.error("Error in takeDamagePhoto:", error);
       feedback.error(t(locale, "profile.photoProcessError"));
     }
   }, [damagePhotoDataUrls.length, feedback, locale, processAndAddDamagePhoto]);

@@ -3,44 +3,7 @@ import * as Location from "expo-location";
 import api from "@/lib/api";
 import { useOnAppForeground } from "@/lib/useOnAppForeground";
 import { PARKINGS_POLL_MS } from "@/lib/syncConstants";
-
-export interface ParkingWithCoords {
-  id: string;
-  name: string;
-  address: string;
-  latitude: number | null;
-  longitude: number | null;
-  companyId: string;
-  company?: {
-    commercialName: string | null;
-    legalName: string | null;
-  } | null;
-}
-
-export interface NearestParkingResult {
-  parking: ParkingWithCoords;
-  distanceKm: number;
-}
-
-export function haversineKm(
-  lat1: number,
-  lon1: number,
-  lat2: number,
-  lon2: number
-): number {
-  const R = 6371;
-  const toRad = (d: number) => (d * Math.PI) / 180;
-  const dLat = toRad(lat2 - lat1);
-  const dLon = toRad(lon2 - lon1);
-  const a =
-    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-    Math.cos(toRad(lat1)) *
-      Math.cos(toRad(lat2)) *
-      Math.sin(dLon / 2) *
-      Math.sin(dLon / 2);
-  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-  return R * c;
-}
+import { ParkingWithCoords, NearestParkingResult, haversineKm } from "@parkit/shared";
 
 export type LocationUiState = "idle" | "loading" | "denied" | "unavailable" | "ready";
 

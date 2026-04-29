@@ -12,13 +12,13 @@ import {
   ActivityIndicator,
   ScrollView,
 } from "react-native";
-import Constants from "expo-constants";
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { IconUser, IconCircleCheck, IconMail, IconClipboardText, IconCar, IconPhone, IconHome2, IconCamera, IconGallery, IconId, IconList, IconCalendar } from "@/components/Icons";
+import { IconUser, IconCircleCheck, IconMail, IconClipboardText, IconCar, IconPhone, IconHome2, IconId, IconList, IconCalendar } from "@/components/Icons";
 import { IconEdit } from "@/components/IconEdit";
 import { ValetBackButton } from "@/components/ValetBackButton";
+import PhotoSelector from "@/components/PhotoSelector";
 import * as ImagePicker from "expo-image-picker";
 import { manipulateAsync, SaveFormat } from "expo-image-manipulator";
 import type { ValetStaffRole } from "@parkit/shared";
@@ -85,7 +85,7 @@ export default function ProfileScreen() {
     Partial<Record<"firstName" | "lastName" | "email" | "phone", string>>
   >({});
 
-  // Estados para valores originales (para detectar cambios)
+  // States for original values (to detect changes)
   const [originalFirstName, setOriginalFirstName] = useState("");
   const [originalLastName, setOriginalLastName] = useState("");
   const [originalEmail, setOriginalEmail] = useState("");
@@ -213,7 +213,6 @@ export default function ProfileScreen() {
 
   const processPickedUri = async (uri: string) => {
     try {
-      console.log("Processing image URI:", uri);
       
       // Validate URI before processing
       if (!uri || typeof uri !== 'string') {
@@ -231,7 +230,6 @@ export default function ProfileScreen() {
       }
       
       const dataUri = `data:image/jpeg;base64,${manipulated.base64}`;
-      console.log("Image processed successfully, data URI length:", dataUri.length);
       
       setLocalAvatar(dataUri);
       setAvatarRemoved(false);
@@ -239,7 +237,6 @@ export default function ProfileScreen() {
       // Provide success feedback
       feedback.success(t(locale, "profile.photoUpdated") || "Photo updated successfully");
     } catch (error) {
-      console.error("Error in processPickedUri:", error);
       
       let errorMessage = t(locale, "profile.photoProcessError");
       if (error instanceof Error) {
@@ -256,209 +253,63 @@ export default function ProfileScreen() {
 
   const pickImage = async () => {
     try {
-      console.log("Requesting media library permissions...");
-      
-      // On web, permissions work differently
-      if (Platform.OS === "web") {
-        console.log("Web platform detected, launching image picker...");
-        const result = await ImagePicker.launchImageLibraryAsync({
-          mediaTypes: ['images'],
-          allowsEditing: true,
-          aspect: [1, 1],
-          quality: 0.8,
-        });
-        console.log("Web image picker result:", result);
-        
-        if (result.canceled) {
-          console.log("User cancelled image selection");
-          return;
-        }
-        
-        if (!result.assets?.[0]?.uri) {
-          console.log("No image URI returned");
-          feedback.error(t(locale, "profile.photoProcessError"));
-          return;
-        }
-        
-        await processPickedUri(result.assets[0].uri);
-        return;
-      }
-      
-      // Check if running in Expo Go
-      if (Constants.appOwnership === 'expo') {
-        console.log("Running in Expo Go - using simplified approach");
-      }
-      
       // First check current permission status
       const { status: currentStatus } = await ImagePicker.getMediaLibraryPermissionsAsync();
-      console.log("Current media library permission status:", currentStatus);
       
       let status = currentStatus;
       
-      // Always request if not granted (including undetermined)
+      // Only request if not already granted
       if (currentStatus !== 'granted') {
-        console.log("Requesting media library permissions...");
         const { status: requestedStatus } = await ImagePicker.requestMediaLibraryPermissionsAsync();
         status = requestedStatus;
-        console.log("Media library permission status after request:", status);
-      }
-      
-      // For Expo Go, if still not granted after request, try one more time
-      if (Constants.appOwnership === 'expo' && status !== 'granted') {
-        console.log("Expo Go: Permission not granted, trying alternative approach...");
-        // Try direct request without checking first
-        const { status: retryStatus } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-        status = retryStatus;
-        console.log("Expo Go: Retry permission status:", status);
       }
       
       if (status !== 'granted') {
-        console.log("Media library permission denied");
-        // For Expo Go, provide more specific guidance
-        if (Constants.appOwnership === 'expo') {
-          feedback.error("Para acceder a la galería en Expo Go, ve a Configuración > Aplicaciones > Expo Go > Permisos y activa 'Almacenamiento'.");
-          return;
-        }
         feedback.error(t(locale, "profile.photoPermissionDenied"));
         return;
       }
       
-      console.log("Launching image library...");
-      // Use simplified options for Expo Go compatibility
       const result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ['images'],
-        allowsEditing: Constants.appOwnership !== 'expo', // Disable editing in Expo Go
-        aspect: Constants.appOwnership !== 'expo' ? [1, 1] : undefined,
-        quality: 0.8,
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsEditing: false,
+        quality: 0.88,
       });
-      console.log("Image library result:", result);
       
-      if (result.canceled) {
-        console.log("User cancelled image selection");
-        return;
-      }
-      
-      if (!result.assets?.[0]?.uri) {
-        console.log("No image URI returned");
-        feedback.error(t(locale, "profile.photoProcessError"));
-        return;
-      }
-      
+      if (result.canceled || !result.assets?.[0]?.uri) return;
       await processPickedUri(result.assets[0].uri);
     } catch (error) {
-      console.error("Error in pickImage:", error);
-      // Provide more specific error messages for Expo Go
-      if (Constants.appOwnership === 'expo') {
-        feedback.error("Error al abrir la galería en Expo Go. Intenta reiniciar la app o usar una development build.");
-        return;
-      }
-      if (error instanceof Error) {
-        if (error.message.includes('Permission')) {
-          feedback.error(t(locale, "profile.photoPermissionDenied"));
-        } else {
-          feedback.error(`${t(locale, "profile.photoProcessError")}: ${error.message}`);
-        }
-      } else {
-        feedback.error(t(locale, "profile.photoProcessError"));
-      }
+      feedback.error(t(locale, "profile.photoProcessError"));
     }
   };
 
   const takePhoto = async () => {
     try {
-      console.log("Requesting camera permissions...");
-      
-      // On web, camera works differently and may not be available
-      if (Platform.OS === "web") {
-        console.log("Web platform detected, camera may not be fully supported");
-        feedback.error("Camera is not fully supported on web. Please use gallery option.");
-        return;
-      }
-      
-      // Check if running in Expo Go
-      if (Constants.appOwnership === 'expo') {
-        console.log("Running in Expo Go - using simplified camera approach");
-      }
-      
       // First check current permission status
       const { status: currentStatus } = await ImagePicker.getCameraPermissionsAsync();
-      console.log("Current camera permission status:", currentStatus);
       
       let status = currentStatus;
       
-      // Always request if not granted (including undetermined)
+      // Only request if not already granted
       if (currentStatus !== 'granted') {
-        console.log("Requesting camera permissions...");
         const { status: requestedStatus } = await ImagePicker.requestCameraPermissionsAsync();
         status = requestedStatus;
-        console.log("Camera permission status after request:", status);
-      }
-      
-      // For Expo Go, if still not granted after request, try one more time
-      if (Constants.appOwnership === 'expo' && status !== 'granted') {
-        console.log("Expo Go: Camera permission not granted, trying alternative approach...");
-        // Try direct request without checking first
-        const { status: retryStatus } = await ImagePicker.requestCameraPermissionsAsync();
-        status = retryStatus;
-        console.log("Expo Go: Retry camera permission status:", status);
       }
       
       if (status !== 'granted') {
-        console.log("Camera permission denied");
-        // For Expo Go, provide more specific guidance
-        if (Constants.appOwnership === 'expo') {
-          feedback.error("Para acceder a la cámara en Expo Go, ve a Configuración > Aplicaciones > Expo Go > Permisos y activa 'Cámara'.");
-          return;
-        }
-        // Provide more specific error message
-        const errorMessage = Platform.OS === 'ios' 
-          ? t(locale, "profile.photoCameraDenied")
-          : t(locale, "profile.photoCameraDenied");
-        feedback.error(errorMessage);
+        feedback.error(t(locale, "profile.photoCameraDenied"));
         return;
       }
       
-      console.log("Launching camera...");
-      // Use simplified options for Expo Go compatibility
       const result = await ImagePicker.launchCameraAsync({
-        mediaTypes: ['images'],
-        allowsEditing: Constants.appOwnership !== 'expo', // Disable editing in Expo Go
-        aspect: Constants.appOwnership !== 'expo' ? [1, 1] : undefined,
-        quality: 0.8,
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsEditing: false,
+        quality: 0.88,
       });
-      console.log("Camera result:", result);
       
-      if (result.canceled) {
-        console.log("User cancelled camera");
-        return;
-      }
-      
-      if (!result.assets?.[0]?.uri) {
-        console.log("No image URI returned from camera");
-        feedback.error(t(locale, "profile.photoProcessError"));
-        return;
-      }
-      
+      if (result.canceled || !result.assets?.[0]?.uri) return;
       await processPickedUri(result.assets[0].uri);
     } catch (error) {
-      console.error("Error in takePhoto:", error);
-      // Provide more specific error messages for Expo Go
-      if (Constants.appOwnership === 'expo') {
-        feedback.error("Error al abrir la cámara en Expo Go. Intenta reiniciar la app o usar una development build.");
-        return;
-      }
-      // Provide more specific error messages
-      if (error instanceof Error) {
-        if (error.message.includes('Permission')) {
-          feedback.error(t(locale, "profile.photoCameraDenied"));
-        } else if (error.message.includes('Camera')) {
-          feedback.error(t(locale, "profile.photoCameraDenied"));
-        } else {
-          feedback.error(`${t(locale, "profile.photoProcessError")}: ${error.message}`);
-        }
-      } else {
-        feedback.error(t(locale, "profile.photoProcessError"));
-      }
+      feedback.error(t(locale, "profile.photoProcessError"));
     }
   };
 
@@ -574,7 +425,7 @@ export default function ProfileScreen() {
         } else {
           setPhone("");
         }
-        // Actualizar los valores originales después de guardar exitosamente
+        // Update original values after successful save
         setOriginalFirstName(fn);
         setOriginalLastName(ln);
         setOriginalEmail(em);
@@ -610,6 +461,7 @@ export default function ProfileScreen() {
     });
   };
 
+  
   const onExpiryChange = (event: { type?: string }, date?: Date) => {
     if (Platform.OS === "android") {
       setExpiryPickerOpen(false);
@@ -618,16 +470,6 @@ export default function ProfileScreen() {
     if (date) {
       setLicenseExpiryYmd(formatYmdLocal(date));
     }
-  };
-
-  const openPhotoChooser = () => {
-    console.log("openPhotoChooser called, platform:", Platform.OS);
-    if (Platform.OS === "web") {
-      // On web, still show modal but with different behavior
-      setPhotoModalOpen(true);
-      return;
-    }
-    setPhotoModalOpen(true);
   };
 
   return (
@@ -643,7 +485,7 @@ export default function ProfileScreen() {
           {isEditing ? (
             <ValetBackButton
               onPress={() => {
-                // Salir de modo edición
+                // Exit edit mode
                 setIsEditing(false);
               }}
               accessibilityLabel={t(locale, "common.back")}
@@ -651,7 +493,7 @@ export default function ProfileScreen() {
           ) : (
             <Pressable 
               onPress={() => {
-                // Entrar en modo edición
+                // Enter edit mode
                 setIsEditing(true);
               }} 
               style={{ width: 44, height: 44, alignItems: "center", justifyContent: "center" }}
@@ -680,7 +522,10 @@ export default function ProfileScreen() {
             >
               <View style={styles.avatarBlock}>
                 <Pressable
-                  onPress={openPhotoChooser}
+                  onPress={() => {
+                    // Selector estilizado sin modal tradicional
+                    setPhotoModalOpen(true);
+                  }}
                   style={({ pressed }) => [
                     styles.avatarRing,
                     { borderColor: hasPhotoPending ? "#F59E0B" : C.border },
@@ -752,7 +597,7 @@ export default function ProfileScreen() {
               </View>
             </View>
 
-            <Text style={styles.inputLabel} maxFontSizeMultiplier={1.5}>{t(locale, "profile.fullName")}</Text>
+            <Text style={styles.inputLabel} maxFontSizeMultiplier={1.5}>Full Name</Text>
               <View style={styles.nameInputContainer}>
                 <View style={styles.nameInputWrapper}>
                   <IconUser 
@@ -1006,70 +851,34 @@ export default function ProfileScreen() {
             )}
             </ScrollView>
 
-            <Modal
+            <PhotoSelector
               visible={photoModalOpen}
-              animationType="slide"
-              transparent
-              onRequestClose={() => setPhotoModalOpen(false)}
-            >
-              <View style={styles.modalOverlay}>
-                <Pressable
-                  style={styles.modalBackdropPress}
-                  onPress={() => setPhotoModalOpen(false)}
-                  accessibilityLabel={t(locale, "common.cancel")}
-                />
-                <View
-                  style={[styles.modalSheet, { backgroundColor: C.card, borderColor: C.border }]}
-                >
-                  <Text style={[styles.modalTitle, { color: C.text }]}>
-                    {t(locale, "profile.changePhoto")}
-                  </Text>
-                  <View style={styles.photoOptions}>
-                    <Pressable
-                      style={({ pressed }) => [
-                        styles.photoOption,
-                        { borderColor: C.border, backgroundColor: C.card },
-                        pressed && styles.pressed,
-                      ]}
-                      onPress={() => {
-                        console.log("Gallery button pressed!");
-                        setPhotoModalOpen(false);
-                        console.log("Modal closed, calling pickImage...");
-                        void pickImage();
-                      }}
-                      accessibilityRole="button"
-                      accessibilityLabel={t(locale, "profile.photoFromLibrary")}
-                    >
-                      <IconGallery size={24} color={C.primary} />
-                      <Text style={[styles.photoOptionText, { color: C.text }]}>{t(locale, "profile.photoFromLibrary")}</Text>
-                    </Pressable>
-                    <Pressable
-                      style={({ pressed }) => [
-                        styles.photoOption,
-                        { borderColor: C.border, backgroundColor: C.card },
-                        pressed && styles.pressed,
-                      ]}
-                      onPress={() => {
-                        console.log("Camera button pressed!");
-                        setPhotoModalOpen(false);
-                        console.log("Modal closed, calling takePhoto...");
-                        void takePhoto();
-                      }}
-                      accessibilityRole="button"
-                      accessibilityLabel={t(locale, "profile.photoFromCamera")}
-                    >
-                      <IconCamera size={24} color={C.primary} />
-                      <Text style={[styles.photoOptionText, { color: C.text }]}>{t(locale, "profile.photoFromCamera")}</Text>
-                    </Pressable>
-                  </View>
-                  <Pressable style={styles.modalDoneBtn} onPress={() => setPhotoModalOpen(false)}>
-                    <Text style={[styles.modalDoneBtnText, { color: C.primary }]}>
-                      {t(locale, "common.cancel")}
-                    </Text>
-                  </Pressable>
-                </View>
-              </View>
-            </Modal>
+              onClose={() => setPhotoModalOpen(false)}
+              onTakePhoto={async () => {
+                setPhotoModalOpen(false);
+                setTimeout(async () => {
+                  try {
+                    await takePhoto();
+                  } catch (error) {
+                    feedback.error(t(locale, "profile.photoProcessError"));
+                  }
+                }, 50);
+              }}
+              onPickFromGallery={async () => {
+                setPhotoModalOpen(false);
+                setTimeout(async () => {
+                  try {
+                    await pickImage();
+                  } catch (error) {
+                    feedback.error(t(locale, "profile.photoProcessError"));
+                  }
+                }, 50);
+              }}
+              title={t(locale, "profile.changePhoto")}
+              cameraText={t(locale, "receive.damageTakePhoto")}
+              galleryText={t(locale, "receive.damageFromGallery")}
+              cancelText={t(locale, "common.cancel")}
+            />
 
             <View>
               <StickyFormFooter keyboardPinned>
@@ -1093,7 +902,7 @@ export default function ProfileScreen() {
             </View>
           </View>
         ) : (
-          // Vista estática - modo lectura con look and feel de settings
+          // Static view - read mode with settings look and feel
           <View style={styles.bodyColumn}>
             <ScrollView
               style={styles.scroll}
@@ -1615,7 +1424,7 @@ function createStyles(theme: Theme, contentMaxWidth: number, sectionPadding: num
       fontWeight: "600",
       color: C.text,
     },
-    // Estilos para vista estática
+    // Styles for static view
     infoSection: {
       backgroundColor: C.card,
       borderRadius: R.card,
@@ -1638,7 +1447,7 @@ function createStyles(theme: Theme, contentMaxWidth: number, sectionPadding: num
       color: C.text,
       lineHeight: 24,
     },
-    // Estilos adicionales para vista estática
+    // Additional styles for static view
     inputText: {
       fontSize: F.base,
       fontWeight: '600',
@@ -1652,7 +1461,7 @@ function createStyles(theme: Theme, contentMaxWidth: number, sectionPadding: num
       color: C.text,
       marginBottom: S.sm,
     },
-    // Estilos para texto plano en modo lectura
+    // Styles for plain text in read mode
     plainText: {
       fontSize: F.base,
       fontWeight: '600',
@@ -1679,7 +1488,7 @@ function createStyles(theme: Theme, contentMaxWidth: number, sectionPadding: num
     plainTextIcon: {
       marginTop: 2,
     },
-    // Estilos para diseño profesional de vista no editable
+    // Styles for professional design of non-editable view
     infoCard: {
       backgroundColor: C.card,
       borderRadius: R.card,
@@ -1728,7 +1537,7 @@ function createStyles(theme: Theme, contentMaxWidth: number, sectionPadding: num
       backgroundColor: C.border,
       marginVertical: S.sm,
     },
-    // Estilos para look and feel de settings
+    // Styles for settings look and feel
     settingsSection: {
       backgroundColor: C.card,
       borderRadius: R.card,
@@ -1766,5 +1575,25 @@ function createStyles(theme: Theme, contentMaxWidth: number, sectionPadding: num
     settingsIcon: {
       marginRight: S.md,
     },
-  });
+    // Styles for camera and gallery buttons like in receive.tsx
+    footerSecondaryBtn: {
+      flex: 1,
+      minWidth: 0,
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "center",
+      gap: S.sm,
+      paddingVertical: S.md,
+      paddingHorizontal: S.sm,
+      borderRadius: R.card,
+      borderWidth: 2,
+      borderColor: C.border,
+      backgroundColor: C.card,
+    },
+    footerSecondaryBtnText: {
+      color: C.text,
+      fontWeight: "800",
+      fontSize: theme.font.base,
+    },
+      });
 }

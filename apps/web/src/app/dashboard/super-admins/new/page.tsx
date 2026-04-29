@@ -55,7 +55,7 @@ export default function NewSuperAdminPage() {
         firstName: form.firstName.trim(),
         lastName: form.lastName.trim(),
         email: form.email.trim(),
-        password: undefined, // No enviar password para usar flujo de invitación
+        password: undefined, // Don't send password to use invitation flow
       });
       showSuccess(t("common.createSuccessShort"));
       router.push("/dashboard/profile");
@@ -71,7 +71,7 @@ export default function NewSuperAdminPage() {
   const steps: WizardStep[] = [
     {
       title: t("superAdmins.newSuperAdmin"),
-      description: "Se enviará una invitación por email al nuevo super administrador",
+      description: "An invitation will be sent by email to the new super administrator",
       accentColor: "violet",
       isValid: () => !!(form.firstName.trim() && form.lastName.trim() && form.email.trim()),
       content: (
@@ -80,7 +80,7 @@ export default function NewSuperAdminPage() {
             <label className={LABEL}>{t("users.firstName")} <span className="text-red-500">*</span></label>
             <div className="relative group">
               <UserCircle className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-text-muted group-focus-within:text-company-primary transition-colors pointer-events-none" />
-              <input value={form.firstName} onChange={set("firstName")} placeholder={t("common.placeholderName")} className={IL} aria-invalid={!!errors.firstName} />
+              <input value={form.firstName} onChange={set("firstName")} placeholder={t("common.placeholderName")} className={IL} />
             </div>
             <div className="min-h-[1.25rem] mt-1">{errors.firstName && <p className="text-sm text-red-500" role="alert">{errors.firstName}</p>}</div>
           </div>
@@ -88,7 +88,7 @@ export default function NewSuperAdminPage() {
             <label className={LABEL}>{t("users.lastName")} <span className="text-red-500">*</span></label>
             <div className="relative group">
               <UserCircle className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-text-muted group-focus-within:text-company-primary transition-colors pointer-events-none" />
-              <input value={form.lastName} onChange={set("lastName")} placeholder={t("common.placeholderLastName")} className={IL} aria-invalid={!!errors.lastName} />
+              <input value={form.lastName} onChange={set("lastName")} placeholder={t("common.placeholderLastName")} className={IL} />
             </div>
             <div className="min-h-[1.25rem] mt-1">{errors.lastName && <p className="text-sm text-red-500" role="alert">{errors.lastName}</p>}</div>
           </div>
@@ -96,7 +96,7 @@ export default function NewSuperAdminPage() {
             <label className={LABEL}>{t("users.email")} <span className="text-red-500">*</span></label>
             <div className="relative group">
               <MailOpen className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-text-muted group-focus-within:text-company-primary transition-colors pointer-events-none" />
-              <input type="email" value={form.email} onChange={set("email")} placeholder={t("common.placeholderEmail")} className={IL} aria-invalid={!!errors.email} />
+              <input type="email" value={form.email} onChange={set("email")} placeholder={t("common.placeholderEmail")} className={IL} />
             </div>
             <div className="min-h-[1.25rem] mt-1">{errors.email && <p className="text-sm text-red-500" role="alert">{errors.email}</p>}</div>
           </div>
