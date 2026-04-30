@@ -113,3 +113,6 @@ export function useNearestParking(enabled: boolean) {
 
   return { nearest, status, refresh, allParkings, userCoords };
 }
+
+// Re-export haversineKm for use in other modules
+export { haversineKm };

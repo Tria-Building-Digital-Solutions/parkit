@@ -133,7 +133,7 @@ export function createScreenStyles(theme: ValetTheme, params: StyleParams) {
 // Estilos para formularios
 export function createFormStyles(theme: ValetTheme, params: StyleParams) {
   const base = createBaseStyles(theme, params);
-  const { C, S, R, F, Fonts } = base;
+  const { colors: C, space: S, radius: R, font: F, fontFamily: Fonts } = base;
 
   return StyleSheet.create({
     formContainer: {
@@ -195,7 +195,7 @@ export function createFormStyles(theme: ValetTheme, params: StyleParams) {
 // Estilos para listas y cards
 export function createListStyles(theme: ValetTheme, params: StyleParams) {
   const base = createBaseStyles(theme, params);
-  const { C, S, R, F, Fonts } = base;
+  const { colors: C, space: S, radius: R, font: F, fontFamily: Fonts } = base;
 
   return StyleSheet.create({
     listContainer: {

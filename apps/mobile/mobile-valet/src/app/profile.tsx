@@ -15,12 +15,12 @@ import {
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { IconUser, IconCircleCheck, IconMail, IconClipboardText, IconCar, IconPhone, IconHome2, IconId, IconList, IconCalendar } from "@/components/Icons";
+import { IconUser, IconCircleCheck, IconMail, IconClipboardText, IconCar, IconPhone, IconHome2, IconId, IconList, IconCalendar, IconAlertCircle } from "@/components/Icons";
 import { IconEdit } from "@/components/IconEdit";
 import { ValetBackButton } from "@/components/ValetBackButton";
 import PhotoSelector from "@/components/PhotoSelector";
+import { CropModal } from "@/components/CropModal";
 import * as ImagePicker from "expo-image-picker";
-import { manipulateAsync, SaveFormat } from "expo-image-manipulator";
 import type { ValetStaffRole } from "@parkit/shared";
 import { useAuthStore, useLocaleStore } from "@/lib/store";
 import { useCompanyContext } from "@/lib/useCompanyContext";
@@ -52,9 +52,11 @@ type MePayload = {
   avatarUrl?: string | null;
 };
 
+
 export default function ProfileScreen() {
   const router = useRouter();
-  const locale = useLocaleStore((s) => s.locale);
+  const locale = useLocaleStore((s: any) => s.locale);
+  const isHydrated = useLocaleStore((s: any) => s.isHydrated);
   const { user, mergeUser } = useAuthStore();
   const theme = useValetTheme();
   const responsive = useResponsiveLayout();
@@ -65,10 +67,12 @@ export default function ProfileScreen() {
     [theme, responsive.contentMaxWidth, responsive.sectionPadding]
   );
   const C = theme.colors;
-  const feedback = useMemo(() => createFeedback(locale), [locale]);
+  const feedback = useMemo(() => createFeedback(locale as 'es' | 'en'), [locale]);
 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const [retrying, setRetrying] = useState(false);
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
@@ -81,6 +85,8 @@ export default function ProfileScreen() {
   );
   const [photoModalOpen, setPhotoModalOpen] = useState(false);
   const [licenseModalOpen, setLicenseModalOpen] = useState(false);
+  const [cropModalOpen, setCropModalOpen] = useState(false);
+  const [pendingImageUri, setPendingImageUri] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<
     Partial<Record<"firstName" | "lastName" | "email" | "phone", string>>
   >({});
@@ -192,11 +198,11 @@ export default function ProfileScreen() {
         }
       } else { /* empty */ }
     } catch (err) {
-      feedback.error(t(locale, "profile.loadError"));
+      setLoadError(t(locale, "profile.loadError"));
     } finally {
       setLoading(false);
     }
-  }, [feedback, locale]);
+  }, [locale, setLoadError]);
 
   useEffect(() => {
     load();
@@ -213,31 +219,16 @@ export default function ProfileScreen() {
 
   const processPickedUri = async (uri: string) => {
     try {
-      
       // Validate URI before processing
       if (!uri || typeof uri !== 'string') {
         throw new Error('Invalid image URI provided');
       }
       
-      const manipulated = await manipulateAsync(
-        uri,
-        [{ resize: { width: 480 } }],
-        { compress: 0.82, format: SaveFormat.JPEG, base64: true }
-      );
-      
-      if (!manipulated.base64) {
-        throw new Error('Failed to process image - no base64 data returned');
-      }
-      
-      const dataUri = `data:image/jpeg;base64,${manipulated.base64}`;
-      
-      setLocalAvatar(dataUri);
+      // Set the pending image URI and open crop modal
+      setPendingImageUri(uri);
+      setCropModalOpen(true);
       setAvatarRemoved(false);
-      
-      // Provide success feedback
-      feedback.success(t(locale, "profile.photoUpdated") || "Photo updated successfully");
     } catch (error) {
-      
       let errorMessage = t(locale, "profile.photoProcessError");
       if (error instanceof Error) {
         if (error.message.includes('file') || error.message.includes('URI')) {
@@ -249,6 +240,23 @@ export default function ProfileScreen() {
       
       feedback.error(errorMessage);
     }
+  };
+
+  const handleCropComplete = async (croppedDataUri: string) => {
+    try {
+      setLocalAvatar(croppedDataUri);
+      setCropModalOpen(false);
+      setPendingImageUri(null);
+    } catch (error) {
+      feedback.error(t(locale, "profile.photoProcessError"));
+      setCropModalOpen(false);
+      setPendingImageUri(null);
+    }
+  };
+
+  const handleCropCancel = () => {
+    setCropModalOpen(false);
+    setPendingImageUri(null);
   };
 
   const pickImage = async () => {
@@ -490,6 +498,8 @@ export default function ProfileScreen() {
               }}
               accessibilityLabel={t(locale, "common.back")}
             />
+          ) : loadError || retrying ? (
+            <View style={{ width: 44, height: 44 }} />
           ) : (
             <Pressable 
               onPress={() => {
@@ -512,6 +522,115 @@ export default function ProfileScreen() {
             <ActivityIndicator size="large" color={C.primary} />
             <Text style={styles.loadingText}>{t(locale, "common.loading")}</Text>
           </View>
+        ) : loadError ? (
+          <View style={styles.bodyColumn}>
+            <View style={[styles.centered, { paddingHorizontal: theme.space.xl }]}>
+              <View style={{
+                width: 80,
+                height: 80,
+                borderRadius: 40,
+                backgroundColor: theme.isDark ? 'rgba(239, 68, 68, 0.15)' : 'rgba(239, 68, 68, 0.1)',
+                justifyContent: 'center',
+                alignItems: 'center',
+                marginBottom: theme.space.lg
+              }}>
+                <IconAlertCircle size={40} color={C.logout} />
+              </View>
+              <Text style={[
+                styles.loadingText, 
+                { 
+                  color: C.text, 
+                  textAlign: 'center', 
+                  marginBottom: theme.space.sm,
+                  fontSize: theme.font.lg,
+                  fontFamily: theme.fontFamily.primary,
+                  fontWeight: '600'
+                }
+              ]}>
+                {t(locale, "common.errorTitle")}
+              </Text>
+              <Text style={[
+                { 
+                  color: C.textMuted, 
+                  textAlign: 'center', 
+                  marginBottom: theme.space.xl,
+                  fontSize: theme.font.base,
+                  fontFamily: theme.fontFamily.primary,
+                  lineHeight: 20
+                }
+              ]}>
+                {loadError}
+              </Text>
+              <Pressable
+                style={[{
+                  backgroundColor: C.primary,
+                  paddingHorizontal: theme.space.xl,
+                  paddingVertical: theme.space.md,
+                  borderRadius: theme.radius.button,
+                  minWidth: 140,
+                  alignItems: 'center'
+                }]}
+                onPress={async () => {
+                  setRetrying(true);
+                  setLoadError(null);
+                  await load();
+                  // Add minimum delay to ensure user sees the loading state
+                  await new Promise(resolve => setTimeout(resolve, 500));
+                  setRetrying(false);
+                }}
+                disabled={retrying}
+              >
+                <Text style={[
+                  { 
+                    color: '#fff', 
+                    fontSize: theme.font.base, 
+                    fontFamily: theme.fontFamily.primary, 
+                    fontWeight: '700'
+                  }
+                ]}>
+                  {t(locale, "common.retry")}
+                </Text>
+              </Pressable>
+            </View>
+            {/* Loading overlay */}
+            {retrying && (
+              <View style={{
+                position: 'absolute',
+                top: 0,
+                left: 0,
+                right: 0,
+                bottom: 0,
+                backgroundColor: theme.isDark ? 'rgba(0, 0, 0, 0.6)' : 'rgba(0, 0, 0, 0.4)',
+                justifyContent: 'center',
+                alignItems: 'center',
+                paddingHorizontal: theme.space.xl
+              }}>
+                <View style={{
+                  backgroundColor: C.card,
+                  padding: theme.space.xl,
+                  borderRadius: theme.radius.card,
+                  alignItems: 'center',
+                  minWidth: 200,
+                  borderWidth: StyleSheet.hairlineWidth,
+                  borderColor: C.border
+                }}>
+                  <ActivityIndicator size="large" color={C.primary} />
+                  <Text style={[
+                    { 
+                      color: C.text, 
+                      marginTop: theme.space.md,
+                      fontSize: theme.font.base,
+                      fontFamily: theme.fontFamily.primary,
+                      fontWeight: '600',
+                      textAlign: 'center'
+                    }
+                  ]}>
+                    {t(locale, "common.loading")}
+                  </Text>
+                </View>
+              </View>
+            )}
+          </View>
         ) : isEditing ? (
           <View style={styles.bodyColumn}>
             <ScrollView
@@ -526,7 +645,7 @@ export default function ProfileScreen() {
                     // Selector estilizado sin modal tradicional
                     setPhotoModalOpen(true);
                   }}
-                  style={({ pressed }) => [
+                  style={({ pressed }: { pressed?: boolean }) => [
                     styles.avatarRing,
                     { borderColor: hasPhotoPending ? "#F59E0B" : C.border },
                     pressed && styles.pressed,
@@ -607,7 +726,7 @@ export default function ProfileScreen() {
                   <TextInput
                     style={styles.nameInput}
                     value={firstName}
-                    onChangeText={(v) => {
+                    onChangeText={(v: string) => {
                       setFirstName(v);
                       if (fieldErrors.firstName) setFieldErrors((e) => ({ ...e, firstName: undefined }));
                     }}
@@ -627,7 +746,7 @@ export default function ProfileScreen() {
                   <TextInput
                     style={styles.nameInput}
                     value={lastName}
-                    onChangeText={(v) => {
+                    onChangeText={(v: string) => {
                       setLastName(v);
                       if (fieldErrors.lastName) setFieldErrors((e) => ({ ...e, lastName: undefined }));
                     }}
@@ -651,14 +770,16 @@ export default function ProfileScreen() {
               <Text style={{ color: C.logout }}> *</Text>
             </Text>
             <View style={styles.inputContainer}>
-              <IconMail size={20} color={C.textMuted} style={styles.inputIcon} />
+              <View style={styles.inputIcon}>
+                <IconMail size={20} color={C.textMuted} />
+              </View>
               <TextInput
                 style={[
                   styles.input,
                   { borderColor: fieldErrors.email ? C.logout : C.border },
                 ]}
                 value={email}
-                onChangeText={(v) => {
+                onChangeText={(v: string) => {
                   setEmail(v);
                   if (fieldErrors.email) setFieldErrors((e) => ({ ...e, email: undefined }));
                 }}
@@ -676,14 +797,16 @@ export default function ProfileScreen() {
 
             <Text style={styles.label}>{t(locale, "profile.phone")}</Text>
             <View style={styles.inputContainer}>
-              <IconPhone size={20} color={C.textMuted} style={styles.inputIcon} />
+              <View style={styles.inputIcon}>
+                <IconPhone size={20} color={C.textMuted} />
+              </View>
               <TextInput
                 style={[
                   styles.input,
                   { borderColor: fieldErrors.phone ? C.logout : C.border },
                 ]}
                 value={phone}
-                onChangeText={(v) => {
+                onChangeText={(v: string) => {
                   setPhone(formatPhoneWithCountryCode(v, getDeviceCountryCode()));
                   if (fieldErrors.phone) setFieldErrors((e) => ({ ...e, phone: undefined }));
                 }}
@@ -700,7 +823,7 @@ export default function ProfileScreen() {
               <>
                 <Text style={styles.label}>{t(locale, "profile.licenseTypesLabel")}</Text>
                 <Pressable
-                  style={({ pressed }) => [
+                  style={({ pressed }: { pressed?: boolean }) => [
                     styles.input,
                     { borderColor: C.border, backgroundColor: C.card, position: 'relative' },
                     pressed && styles.pressed,
@@ -709,13 +832,17 @@ export default function ProfileScreen() {
                   accessibilityRole="button"
                   accessibilityLabel={t(locale, "profile.licensePickerTitle")}
                 >
-                  <IconId size={20} color={C.textMuted} style={{ position: 'absolute', left: 16, top: '50%', marginTop: 0, zIndex: 1 }} />
+                  <View style={{ position: 'absolute', left: 16, top: '50%', marginTop: 0, zIndex: 1 }}>
+                    <IconId size={20} color={C.textMuted} />
+                  </View>
                   <Text
                     style={[{ color: C.text, paddingTop: 4, textAlignVertical: 'center', fontSize: theme.font.base, fontFamily: theme.fontFamily.primary }]} numberOfLines={1}
                   >
                     {licenseCodesDisplay || t(locale, "profile.licenseTypesPlaceholder")}
                   </Text>
-                  <IconList size={16} color={C.textMuted} style={{ position: 'absolute', right: 16, top: '50%', marginTop: 0, zIndex: 1 }} />
+                  <View style={{ position: 'absolute', right: 16, top: '50%', marginTop: 0, zIndex: 1 }}>
+                    <IconList size={16} color={C.textMuted} />
+                  </View>
                 </Pressable>
 
                 <Modal
@@ -738,14 +865,14 @@ export default function ProfileScreen() {
                       </Text>
                       <FlatList
                         data={LICENSE_TYPE_OPTIONS}
-                        keyExtractor={(item) => item.value}
+                        keyExtractor={(item: { value: string; label: string }) => item.value}
                         style={styles.modalListLicense}
                         keyboardShouldPersistTaps="handled"
-                        renderItem={({ item }) => {
+                        renderItem={({ item }: { item: { value: string; label: string } }) => {
                           const selected = licenseTypes.includes(item.value);
                           return (
                             <Pressable
-                              style={({ pressed }) => [
+                              style={({ pressed }: { pressed?: boolean }) => [
                                 styles.licenseOptionRow,
                                 { borderBottomColor: C.border },
                                 pressed && styles.pressed,
@@ -776,14 +903,16 @@ export default function ProfileScreen() {
                 <Text style={styles.label}>{t(locale, "profile.licenseExpiryLabel")}</Text>
                 <Pressable
                   onPress={() => setExpiryPickerOpen(true)}
-                  style={({ pressed }) => [
+                  style={({ pressed }: { pressed?: boolean }) => [
                     styles.input,
                     { borderColor: C.border, backgroundColor: C.card, position: 'relative' },
                     pressed && styles.pressed,
                   ]}
                   accessibilityRole="button"
                 >
-                  <IconCalendar size={20} color={C.textMuted} style={{ position: 'absolute', left: 16, top: '50%', marginTop: 0, zIndex: 1 }} />
+                  <View style={{ position: 'absolute', left: 16, top: '50%', marginTop: 0, zIndex: 1 }}>
+                    <IconCalendar size={20} color={C.textMuted} />
+                  </View>
                   <Text
                     style={[{ color: C.text, paddingTop: 4, textAlignVertical: 'center', fontSize: theme.font.base, fontFamily: theme.fontFamily.primary }]} numberOfLines={1}
                   >
@@ -791,7 +920,9 @@ export default function ProfileScreen() {
                       ? licenseExpiryYmd
                       : t(locale, "profile.licenseExpiryPlaceholder")}
                   </Text>
-                  <IconList size={16} color={C.textMuted} style={{ position: 'absolute', right: 16, top: '50%', marginTop: 0, zIndex: 1 }} />
+                  <View style={{ position: 'absolute', right: 16, top: '50%', marginTop: 0, zIndex: 1 }}>
+                    <IconList size={16} color={C.textMuted} />
+                  </View>
                 </Pressable>
                 {licenseExpiryYmd.trim() ? (
                   <Pressable onPress={() => setLicenseExpiryYmd("")} style={styles.clearExpiryLink}>
@@ -839,7 +970,7 @@ export default function ProfileScreen() {
                           value={parseYmdLocal(licenseExpiryYmd) ?? new Date()}
                           mode="date"
                           display="spinner"
-                          onChange={(_, date) => {
+                          onChange={(_: any, date?: Date) => {
                             if (date) setLicenseExpiryYmd(formatYmdLocal(date));
                           }}
                         />
@@ -883,7 +1014,7 @@ export default function ProfileScreen() {
             <View>
               <StickyFormFooter keyboardPinned>
                 <Pressable
-                  style={({ pressed }) => [
+                  style={({ pressed }: { pressed?: boolean }) => [
                     styles.primaryBtnFooter,
                     { backgroundColor: C.primary },
                     (!hasChanges || saving) && styles.btnDisabled,
@@ -901,7 +1032,7 @@ export default function ProfileScreen() {
               </StickyFormFooter>
             </View>
           </View>
-        ) : (
+        ) : loadError ? null : (
           // Static view - read mode with settings look and feel
           <View style={styles.bodyColumn}>
             <ScrollView
@@ -927,11 +1058,13 @@ export default function ProfileScreen() {
               <Text style={styles.sectionTitle}>{t(locale, "profile.personalInfo")}</Text>
               <View style={styles.settingsSection}>
                 <View style={styles.settingsRow}>
-                  {staffRole === 'DRIVER' ? (
-                    <IconCar size={20} color={C.textMuted} style={styles.settingsIcon} />
-                  ) : (
-                    <IconClipboardText size={20} color={C.textMuted} style={styles.settingsIcon} />
-                  )}
+                  <View style={styles.settingsIcon}>
+                    {staffRole === 'DRIVER' ? (
+                      <IconCar size={20} color={C.textMuted} />
+                    ) : (
+                      <IconClipboardText size={20} color={C.textMuted} />
+                    )}
+                  </View>
                   <View style={styles.settingsRowContent}>
                     <Text style={styles.settingsLabel}>{t(locale, "profile.staffRoleLabel")}</Text>
                     <Text style={styles.settingsValue}>{staffRole === 'DRIVER' ? t(locale, "profile.driverRole") : t(locale, "profile.receptionistRole")}</Text>
@@ -939,7 +1072,9 @@ export default function ProfileScreen() {
                 </View>
 
                 <View style={styles.settingsRow}>
-                  <IconUser size={20} color={C.textMuted} style={styles.settingsIcon} />
+                  <View style={styles.settingsIcon}>
+                    <IconUser size={20} color={C.textMuted} />
+                  </View>
                   <View style={styles.settingsRowContent}>
                     <Text style={styles.settingsLabel}>{t(locale, "profile.firstNameLabel")}</Text>
                     <Text style={styles.settingsValue}>{firstName} {lastName}</Text>
@@ -947,7 +1082,9 @@ export default function ProfileScreen() {
                 </View>
 
                 <View style={styles.settingsRow}>
-                  <IconMail size={20} color={C.textMuted} style={styles.settingsIcon} />
+                  <View style={styles.settingsIcon}>
+                    <IconMail size={20} color={C.textMuted} />
+                  </View>
                   <View style={styles.settingsRowContent}>
                     <Text style={styles.settingsLabel}>{t(locale, "profile.emailLabel")}</Text>
                     <Text style={styles.settingsValue}>{email}</Text>
@@ -956,7 +1093,9 @@ export default function ProfileScreen() {
 
                 {phone && (
                   <View style={[styles.settingsRow, styles.settingsRowLast]}>
-                    <IconPhone size={20} color={C.textMuted} style={styles.settingsIcon} />
+                    <View style={styles.settingsIcon}>
+                      <IconPhone size={20} color={C.textMuted} />
+                    </View>
                     <View style={styles.settingsRowContent}>
                       <Text style={styles.settingsLabel}>{t(locale, "profile.phoneLabel")}</Text>
                       <Text style={styles.settingsValue}>{phone}</Text>
@@ -970,7 +1109,9 @@ export default function ProfileScreen() {
                   <Text style={styles.sectionTitle}>{t(locale, "profile.driverLicenseSection")}</Text>
                   <View style={styles.settingsSection}>
                     <View style={styles.settingsRow}>
-                      <IconId size={20} color={C.textMuted} style={styles.settingsIcon} />
+                      <View style={styles.settingsIcon}>
+                        <IconId size={20} color={C.textMuted} />
+                      </View>
                       <View style={styles.settingsRowContent}>
                         <Text style={styles.settingsLabel}>{t(locale, "profile.licenseTypesLabel")}</Text>
                         <Text style={styles.settingsValue}>
@@ -980,7 +1121,9 @@ export default function ProfileScreen() {
                     </View>
 
                     <View style={[styles.settingsRow, styles.settingsRowLast]}>
-                      <IconCalendar size={20} color={C.textMuted} style={styles.settingsIcon} />
+                      <View style={styles.settingsIcon}>
+                        <IconCalendar size={20} color={C.textMuted} />
+                      </View>
                       <View style={styles.settingsRowContent}>
                         <Text style={styles.settingsLabel}>{t(locale, "profile.licenseExpiryLabel")}</Text>
                         <Text style={styles.settingsValue}>
@@ -996,6 +1139,19 @@ export default function ProfileScreen() {
         )}
       </View>
       </View>
+      
+      {/* Crop Modal */}
+      {isHydrated && cropModalOpen && pendingImageUri && (
+        <CropModal
+          key={`crop-modal-${pendingImageUri}`}
+          visible={cropModalOpen}
+          imageUrl={pendingImageUri}
+          onClose={handleCropCancel}
+          onCrop={handleCropComplete}
+          locale={locale || 'es'}
+          mode="profile"
+        />
+      )}
     </SafeAreaView>
   );
 }
@@ -1100,7 +1256,7 @@ function createStyles(theme: Theme, contentMaxWidth: number, sectionPadding: num
       borderColor: C.primary,
       backgroundColor: C.card,
     },
-    avatarImage: { width: "100%", height: "100%" },
+    avatarImage: { width: "100%", height: "100%", resizeMode: "cover" },
     avatarPlaceholder: {
       flex: 1,
       alignItems: "center",

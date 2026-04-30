@@ -1,8 +1,5 @@
 {
   "files": [],
-  "exclude": [
-    "node_modules"
-  ],
   "references": [
     {
       "path": "./apps/api"
@@ -21,7 +18,18 @@
     }
   ],
   "compilerOptions": {
-    "skipLibCheck": true
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "strict": true,
+    "disableSolutionSearching": true,
+    "disableSourceOfProjectReferenceRedirect": true
   },
-  "extends": "expo/tsconfig.base"
+  "exclude": [
+    "node_modules",
+    "node_modules/**",
+    "**/node_modules",
+    "**/node_modules/**",
+    "./node_modules/**",
+    "./**/node_modules/**"
+  ]
 }

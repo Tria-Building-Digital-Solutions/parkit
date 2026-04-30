@@ -2,6 +2,7 @@ import "@/lib/androidTextDefaults";
 import { Stack, SplashScreen } from 'expo-router';
 import { useEffect } from 'react';
 import { View, Text } from 'react-native';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { useAuthStore, useLocaleStore } from '@/lib/store';
 import { useThemeStore } from '@/lib/themeStore';
 import { getStoredUser } from '@/lib/auth';
@@ -53,9 +54,10 @@ export default function RootLayout() {
   }
 
   return (
-    <ActionSheetProvider>
-      <View style={{ flex: 1 }}>
-        <Stack
+    <GestureHandlerRootView>
+      <ActionSheetProvider>
+        <View style={{ flex: 1 }}>
+          <Stack
           screenOptions={{
             headerShown: false,
             animation: 'default',
@@ -281,5 +283,6 @@ export default function RootLayout() {
         />
       </View>
     </ActionSheetProvider>
+    </GestureHandlerRootView>
   );
 }

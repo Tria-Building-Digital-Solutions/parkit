@@ -176,6 +176,7 @@ function createStyles(theme: any) {
       width: '100%',
       height: '100%',
       borderRadius: 100,
+      resizeMode: 'cover',
     },
     avatarPlaceholder: {
       width: '100%',

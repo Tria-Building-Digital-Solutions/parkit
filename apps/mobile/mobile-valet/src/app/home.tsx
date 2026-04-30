@@ -783,6 +783,7 @@ function createStyles(
     },
     /** Medidas explícitas: en algunos dispositivos % dentro del círculo no pinta la imagen. */
     headerAvatarImage: {
+      resizeMode: 'cover',
     },
     headerAvatarInitials: {
       fontWeight: "600",
