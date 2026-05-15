@@ -1,6 +1,6 @@
 # Parkit
 
-parkit. is a **B2B2C parking and valet management platform** designed for companies
+parkit is a **B2B2C parking and valet management platform** designed for companies
 that operate parking facilities, valet services, or hybrid parking models.
 
 The platform connects **companies**, **customers**, and **valet staff**
@@ -99,7 +99,7 @@ Super admin users are created via **seed** or internal tooling (e.g. `superadmin
 
 ## Applications
 
-parkit. is structured as a **multi-application platform**:
+parkit is structured as a **multi-application platform**:
 
 ### Backend API
 
