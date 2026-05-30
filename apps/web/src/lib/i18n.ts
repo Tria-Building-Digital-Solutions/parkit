@@ -1180,6 +1180,16 @@ export const translations = {
         bottomQuestion: "¿Aún tienes preguntas?",
         bottomContact: "Contacta a nuestro equipo de soporte",
       },
+      contact: {
+        title: "Contáctanos",
+        subtitle: "Estamos aquí para ayudarte",
+        emailLabel: "Correo electrónico",
+        emailValue: "hola@parkit.io",
+        phoneLabel: "Teléfono",
+        phoneValue: "+1 (555) 000-0000",
+        officeLabel: "Oficina",
+        officeValue: "Av. Principal 123, Ciudad de México",
+      },
       footer: {
         heading: "Lleva tu operación de valet al siguiente nivel.",
         description: "Controla accesos, turnos, llaves y reportes desde una plataforma diseñada para equipos que necesitan operar sin fricción.",
@@ -2394,6 +2404,16 @@ export const translations = {
         a7: "Yes, we offer a free personalized demo where we can show you all the platform's features and answer your specific questions. You can also request a trial period to evaluate Parkit in your operation.",
         bottomQuestion: "Still have questions?",
         bottomContact: "Contact our support team",
+      },
+      contact: {
+        title: "Get in touch",
+        subtitle: "We're here to help",
+        emailLabel: "Email",
+        emailValue: "hello@parkit.io",
+        phoneLabel: "Phone",
+        phoneValue: "+1 (555) 000-0000",
+        officeLabel: "Office",
+        officeValue: "123 Main Street, New York, NY",
       },
       footer: {
         heading: "Take your valet operation to the next level.",

@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { AuthModal } from "@/components/AuthModal";
-import { ArrowRight, Menu, X, Mail, Plus, Minus, Check, Smartphone, Activity, BarChart3 } from "lucide-react";
+import { ArrowRight, Menu, X, Mail, Phone, MapPin, Plus, Minus, Check, Smartphone, Activity, BarChart3 } from "lucide-react";
 import Hyperspeed from "@/components/effects/Hyperspeed";
 import { hyperspeedPresets } from "@/components/effects/hyperspeedPresets";
 import { useRouter } from "next/navigation";
@@ -12,6 +12,8 @@ import { ThemeToggleSimple } from "@/components/ThemeToggleSimple";
 import { LocaleToggle } from "@/components/LocaleToggle";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useTheme } from "next-themes";
+import { BentoGrid, BentoGridItem } from "@/components/ui/bento-grid";
+import { PhoneSkeleton, DashboardSkeleton, ChartSkeleton } from "@/components/feature-skeletons";
 
 function AnimatedStat({ to, suffix }: { to: number; suffix: string }) {
   const ref = useRef<HTMLSpanElement>(null);
@@ -386,7 +388,7 @@ export default function Home() {
         </div>
       </div>
 
-      {/* How It Works Section — Bento Grid */}
+      {/* Features — Bento Grid With Skeletons */}
       <section id="features" className="bg-gray-50 dark:bg-gray-800 py-24 sm:py-32">
         <div className="mx-auto max-w-7xl px-6 lg:px-8">
           <motion.div
@@ -407,83 +409,42 @@ export default function Home() {
             </p>
           </motion.div>
 
-          <div className="mx-auto mt-16 grid grid-cols-1 gap-6 lg:grid-cols-3">
-            {/* Left tall card — spans full height on desktop */}
-            <motion.div
-              initial={{ opacity: 0, y: 24 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.5, delay: 0.1 }}
-              className="relative flex flex-col justify-between overflow-hidden rounded-2xl bg-gradient-to-br from-blue-600 to-blue-700 p-8 lg:col-span-1 lg:row-span-3"
-            >
-              <div>
-                <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-white/20 text-white">
-                  <Smartphone className="h-6 w-6" />
-                </div>
-                <h3 className="mt-6 text-2xl font-bold text-white">
-                  {t("landing.howItWorks.step1Title")}
-                </h3>
-                <p className="mt-3 text-base leading-7 text-blue-100">
-                  {t("landing.howItWorks.step1Desc")}
-                </p>
-              </div>
-              <div className="mt-8 flex items-center gap-3">
-                {["01", "02", "03"].map((n) => (
-                  <span
-                    key={n}
-                    className="flex h-8 w-8 items-center justify-center rounded-full bg-white/20 text-xs font-bold text-white"
-                  >
-                    {n}
-                  </span>
-                ))}
-              </div>
-            </motion.div>
-
-            {/* Step 2 card */}
-            <motion.div
-              initial={{ opacity: 0, y: 24 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.5, delay: 0.2 }}
-              className="rounded-2xl bg-white dark:bg-gray-900 p-8 shadow-sm ring-1 ring-gray-200 dark:ring-gray-700 lg:col-span-2"
-            >
-              <div className="flex items-start gap-5">
-                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-blue-50 dark:bg-blue-950/50 text-blue-600 dark:text-blue-400">
-                  <Activity className="h-6 w-6" />
-                </div>
-                <div>
-                  <h3 className="text-xl font-semibold text-gray-900 dark:text-white">
-                    {t("landing.howItWorks.step2Title")}
-                  </h3>
-                  <p className="mt-2 text-base leading-7 text-gray-600 dark:text-gray-300">
-                    {t("landing.howItWorks.step2Desc")}
-                  </p>
-                </div>
-              </div>
-            </motion.div>
-
-            {/* Step 3 card */}
-            <motion.div
-              initial={{ opacity: 0, y: 24 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.5, delay: 0.3 }}
-              className="rounded-2xl bg-white dark:bg-gray-900 p-8 shadow-sm ring-1 ring-gray-200 dark:ring-gray-700 lg:col-span-2"
-            >
-              <div className="flex items-start gap-5">
-                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-blue-50 dark:bg-blue-950/50 text-blue-600 dark:text-blue-400">
-                  <BarChart3 className="h-6 w-6" />
-                </div>
-                <div>
-                  <h3 className="text-xl font-semibold text-gray-900 dark:text-white">
-                    {t("landing.howItWorks.step3Title")}
-                  </h3>
-                  <p className="mt-2 text-base leading-7 text-gray-600 dark:text-gray-300">
-                    {t("landing.howItWorks.step3Desc")}
-                  </p>
-                </div>
-              </div>
-            </motion.div>
+          <div className="mx-auto mt-16">
+            <BentoGrid>
+              <BentoGridItem
+                title={t("landing.howItWorks.step1Title")}
+                description={t("landing.howItWorks.step1Desc")}
+                header={<PhoneSkeleton />}
+                icon={
+                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-50 dark:bg-blue-950/50 text-blue-600 dark:text-blue-400">
+                    <Smartphone className="h-5 w-5" />
+                  </div>
+                }
+                className="md:col-span-4 md:row-span-2 bg-gradient-to-br from-blue-600 to-blue-700 border-0 dark:border-0 [&_div]:!text-white"
+              />
+              <BentoGridItem
+                title={t("landing.howItWorks.step2Title")}
+                description={t("landing.howItWorks.step2Desc")}
+                header={<DashboardSkeleton />}
+                icon={
+                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-50 dark:bg-blue-950/50 text-blue-600 dark:text-blue-400">
+                    <Activity className="h-5 w-5" />
+                  </div>
+                }
+                className="md:col-span-2"
+              />
+              <BentoGridItem
+                title={t("landing.howItWorks.step3Title")}
+                description={t("landing.howItWorks.step3Desc")}
+                header={<ChartSkeleton />}
+                icon={
+                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-50 dark:bg-blue-950/50 text-blue-600 dark:text-blue-400">
+                    <BarChart3 className="h-5 w-5" />
+                  </div>
+                }
+                className="md:col-span-2"
+              />
+            </BentoGrid>
           </div>
         </div>
       </section>
@@ -748,6 +709,67 @@ export default function Home() {
               </button>
             </div>
           </div>
+        </div>
+      </section>
+
+      {/* Contact Section */}
+      <section id="contact" className="bg-white dark:bg-gray-900 py-24 sm:py-32">
+        <div className="mx-auto max-w-7xl px-6 lg:px-8">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.5 }}
+            className="mx-auto max-w-2xl text-center"
+          >
+            <h2 className="text-3xl font-bold tracking-tight text-gray-900 dark:text-white sm:text-4xl">
+              {t("landing.contact.title")}
+            </h2>
+            <p className="mt-2 text-lg leading-8 text-gray-600 dark:text-gray-300">
+              {t("landing.contact.subtitle")}
+            </p>
+          </motion.div>
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.5, delay: 0.15 }}
+            className="mx-auto mt-16 grid max-w-4xl grid-cols-1 gap-12 sm:grid-cols-3"
+          >
+            <div className="flex flex-col items-center text-center">
+              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-blue-50 dark:bg-blue-950/50 text-blue-600 dark:text-blue-400">
+                <Mail className="h-6 w-6" />
+              </div>
+              <h3 className="mt-6 text-base font-semibold text-gray-900 dark:text-white">
+                {t("landing.contact.emailLabel")}
+              </h3>
+              <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
+                {t("landing.contact.emailValue")}
+              </p>
+            </div>
+            <div className="flex flex-col items-center text-center">
+              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-blue-50 dark:bg-blue-950/50 text-blue-600 dark:text-blue-400">
+                <Phone className="h-6 w-6" />
+              </div>
+              <h3 className="mt-6 text-base font-semibold text-gray-900 dark:text-white">
+                {t("landing.contact.phoneLabel")}
+              </h3>
+              <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
+                {t("landing.contact.phoneValue")}
+              </p>
+            </div>
+            <div className="flex flex-col items-center text-center">
+              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-blue-50 dark:bg-blue-950/50 text-blue-600 dark:text-blue-400">
+                <MapPin className="h-6 w-6" />
+              </div>
+              <h3 className="mt-6 text-base font-semibold text-gray-900 dark:text-white">
+                {t("landing.contact.officeLabel")}
+              </h3>
+              <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
+                {t("landing.contact.officeValue")}
+              </p>
+            </div>
+          </motion.div>
         </div>
       </section>
 
