@@ -19,13 +19,13 @@ export function ProtectedRoute({ children }: { children: React.ReactNode }) {
       const currentUser = useAuthStore.getState().user;
       if (!currentUser && !redirecting.current) {
         redirecting.current = true;
-        router.replace("/login");
+        router.replace("/");
       }
     }, 0);
     return () => clearTimeout(timer);
   }, [hydrate, router]);
 
-  // During active logout: render nothing (sidebar already navigates to /login)
+  // During active logout: render nothing (sidebar already navigates to /)
   if (loggingOut) return null;
 
   if (!user) {

@@ -4,6 +4,7 @@ import { ThemeProvider as NextThemesProvider } from "next-themes";
 import { CompanyThemeSync } from "@/components/CompanyThemeSync";
 import { Toaster } from "@/components/Toaster";
 import { LocaleInit } from "@/components/LocaleInit";
+import { DocumentTitleSetter } from "@/components/DocumentTitleSetter";
 
 export function Providers({ children }: { children: React.ReactNode }) {
   return (
@@ -15,7 +16,10 @@ export function Providers({ children }: { children: React.ReactNode }) {
       disableTransitionOnChange={false}
     >
       <CompanyThemeSync />
-      <LocaleInit>{children}</LocaleInit>
+      <LocaleInit>
+        <DocumentTitleSetter />
+        {children}
+      </LocaleInit>
       <Toaster />
     </NextThemesProvider>
   );

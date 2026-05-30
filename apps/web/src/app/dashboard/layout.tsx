@@ -317,7 +317,7 @@ function DashboardLayoutInner({
                           : "bg-white/60 dark:bg-slate-900/60 hover:bg-white/90 dark:hover:bg-slate-800/90 shadow-[0_4px_20px_rgba(0,0,0,0.08),0_1px_3px_rgba(0,0,0,0.05)] dark:shadow-[0_4px_20px_rgba(0,0,0,0.3),0_1px_3px_rgba(0,0,0,0.2)] hover:shadow-[0_8px_28px_rgba(0,0,0,0.12),0_2px_6px_rgba(0,0,0,0.08)] dark:hover:shadow-[0_8px_28px_rgba(0,0,0,0.4),0_2px_6px_rgba(0,0,0,0.3)] backdrop-blur-xl border border-white/40 dark:border-white/10"
                       }`}
                       aria-haspopup="menu"
-                      aria-expanded={userMenuOpen}
+                      aria-expanded={userMenuOpen ? "true" : "false"}
                       title={getFullName(user) || user.email}
                     >
                       {(() => {
@@ -426,6 +426,7 @@ function DashboardLayoutInner({
                                     apiClient.patch("/users/me", { appPreferences: { theme: "light" } }).catch(() => {});
                                   }}
                                   className={`p-1.5 rounded-md transition-all ${theme === "light" ? "bg-white text-amber-500 shadow-sm" : "text-slate-400 hover:text-slate-600"}`}
+                                  aria-label="Light theme"
                                 >
                                   <Sun className="w-3.5 h-3.5" />
                                 </button>
@@ -436,6 +437,7 @@ function DashboardLayoutInner({
                                     apiClient.patch("/users/me", { appPreferences: { theme: "dark" } }).catch(() => {});
                                   }}
                                   className={`p-1.5 rounded-md transition-all ${theme === "dark" ? "bg-slate-700 text-indigo-300 shadow-sm" : "text-slate-400 hover:text-slate-600"}`}
+                                  aria-label="Dark theme"
                                 >
                                   <Moon className="w-3.5 h-3.5" />
                                 </button>
@@ -492,9 +494,9 @@ function DashboardLayoutInner({
                               setUserMenuOpen(false);
                               logout();
                               if (typeof window !== "undefined") {
-                                window.location.href = "/login";
+                                window.location.href = "/";
                               } else {
-                                router.replace("/login");
+                                router.replace("/");
                               }
                             }}
                             className="group w-full px-3 py-2 text-left text-[13px] rounded-lg transition-colors text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-500/10 flex items-center gap-2.5"

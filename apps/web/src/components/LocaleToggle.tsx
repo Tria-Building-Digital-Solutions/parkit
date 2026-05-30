@@ -11,7 +11,7 @@ const LOCALE_OPTIONS = [
   { value: "en", label: "English", flag: "🇬🇧" },
 ];
 
-export function LocaleToggle() {
+export function LocaleToggle({ triggerClassName = "" }: { triggerClassName?: string }) {
   const { locale, setLocale } = useLocaleStore();
   const { t } = useTranslation();
   const [open, setOpen] = useState(false);
@@ -74,7 +74,7 @@ export function LocaleToggle() {
         <button
           type="button"
           onClick={handleToggle}
-          className="h-10 rounded-xl text-text-secondary hover:text-text-primary hover:bg-input-bg transition-colors flex items-center gap-1.5 px-2"
+          className={`h-10 rounded-xl hover:bg-input-bg transition-colors flex items-center gap-1.5 px-2 text-gray-900 dark:text-gray-100 ${triggerClassName}`}
           title={t("settings.language")}
           aria-label={t("settings.language")}
         >
@@ -93,7 +93,7 @@ export function LocaleToggle() {
             minWidth: "180px",
           }}
         >
-          <p className="text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-3">
+          <p className="text-xs font-medium !text-gray-900 dark:!text-gray-100 uppercase tracking-wider mb-3">
             {t("settings.language")}
           </p>
           <div className="space-y-1">
@@ -104,15 +104,15 @@ export function LocaleToggle() {
                 onClick={() => handleLocaleChange(option.value)}
                 className={`w-full flex items-center justify-between gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all ${
                   locale === option.value
-                    ? "bg-company-primary-subtle text-company-primary ring-1 ring-company-primary/30"
-                    : "text-text-primary hover:bg-input-bg"
+                    ? "bg-company-primary-subtle !text-gray-900 dark:!text-gray-100 ring-1 ring-company-primary/30"
+                    : "!text-gray-900 dark:!text-gray-100 hover:bg-input-bg"
                 }`}
               >
                 <span className="flex items-center gap-2">
                   <span className="text-base">{option.flag}</span>
                   <span>{option.label}</span>
                 </span>
-                {locale === option.value && <Check className="w-4 h-4" />}
+                {locale === option.value && <Check className="w-4 h-4 !text-gray-900 dark:!text-gray-100" />}
               </button>
             ))}
           </div>

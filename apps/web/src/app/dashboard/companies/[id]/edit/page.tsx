@@ -217,10 +217,10 @@ export default function EditCompanyPage() {
         <div className="p-6 pt-4">
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
             <Field label={t("companies.legalName")} required icon={Building} error={errors.legalName}>
-              <input value={form.legalName} onChange={set("legalName")} placeholder={t("common.placeholderLegalName")} className={IL} aria-invalid={!!errors.legalName} />
+              <input value={form.legalName} onChange={set("legalName")} placeholder={t("common.placeholderLegalName")} className={IL} aria-invalid={errors.legalName ? "true" : "false"} />
             </Field>
             <Field label={t("companies.taxId")} required icon={Receipt} error={errors.taxId}>
-              <input value={form.taxId} onChange={(e) => setForm((p) => ({ ...p, taxId: formatTaxId(e.target.value) }))} placeholder={t("common.placeholderTaxId")} className={IL} aria-invalid={!!errors.taxId} />
+              <input value={form.taxId} onChange={(e) => setForm((p) => ({ ...p, taxId: formatTaxId(e.target.value) }))} placeholder={t("common.placeholderTaxId")} className={IL} aria-invalid={errors.taxId ? "true" : "false"} />
             </Field>
             <Field label={t("companies.industry")} required icon={form.industry ? getIndustryIcon(form.industry) : Building}>
               <SelectField value={form.industry} onChange={set("industry")} icon={form.industry ? getIndustryIcon(form.industry) : Building}>
@@ -248,13 +248,13 @@ export default function EditCompanyPage() {
         <div className="p-6 pt-4">
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
             <Field label={t("companies.commercialName")} required icon={Building} error={errors.commercialName}>
-              <input value={form.commercialName} onChange={set("commercialName")} placeholder={t("common.placeholderCommercialName")} className={IL} aria-invalid={!!errors.commercialName} />
+              <input value={form.commercialName} onChange={set("commercialName")} placeholder={t("common.placeholderCommercialName")} className={IL} aria-invalid={errors.commercialName ? "true" : "false"} />
             </Field>
             <Field label={t("companies.email")} required icon={Mail} error={errors.email}>
-              <input type="email" value={form.email} onChange={set("email")} placeholder={t("common.placeholderEmail")} className={IL} aria-invalid={!!errors.email} />
+              <input type="email" value={form.email} onChange={set("email")} placeholder={t("common.placeholderEmail")} className={IL} aria-invalid={errors.email ? "true" : "false"} />
             </Field>
             <Field label={t("companies.contactPhone")} icon={Phone} error={errors.contactPhone}>
-              <input type="tel" value={form.contactPhone} onChange={(e) => setForm((p) => ({ ...p, contactPhone: formatPhoneWithCountryCode(e.target.value, form.countryCode) }))} placeholder={`+${COUNTRY_DIAL_CODES[form.countryCode] || "1"}`} className={IL} aria-invalid={!!errors.contactPhone} />
+              <input type="tel" value={form.contactPhone} onChange={(e) => setForm((p) => ({ ...p, contactPhone: formatPhoneWithCountryCode(e.target.value, form.countryCode) }))} placeholder={`+${COUNTRY_DIAL_CODES[form.countryCode] || "1"}`} className={IL} aria-invalid={errors.contactPhone ? "true" : "false"} />
             </Field>
             <div className="sm:col-span-2 lg:col-span-3">
               <label className={LABEL}>{t("companies.legalAddress")}</label>

@@ -39,7 +39,7 @@ function ResetPasswordForm() {
       setRedirectSeconds((s) => {
         if (s <= 1) {
           clearInterval(id);
-          router.push("/login");
+          router.push("/?auth=login");
           return 0;
         }
         return s - 1;
@@ -85,7 +85,7 @@ function ResetPasswordForm() {
           <Logo variant={logoVariant} className="text-4xl mx-auto" />
           <p className="mt-6 text-sm text-text-muted">{t("auth.resetLinkInvalid")}</p>
           <Link
-            href="/login"
+            href="/?auth=login"
             className="mt-6 inline-flex items-center gap-2 text-company-primary hover:text-company-primary text-sm font-medium"
           >
             {t("auth.backToSignIn")}
@@ -260,7 +260,7 @@ function ResetPasswordForm() {
           </button>
 
           <p className="text-center">
-            <Link href="/login" className="group text-sm text-company-primary hover:text-company-primary inline-flex items-center gap-1">
+            <Link href="/?auth=login" className="group text-sm text-company-primary hover:text-company-primary inline-flex items-center gap-1">
               {t("auth.backToSignIn")}
               <ArrowRight className="w-3.5 h-3.5 transition-transform duration-300 group-hover:translate-x-1" />
             </Link>

@@ -6,6 +6,7 @@ const nextConfig = {
   transpilePackages: ['@parkit/shared', 'react-native', 'react-native-web'],
   reactStrictMode: true,
 
+
   webpack: (config) => {
     config.resolve.alias = {
       ...(config.resolve.alias || {}),

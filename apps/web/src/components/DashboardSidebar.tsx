@@ -27,7 +27,6 @@ import {
   Settings,
   SidebarCollapse,
   SidebarExpand,
-  ChevronRight,
   ChevronDown,
   Building,
 } from "@/lib/premiumIcons";
@@ -342,6 +341,7 @@ export function DashboardSidebar() {
   const [unreadNotificationsCount, setUnreadNotificationsCount] = useState(0);
   const [hasBookableParkings, setHasBookableParkings] = useState(false);
   const [isLoadingCompany, setIsLoadingCompany] = useState(false);
+  const [hoverExpanded, setHoverExpanded] = useState(false);
 
   const superAdmin = isSuperAdmin(user);
   const admin = isAdmin(user);
@@ -352,6 +352,7 @@ export function DashboardSidebar() {
   // Show loading state if fetching company data and no companies are loaded yet
   const shouldShowLoading = isLoadingCompany && !hasCompanies;
   const isDark = resolvedTheme === "dark";
+  const expanded = !collapsed || hoverExpanded || sidebarOpen;
 
   const bannerDefaultSrc = isDark
     ? "/images/default-banner-dark.png"
@@ -448,7 +449,10 @@ export function DashboardSidebar() {
       .catch(() => setHasBookableParkings(false));
   }, [superAdmin, selectedCompanyId, user?.id, companiesVersion, parkingsVersion]);
 
-  const toggleCollapsed = () => setSidebarCollapsed(!collapsed);
+  const toggleCollapsed = () => {
+    setHoverExpanded(false);
+    setSidebarCollapsed(!collapsed);
+  };
 
   const handleNavClick = () => {
     if (sidebarOpen) {
@@ -515,31 +519,43 @@ export function DashboardSidebar() {
         />
       )}
       <aside
+        onMouseEnter={() => {
+          if (collapsed) setHoverExpanded(true);
+        }}
+        onMouseLeave={() => setHoverExpanded(false)}
+        onFocusCapture={() => {
+          if (collapsed) setHoverExpanded(true);
+        }}
+        onBlurCapture={(event) => {
+          if (!event.currentTarget.contains(event.relatedTarget as Node | null)) {
+            setHoverExpanded(false);
+          }
+        }}
         className={`
           fixed md:relative inset-y-0 left-0 z-[20001] md:z-30
-          h-screen flex flex-col overflow-hidden bg-gradient-to-b from-page via-page to-page/95 
-          backdrop-blur-2xl border-r border-card-border/40 dark:border-white/[0.11]
+          h-screen flex flex-col overflow-hidden bg-slate-50/95 dark:bg-neutral-950
+          backdrop-blur-xl border-r border-neutral-200 dark:border-neutral-800
           transition-[width,transform] duration-500 ease-[cubic-bezier(0.23,1,0.32,1)] shrink-0
-          w-[260px] ${collapsed ? "md:w-[76px]" : "md:w-[264px]"}
+          w-[260px] ${expanded ? "md:w-[272px]" : "md:w-[76px]"}
           ${sidebarOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"}
         `}
         style={{ 
           boxShadow: isDark 
-            ? "4px 0 32px -8px rgba(0,0,0,0.4), 1px 0 0 rgba(255,255,255,0.03) inset" 
-            : "4px 0 32px -8px rgba(0,0,0,0.12), 1px 0 0 rgba(255,255,255,0.4) inset",
+            ? "8px 0 30px -24px rgba(0,0,0,0.9)" 
+            : "8px 0 30px -24px rgba(15,23,42,0.28)",
         }}
       >
       {/* Logo / brand */}
       <div
-        className={`flex flex-col border-b border-card-border/25 dark:border-white/[0.04] shrink-0 bg-gradient-to-b from-white/[0.02] to-transparent ${
-          collapsed ? "items-center justify-center py-4 px-2" : "px-5 pt-5 pb-4"
+        className={`flex flex-col border-b border-neutral-200/80 dark:border-neutral-800 shrink-0 ${
+          expanded ? "px-4 py-4" : "items-center justify-center py-4 px-2"
         }`}
       >
-        {collapsed ? (
-          <SidebarTooltip show label={t("sidebar.expand")}>
+        {!expanded ? (
+          <SidebarTooltip show={!hoverExpanded} label={t("sidebar.expand")}>
             <button
               onClick={toggleCollapsed}
-              className="p-2.5 rounded-lg text-text-muted hover:text-company-primary hover:bg-company-primary/10 transition-all duration-300 ease-out w-full flex justify-center group"
+              className="p-2.5 rounded-md text-neutral-500 hover:text-neutral-900 hover:bg-neutral-200/70 dark:text-neutral-400 dark:hover:text-white dark:hover:bg-neutral-800 transition-all duration-200 w-full flex justify-center group"
               aria-label="Expand sidebar"
             >
               <SidebarExpand className="w-5 h-5 transition-transform duration-300 group-hover:scale-110" />
@@ -554,10 +570,14 @@ export function DashboardSidebar() {
               {/* Collapse button: only visible on md+ */}
               <button
                 onClick={toggleCollapsed}
-                className="hidden md:flex p-2 rounded-lg text-text-muted hover:text-company-primary hover:bg-company-primary/10 transition-all duration-300 ease-out shrink-0 group"
-                aria-label="Collapse sidebar"
+                className="hidden md:flex p-2 rounded-md text-neutral-500 hover:text-neutral-900 hover:bg-neutral-200/70 dark:text-neutral-400 dark:hover:text-white dark:hover:bg-neutral-800 transition-all duration-200 shrink-0 group"
+                aria-label={collapsed ? "Pin sidebar open" : "Collapse sidebar"}
               >
-                <SidebarCollapse className="w-5 h-5 transition-transform duration-300 group-hover:scale-110" />
+                {collapsed ? (
+                  <SidebarExpand className="w-5 h-5 transition-transform duration-300 group-hover:scale-110" />
+                ) : (
+                  <SidebarCollapse className="w-5 h-5 transition-transform duration-300 group-hover:scale-110" />
+                )}
               </button>
             </div>
           </>
@@ -567,10 +587,10 @@ export function DashboardSidebar() {
       {/* Company banner + selector (SUPER_ADMIN) o banner con avatar (ADMIN) */}
       {hasCompanies ? (
         <>
-          {!collapsed ? (
+          {expanded ? (
             <>
               {superAdmin ? (
-                <div className="border-b border-card-border/25 dark:border-white/[0.04] shrink-0 relative">
+                <div className="border-b border-neutral-200/80 dark:border-neutral-800 shrink-0 relative">
                   <DefaultBanner
                     companyName={selectedCompanyName || t("sidebar.company")}
                     logoImageUrl={companyBranding?.logoImageUrl}
@@ -597,7 +617,7 @@ export function DashboardSidebar() {
                   />
                 </div>
               ) : (adminCompanyName || selectedCompanyName) ? (
-                <div className="border-b border-card-border/25 dark:border-white/[0.04] shrink-0 relative">
+                <div className="border-b border-neutral-200/80 dark:border-neutral-800 shrink-0 relative">
                   <DefaultBanner
                     companyName={adminCompanyName || selectedCompanyName || "Company"}
                     logoImageUrl={companyBranding?.logoImageUrl}
@@ -635,14 +655,14 @@ export function DashboardSidebar() {
           )}
         </>
       ) : shouldShowLoading ? (
-        <div className="border-b border-card-border/25 dark:border-white/[0.04] px-3 py-3 shrink-0">
+        <div className="border-b border-neutral-200/80 dark:border-neutral-800 px-3 py-3 shrink-0">
           <div className="flex items-center gap-3 px-3 py-2.5 text-text-muted">
             <div className="w-5 h-5 border-2 border-company-primary border-t-transparent rounded-full animate-spin" />
-            <span className="text-sm">{t("common.loading")}</span>
+            {expanded && <span className="text-sm">{t("common.loading")}</span>}
           </div>
         </div>
       ) : (
-        <div className="border-b border-card-border/25 dark:border-white/[0.04] px-3 py-3 shrink-0">
+        <div className="border-b border-neutral-200/80 dark:border-neutral-800 px-3 py-3 shrink-0">
           <Link
             href="/dashboard/companies/new?first=1"
             className="group relative flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 text-text-muted hover:bg-input-bg hover:text-text-secondary"
@@ -650,20 +670,20 @@ export function DashboardSidebar() {
             <span className="flex items-center justify-center w-9 h-9 rounded-lg shrink-0 transition-all duration-200 bg-company-primary/10 text-company-primary group-hover:bg-company-primary/15">
               <Building className="w-5 h-5" />
             </span>
-            <span className="font-medium truncate">
+            {expanded && <span className="font-medium truncate">
               {t("companies.createCompany")}
-            </span>
+            </span>}
           </Link>
         </div>
       )}
 
       {/* Nav groups: no scroll, fits within viewport */}
       {hasCompanies ? (
-        <nav className="flex-1 overflow-hidden py-3 px-3 space-y-4">
+        <nav className="flex-1 overflow-hidden py-3 px-2.5 space-y-3">
           {navGroups.map((group) => (
             <div key={group.label}>
-              {!collapsed && (
-                <p className="px-3 mb-2 text-[10px] font-bold uppercase tracking-[0.15em] text-text-secondary">
+              {expanded && (
+                <p className="px-3 mb-2 text-[10px] font-semibold uppercase tracking-[0.16em] text-neutral-400 dark:text-neutral-500">
                   {group.label}
                 </p>
               )}
@@ -674,26 +694,26 @@ export function DashboardSidebar() {
                   const linkContent = (
                     <>
                       <span
-                        className={`absolute left-0 top-1/2 -translate-y-1/2 w-[3px] rounded-r-full bg-gradient-to-b from-company-primary to-company-primary/70 transition-all duration-500 ease-[cubic-bezier(0.23,1,0.32,1)] shadow-[0_0_12px_rgba(var(--company-primary-rgb),0.4)] ${
-                          isActive ? "opacity-100 h-7" : "opacity-0 h-0"
+                        className={`absolute left-1.5 top-1/2 -translate-y-1/2 w-1.5 h-1.5 rounded-full bg-company-primary transition-all duration-300 ${
+                          isActive && expanded ? "opacity-100 scale-100" : "opacity-0 scale-50"
                         }`}
                       />
-                      <span className={`flex items-center justify-center w-10 h-10 rounded-lg shrink-0 transition-all duration-300 ease-out ${
+                      <span className={`flex items-center justify-center w-9 h-9 rounded-md shrink-0 transition-all duration-200 ease-out ${
                           isActive 
-                            ? "bg-gradient-to-br from-company-primary/20 to-company-primary/5 shadow-[0_2px_8px_-2px_rgba(var(--company-primary-rgb),0.2)]" 
-                            : "group-hover:bg-input-bg/50"
+                            ? "bg-company-primary/10 dark:bg-company-primary/15" 
+                            : "group-hover:bg-neutral-200/70 dark:group-hover:bg-neutral-800"
                         }`}>
                         <Icon
-                          className={`w-[18px] h-[18px] transition-all duration-300 ${
-                            isActive ? "text-company-primary scale-105" : "text-text-secondary group-hover:text-company-primary group-hover:scale-105"
+                          className={`w-[18px] h-[18px] transition-all duration-200 ${
+                            isActive ? "text-company-primary" : "text-neutral-500 group-hover:text-neutral-900 dark:text-neutral-400 dark:group-hover:text-white"
                           }`}
                         />
                       </span>
-                      {!collapsed && (
+                      {expanded && (
                         <>
                           <span
-                            className={`font-medium truncate transition-colors duration-300 ${
-                              isActive ? "text-text-primary font-semibold" : "text-text-secondary group-hover:text-company-primary"
+                            className={`font-medium truncate transition-colors duration-200 ${
+                              isActive ? "text-neutral-950 dark:text-white" : "text-neutral-600 group-hover:text-neutral-950 dark:text-neutral-300 dark:group-hover:text-white"
                             }`}
                           >
                             {item.label}
@@ -703,14 +723,11 @@ export function DashboardSidebar() {
                               {unreadNotificationsCount > 99 ? "99+" : unreadNotificationsCount}
                             </span>
                           )}
-                          {isActive && (
-                            <ChevronRight className="w-4 h-4 text-company-primary shrink-0 ml-auto opacity-70" />
-                          )}
                         </>
                       )}
-                      {collapsed && item.href === "/dashboard/notifications" && unreadNotificationsCount > 0 && (
+                      {!expanded && item.href === "/dashboard/notifications" && unreadNotificationsCount > 0 && (
                         <span
-                          className="absolute top-2 right-2 w-2.5 h-2.5 rounded-full bg-gradient-to-br from-red-500 to-red-600 ring-[2.5px] ring-page shadow-sm"
+                          className="absolute top-2 right-2 w-2.5 h-2.5 rounded-full bg-gradient-to-br from-red-500 to-red-600 ring-[2.5px] ring-slate-50 dark:ring-neutral-950 shadow-sm"
                           aria-label={`${unreadNotificationsCount} sin leer`}
                         />
                       )}
@@ -718,18 +735,18 @@ export function DashboardSidebar() {
                   );
                   return (
                     <li key={item.href}>
-                      <SidebarTooltip show={collapsed} label={item.label}>
+                      <SidebarTooltip show={!expanded} label={item.label}>
                         <Link
                           href={item.href}
                           onClick={() => {
                             handleNavClick();
                           }}
-                          className={`group relative flex items-center gap-3 px-3 py-2 rounded-lg transition-all duration-300 ease-[cubic-bezier(0.23,1,0.32,1)] ${
-                            collapsed ? "justify-center mx-1" : "mx-1"
+                          className={`group relative flex items-center gap-3 px-3 py-1.5 rounded-md transition-all duration-200 ${
+                            expanded ? "mx-1" : "justify-center mx-1"
                           } ${
                             isActive
-                              ? "bg-gradient-to-r from-company-primary/10 via-company-primary/5 to-transparent text-text-primary shadow-[0_1px 3px_-1px_rgba(0,0,0,0.05)]"
-                              : "text-text-secondary hover:bg-gradient-to-r hover:from-input-bg/80 hover:to-transparent hover:text-company-primary"
+                              ? "bg-white shadow-sm ring-1 ring-neutral-200/80 dark:bg-neutral-900 dark:ring-neutral-800"
+                              : "hover:bg-white/70 dark:hover:bg-neutral-900/70"
                           }`}
                         >
                           {linkContent}
@@ -747,22 +764,22 @@ export function DashboardSidebar() {
       )}
 
       {/* Premium Footer */}
-      <footer className="shrink-0 border-t border-card-border/15 dark:border-white/[0.04] bg-gradient-to-b from-transparent to-page/30 backdrop-blur-sm">
-        {!collapsed ? (
+      <footer className="shrink-0 border-t border-neutral-200/80 dark:border-neutral-800 bg-slate-50/80 dark:bg-neutral-950/80 backdrop-blur-sm">
+        {expanded ? (
           <div className="px-4 py-2.5 flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <div className="w-1.5 h-1.5 rounded-full bg-gradient-to-br from-company-primary to-company-primary/60 animate-pulse" />
-              <span className="text-[9px] font-medium text-text-secondary/70 tracking-wide">
+              <div className="w-1.5 h-1.5 rounded-full bg-company-primary animate-pulse" />
+              <span className="text-[9px] font-medium text-neutral-500 dark:text-neutral-400 tracking-wide">
                 v{APP_VERSION}
               </span>
             </div>
-            <span className="text-[8px] text-text-muted/50">
+            <span className="text-[8px] text-neutral-400 dark:text-neutral-500">
               © {new Date().getFullYear()}
             </span>
           </div>
         ) : (
           <div className="py-3 flex justify-center">
-            <span className="text-[8px] text-text-muted/50">
+            <span className="text-[8px] text-neutral-400 dark:text-neutral-500">
               v{APP_VERSION}
             </span>
           </div>

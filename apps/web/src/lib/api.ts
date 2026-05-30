@@ -82,14 +82,14 @@ class ApiClient {
           }
         }
 
-        // Handle 401 - redirect to login (except on auth endpoints like /auth/login)
+        // Handle 401 - redirect to home (except on auth endpoints like /auth/login)
         if (error.response?.status === 401) {
           const url = error.config?.url ?? "";
           const isAuthEndpoint = typeof url === "string" && url.startsWith("/auth/");
           if (!isAuthEndpoint) {
             this.clearToken();
             if (typeof window !== "undefined") {
-              window.location.href = "/login";
+              window.location.href = "/";
             }
           }
         }

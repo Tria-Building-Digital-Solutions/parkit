@@ -60,7 +60,7 @@ function AcceptInviteForm() {
   useEffect(() => {
     if (!success) return;
     if (redirectSeconds <= 0) {
-      const loginUrl = email ? `/login?email=${encodeURIComponent(email)}` : "/login";
+      const loginUrl = email ? `/?auth=login&email=${encodeURIComponent(email)}` : "/?auth=login";
       router.push(loginUrl);
     }
   }, [success, redirectSeconds, router, email]);
@@ -115,15 +115,7 @@ function AcceptInviteForm() {
 
   const TopRightToggles = () => (
     <div className="absolute top-4 right-4 z-30 hidden md:flex items-center gap-3">
-      <Link href="/terms" className="text-xs font-medium text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white transition-colors">
-        {t("privacy.footerTerms")}
-      </Link>
-      <span className="text-slate-400 dark:text-slate-500">•</span>
-      <Link href="/privacy" className="text-xs font-medium text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white transition-colors">
-        {t("privacy.footerPrivacy")}
-      </Link>
-      <div className="w-px h-4 bg-slate-300 dark:bg-slate-600 mx-1" />
-      <ThemeToggleSimple />
+            <ThemeToggleSimple />
       <LocaleToggle />
     </div>
   );
@@ -145,7 +137,7 @@ function AcceptInviteForm() {
           <div className="bg-white/90 dark:bg-slate-900/70 backdrop-blur-2xl rounded-lg border border-white/50 dark:border-white/20 shadow-[0_8px_32px_rgba(0,0,0,0.12)] dark:shadow-[0_8px_32px_rgba(0,0,0,0.4)] p-8 md:p-10 text-center">
             <Logo variant={logoVariant} className="text-5xl mx-auto mb-6" />
             <p className="text-slate-600 dark:text-slate-300 mb-6">{t("auth.inviteExpiredOrInvalid")}</p>
-            <Link href="/login" className="group inline-flex items-center gap-2 text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300 text-sm font-medium">
+            <Link href="/?auth=login" className="group inline-flex items-center gap-2 text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300 text-sm font-medium">
               {t("auth.backToSignIn")}
               <ArrowRight className="w-4 h-4 transition-transform duration-300 group-hover:translate-x-0.5" />
             </Link>
@@ -153,10 +145,6 @@ function AcceptInviteForm() {
           <BottomSection />
         </main>
 
-        {/* Minimal Footer */}
-        <div className="mt-6 text-center">
-          <p className="text-[11px] font-medium text-slate-600 dark:text-slate-400">© {new Date().getFullYear()} Parkit. {t("footer.allRightsReserved")}</p>
-        </div>
       </div>
     );
   }
@@ -174,7 +162,7 @@ function AcceptInviteForm() {
             </span>
             <h1 className="text-[1.35rem] premium-title mb-2">{t("auth.passwordSetSuccess")}</h1>
             <p className="premium-subtitle text-sm mb-6">{t("auth.redirectingToLogin", { seconds: redirectSeconds })}</p>
-            <Link href="/login" className="inline-flex items-center gap-2 text-sm font-medium text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300">
+            <Link href="/?auth=login" className="inline-flex items-center gap-2 text-sm font-medium text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300">
               {t("auth.backToSignIn")}
               <ArrowRight className="w-4 h-4" />
             </Link>
@@ -182,10 +170,6 @@ function AcceptInviteForm() {
           <BottomSection />
         </main>
 
-        {/* Minimal Footer */}
-        <div className="mt-6 text-center">
-          <p className="text-[11px] font-medium text-slate-600 dark:text-slate-400">© {new Date().getFullYear()} Parkit. {t("footer.allRightsReserved")}</p>
-        </div>
       </div>
     );
   }
@@ -279,7 +263,7 @@ function AcceptInviteForm() {
             )}
 
             <p className="text-center">
-              <Link href="/login" className="group text-sm text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300 inline-flex items-center gap-1">
+              <Link href="/?auth=login" className="group text-sm text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300 inline-flex items-center gap-1">
                 {t("auth.backToSignIn")}
                 <ArrowRight className="w-3.5 h-3.5 transition-transform duration-300 group-hover:translate-x-1" />
               </Link>
@@ -289,10 +273,6 @@ function AcceptInviteForm() {
         <BottomSection />
       </main>
 
-      {/* Minimal Footer */}
-      <div className="mt-6 text-center">
-        <p className="text-[10px] text-slate-400 dark:text-slate-500">© {new Date().getFullYear()} Parkit. All rights reserved.</p>
-      </div>
     </div>
   );
 }

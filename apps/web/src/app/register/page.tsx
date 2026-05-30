@@ -82,7 +82,7 @@ function RegisterForm() {
   }, [success]);
 
   useEffect(() => {
-    if (success && redirectSeconds <= 0) router.push("/login");
+    if (success && redirectSeconds <= 0) router.push("/?auth=login");
   }, [success, redirectSeconds, router]);
 
   const req = checkPasswordRequirements(password);
@@ -294,15 +294,7 @@ function RegisterForm() {
 
       {/* TOP RIGHT: Theme and Locale toggles */}
       <div className="absolute top-4 right-4 z-30 hidden md:flex items-center gap-3">
-        <Link href="/terms" className="text-xs font-medium text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white transition-colors">
-          {t("privacy.footerTerms")}
-        </Link>
-        <span className="text-slate-400 dark:text-slate-500">•</span>
-        <Link href="/privacy" className="text-xs font-medium text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white transition-colors">
-          {t("privacy.footerPrivacy")}
-        </Link>
-        <div className="w-px h-4 bg-slate-300 dark:bg-slate-600 mx-1" />
-        <ThemeToggleSimple />
+                <ThemeToggleSimple />
         <LocaleToggle />
       </div>
 
@@ -440,17 +432,13 @@ function RegisterForm() {
           <div className="mt-8 pt-6 border-t border-slate-200 dark:border-slate-700 text-center">
             <p className="text-sm text-slate-500 dark:text-slate-400">
               {t("auth.alreadyHaveAccount")}{" "}
-              <Link href="/login" className="font-medium text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300 underline-offset-2 hover:underline transition-colors">
+              <Link href="/?auth=login" className="font-medium text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300 underline-offset-2 hover:underline transition-colors">
                 {t("auth.signIn")}
               </Link>
             </p>
           </div>
         </div>
 
-        {/* Minimal Footer */}
-        <div className="mt-6 text-center">
-          <p className="text-[11px] font-medium text-slate-600 dark:text-slate-400">© {new Date().getFullYear()} Parkit. {t("footer.allRightsReserved")}</p>
-        </div>
       </main>
     </div>
   );

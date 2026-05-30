@@ -422,7 +422,7 @@ export default function EditParkingPage() {
               <label className={LABEL}>{t("parkings.name")} <span className="text-company-primary">*</span></label>
               <div className="relative group">
                 <Building className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-text-muted group-focus-within:text-company-primary transition-colors pointer-events-none" />
-                <input value={form.name} onChange={set("name")} placeholder={t("common.placeholderName")} className={IL} aria-invalid={!!fieldErrors.name} />
+                <input value={form.name} onChange={set("name")} placeholder={t("common.placeholderName")} className={IL} aria-invalid={fieldErrors.name ? "true" : "false"} />
               </div>
               <div className="min-h-[1.25rem] mt-1">
                 {fieldErrors.name && <p className="text-sm text-red-500" role="alert">{fieldErrors.name}</p>}
@@ -433,7 +433,7 @@ export default function EditParkingPage() {
               <div className="flex gap-2">
                 <div className="relative group flex-1">
                   <Navigation className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-text-muted group-focus-within:text-company-primary transition-colors pointer-events-none" />
-                  <input value={form.address} readOnly placeholder={t("common.placeholderAddress")} className={IL + " cursor-pointer"} onClick={() => setAddressPickerOpen(true)} aria-invalid={!!fieldErrors.address} />
+                  <input value={form.address} readOnly placeholder={t("common.placeholderAddress")} className={IL + " cursor-pointer"} onClick={() => setAddressPickerOpen(true)} aria-invalid={fieldErrors.address ? "true" : "false"} />
                 </div>
                 <button
                   type="button"
@@ -484,7 +484,8 @@ export default function EditParkingPage() {
                 <button
                   type="button"
                   role="switch"
-                  aria-checked={chargesParking}
+                  aria-checked={chargesParking ? "true" : "false"}
+                  aria-label={t("parkings.chargesSwitchLabel")}
                   onClick={() => setChargesParking((v) => !v)}
                   className={`relative w-10 h-6 rounded-full shrink-0 transition-colors focus:outline-none focus:ring-1 focus:ring-company-primary focus:ring-offset-2 focus:ring-offset-page ${
                     chargesParking ? "bg-company-primary" : "bg-input-border"
@@ -846,7 +847,7 @@ export default function EditParkingPage() {
               <label className={LABEL}>{t("parkings.geofenceRadius")} <span className="text-company-primary">*</span></label>
               <div className="relative group">
                 <CircleDashed className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-text-muted group-focus-within:text-company-primary transition-colors pointer-events-none" />
-                <input type="number" min={1} max={10000} inputMode="numeric" step={1} value={form.geofenceRadius} readOnly onFocus={(e) => e.target.select()} placeholder={t("common.placeholderRadius")} className={IL + " cursor-pointer"} onClick={() => setAddressPickerOpen(true)} aria-invalid={!!fieldErrors.geofenceRadius} />
+                <input type="number" min={1} max={10000} inputMode="numeric" step={1} value={form.geofenceRadius} readOnly onFocus={(e) => e.target.select()} placeholder={t("common.placeholderRadius")} className={IL + " cursor-pointer"} onClick={() => setAddressPickerOpen(true)} aria-invalid={fieldErrors.geofenceRadius ? "true" : "false"} />
               </div>
               <div className="min-h-[1.25rem] mt-1">
                 {fieldErrors.geofenceRadius && <p className="text-sm text-red-500" role="alert">{fieldErrors.geofenceRadius}</p>}
