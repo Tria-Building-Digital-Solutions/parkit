@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { AuthModal } from "@/components/AuthModal";
-import { ArrowRight, Menu, X, Mail, Phone, MapPin, Plus, Minus, Check, Smartphone, Activity, BarChart3 } from "lucide-react";
+import { ArrowRight, Menu, X, Mail, Phone, MapPin, Plus, Minus, Check, Smartphone, Activity, BarChart3, Key, Monitor, Building2, Palette, Cpu, UtensilsCrossed, Heart, ShoppingBag, Calendar, RefreshCw, Plane, Truck, Star, Zap } from "lucide-react";
 import Hyperspeed from "@/components/effects/Hyperspeed";
 import { hyperspeedPresets } from "@/components/effects/hyperspeedPresets";
 import { useRouter } from "next/navigation";
@@ -12,8 +12,6 @@ import { ThemeToggleSimple } from "@/components/ThemeToggleSimple";
 import { LocaleToggle } from "@/components/LocaleToggle";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useTheme } from "next-themes";
-import { BentoGrid, BentoGridItem } from "@/components/ui/bento-grid";
-import { PhoneSkeleton, DashboardSkeleton, ChartSkeleton } from "@/components/feature-skeletons";
 
 function AnimatedStat({ to, suffix }: { to: number; suffix: string }) {
   const ref = useRef<HTMLSpanElement>(null);
@@ -104,7 +102,7 @@ export default function Home() {
 
   const navigation = [
     { name: t("landing.nav.features"), href: "#features" },
-    { name: t("landing.nav.solutions"), href: "#features" },
+    { name: t("landing.nav.solutions"), href: "#solutions" },
     { name: t("landing.nav.pricing"), href: "#pricing" },
     { name: t("landing.nav.faq"), href: "#faq" },
   ];
@@ -388,8 +386,8 @@ export default function Home() {
         </div>
       </div>
 
-      {/* Features — Bento Grid With Skeletons */}
-      <section id="features" className="bg-gray-50 dark:bg-gray-800 py-24 sm:py-32">
+      {/* How It Works */}
+      <section id="how-it-works" className="bg-gray-50 dark:bg-gray-800 py-24 sm:py-32">
         <div className="mx-auto max-w-7xl px-6 lg:px-8">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -409,46 +407,343 @@ export default function Home() {
             </p>
           </motion.div>
 
-          <div className="mx-auto mt-16">
-            <BentoGrid>
-              <BentoGridItem
-                title={t("landing.howItWorks.step1Title")}
-                description={t("landing.howItWorks.step1Desc")}
-                header={<PhoneSkeleton />}
-                icon={
-                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-50 dark:bg-blue-950/50 text-blue-600 dark:text-blue-400">
-                    <Smartphone className="h-5 w-5" />
-                  </div>
-                }
-                className="md:col-span-4 md:row-span-2 bg-gradient-to-br from-blue-600 to-blue-700 border-0 dark:border-0 [&_div]:!text-white"
-              />
-              <BentoGridItem
-                title={t("landing.howItWorks.step2Title")}
-                description={t("landing.howItWorks.step2Desc")}
-                header={<DashboardSkeleton />}
-                icon={
-                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-50 dark:bg-blue-950/50 text-blue-600 dark:text-blue-400">
-                    <Activity className="h-5 w-5" />
-                  </div>
-                }
-                className="md:col-span-2"
-              />
-              <BentoGridItem
-                title={t("landing.howItWorks.step3Title")}
-                description={t("landing.howItWorks.step3Desc")}
-                header={<ChartSkeleton />}
-                icon={
-                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-50 dark:bg-blue-950/50 text-blue-600 dark:text-blue-400">
-                    <BarChart3 className="h-5 w-5" />
-                  </div>
-                }
-                className="md:col-span-2"
-              />
-            </BentoGrid>
+          <div className="relative mx-auto mt-20 grid max-w-5xl grid-cols-1 gap-12 lg:grid-cols-3">
+            {/* Connecting line */}
+            <div className="absolute left-1/2 top-16 hidden h-[calc(100%-8rem)] w-px bg-gradient-to-b from-blue-200 via-blue-400 to-blue-200 dark:from-blue-800 dark:via-blue-600 dark:to-blue-800 lg:block" />
+
+            {[
+              { step: "01", icon: Smartphone, title: t("landing.howItWorks.step1Title"), desc: t("landing.howItWorks.step1Desc") },
+              { step: "02", icon: Activity, title: t("landing.howItWorks.step2Title"), desc: t("landing.howItWorks.step2Desc") },
+              { step: "03", icon: BarChart3, title: t("landing.howItWorks.step3Title"), desc: t("landing.howItWorks.step3Desc") },
+            ].map((item, i) => (
+              <motion.div
+                key={i}
+                initial={{ opacity: 0, y: 30 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.5, delay: i * 0.15 }}
+                className="relative flex flex-col items-center text-center"
+              >
+                <div className="relative z-10 flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-600 to-blue-700 text-white shadow-lg shadow-blue-600/20">
+                  <item.icon className="h-6 w-6" />
+                </div>
+                <span className="mt-4 text-sm font-semibold text-blue-600">{item.step}</span>
+                <h3 className="mt-2 text-lg font-semibold text-gray-900 dark:text-white">{item.title}</h3>
+                <p className="mt-3 text-sm leading-6 text-gray-500 dark:text-gray-400 max-w-xs">{item.desc}</p>
+              </motion.div>
+            ))}
           </div>
         </div>
       </section>
 
+      {/* Features */}
+      <section id="features" className="bg-white dark:bg-gray-900 py-24 sm:py-32">
+        <div className="mx-auto max-w-7xl px-6 lg:px-8">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.5 }}
+            className="text-center"
+          >
+            <h2 className="text-lg font-semibold leading-8 tracking-tight text-blue-600">
+              {t("landing.whyFeatures.title")}
+            </h2>
+            <p className="mt-2 text-3xl font-bold tracking-tight text-gray-900 dark:text-white sm:text-4xl">
+              {t("landing.whyFeatures.heading")}
+            </p>
+          </motion.div>
+
+          <div className="mx-auto mt-16 grid max-w-2xl grid-cols-1 gap-6 lg:max-w-none lg:grid-cols-3">
+            {[
+              { icon: Key, title: t("landing.whyFeatures.item1Title"), desc: t("landing.whyFeatures.item1Desc") },
+              { icon: Monitor, title: t("landing.whyFeatures.item2Title"), desc: t("landing.whyFeatures.item2Desc") },
+              { icon: BarChart3, title: t("landing.whyFeatures.item3Title"), desc: t("landing.whyFeatures.item3Desc") },
+              { icon: Building2, title: t("landing.whyFeatures.item4Title"), desc: t("landing.whyFeatures.item4Desc") },
+              { icon: Palette, title: t("landing.whyFeatures.item5Title"), desc: t("landing.whyFeatures.item5Desc") },
+              { icon: Cpu, title: t("landing.whyFeatures.item6Title"), desc: t("landing.whyFeatures.item6Desc") },
+            ].map((item, i) => (
+              <motion.div
+                key={i}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.4, delay: i * 0.08 }}
+                className="group relative rounded-2xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-7 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:shadow-blue-500/5 dark:hover:shadow-blue-500/10"
+              >
+                <div className="absolute inset-x-0 top-0 h-1 rounded-t-2xl bg-gradient-to-r from-blue-500 to-blue-600 opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
+                <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-blue-50 dark:bg-blue-950/50 text-blue-600 dark:text-blue-400 transition-colors duration-300 group-hover:bg-blue-600 group-hover:text-white">
+                  <item.icon className="h-5 w-5" />
+                </div>
+                <h3 className="mt-5 text-base font-semibold text-gray-900 dark:text-white">{item.title}</h3>
+                <p className="mt-2 text-sm leading-6 text-gray-500 dark:text-gray-400">{item.desc}</p>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Use Cases */}
+      <section id="use-cases" className="bg-gray-50 dark:bg-gray-800 py-24 sm:py-32">
+        <div className="mx-auto max-w-7xl px-6 lg:px-8">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.5 }}
+            className="text-center"
+          >
+            <h2 className="text-lg font-semibold leading-8 tracking-tight text-blue-600">
+              {t("landing.useCases.title")}
+            </h2>
+            <p className="mt-2 text-3xl font-bold tracking-tight text-gray-900 dark:text-white sm:text-4xl">
+              {t("landing.useCases.heading")}
+            </p>
+          </motion.div>
+
+          <div className="mx-auto mt-16 grid max-w-2xl grid-cols-1 gap-6 lg:max-w-none lg:grid-cols-4">
+            {[
+              { icon: Building2, title: t("landing.useCases.item1Title"), desc: t("landing.useCases.item1Desc") },
+              { icon: UtensilsCrossed, title: t("landing.useCases.item2Title"), desc: t("landing.useCases.item2Desc") },
+              { icon: Heart, title: t("landing.useCases.item3Title"), desc: t("landing.useCases.item3Desc") },
+              { icon: ShoppingBag, title: t("landing.useCases.item4Title"), desc: t("landing.useCases.item4Desc") },
+            ].map((item, i) => (
+              <motion.div
+                key={i}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.4, delay: i * 0.1 }}
+                className="group relative rounded-2xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-8 text-center transition-all duration-300 hover:-translate-y-1 hover:shadow-lg"
+              >
+                <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-950/50 dark:to-blue-900/50 text-blue-600 dark:text-blue-400 transition-all duration-300 group-hover:scale-110 group-hover:from-blue-600 group-hover:to-blue-700 group-hover:text-white">
+                  <item.icon className="h-6 w-6" />
+                </div>
+                <h3 className="mt-6 text-base font-semibold text-gray-900 dark:text-white">{item.title}</h3>
+                <p className="mt-3 text-sm leading-6 text-gray-500 dark:text-gray-400">{item.desc}</p>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ========================
+          Services Layout 1 — Clanora mirror
+      =========================== */}
+      <section id="services" className="relative bg-gray-900 py-24 sm:py-32 overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-br from-gray-900 via-blue-950/30 to-gray-900" />
+        <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxnIGZpbGw9IiNmZmYiIGZpbGwtb3BhY2l0eT0iMC4wMyI+PHBhdGggZD0iTTM2IDM0djItSDI0di0yaDEyek0zNiAyNHYySDI0di0yaDEyeiIvPjwvZz48L2c+PC9zdmc+')] opacity-40" />
+        <div className="relative mx-auto max-w-7xl px-6 lg:px-8">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.5 }}
+            className="text-center max-w-2xl mx-auto mb-16"
+          >
+            <h2 className="text-sm font-semibold tracking-[0.2em] uppercase text-blue-400">
+              {t("landing.servicesSection.subtitle")}
+            </h2>
+            <h3 className="mt-3 text-3xl font-bold text-white sm:text-4xl">
+              {t("landing.servicesSection.heading")}
+            </h3>
+          </motion.div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {[
+              { icon: Building2, title: t("landing.servicesSection.item1Title"), desc: t("landing.servicesSection.item1Desc") },
+              { icon: Calendar, title: t("landing.servicesSection.item2Title"), desc: t("landing.servicesSection.item2Desc") },
+              { icon: RefreshCw, title: t("landing.servicesSection.item3Title"), desc: t("landing.servicesSection.item3Desc") },
+              { icon: Plane, title: t("landing.servicesSection.item4Title"), desc: t("landing.servicesSection.item4Desc") },
+              { icon: Truck, title: t("landing.servicesSection.item5Title"), desc: t("landing.servicesSection.item5Desc") },
+              { icon: Star, title: t("landing.servicesSection.item6Title"), desc: t("landing.servicesSection.item6Desc") },
+            ].map((item, i) => (
+              <motion.div
+                key={i}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.4, delay: i * 0.08 }}
+                className="group bg-white dark:bg-gray-800 rounded-lg overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 hover:-translate-y-1"
+              >
+                {/* Overlay image area */}
+                <div className="relative h-48 bg-gradient-to-br from-blue-600/80 to-blue-900/80 flex items-center justify-center overflow-hidden">
+                  <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCA0MCA0MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cGF0aCBkPSJNMjAgM0wzNyA3bC00IDE3TDIwIDM3IDcgMjRsLTEtMTd6IiBmaWxsPSIjZmZmIiBmaWxsLW9wYWNpdHk9Ii4wNSIvPjwvc3ZnPg==')] opacity-60" />
+                  <div className="relative flex h-16 w-16 items-center justify-center rounded-2xl bg-white/20 backdrop-blur-sm text-white group-hover:scale-110 transition-transform duration-300">
+                    <item.icon className="h-7 w-7" />
+                  </div>
+                </div>
+                {/* Body */}
+                <div className="p-7">
+                  <h4 className="text-lg font-bold text-gray-900 dark:text-white">{item.title}</h4>
+                  <p className="mt-3 text-sm leading-6 text-gray-500 dark:text-gray-400">{item.desc}</p>
+                </div>
+                {/* Full width button */}
+                <a
+                  href="#contact"
+                  className="flex items-center justify-between border-t border-gray-100 dark:border-gray-700 px-7 py-3.5 text-sm font-semibold text-blue-600 dark:text-blue-400 hover:bg-gray-50 dark:hover:bg-gray-750 transition-colors group/btn"
+                >
+                  <span>{t("landing.hero.learnMore")}</span>
+                  <span className="flex items-center justify-center w-8 h-8 rounded-full border border-blue-600 dark:border-blue-400 text-blue-600 dark:text-blue-400 group-hover/btn:bg-blue-600 group-hover/btn:text-white transition-colors">
+                    <ArrowRight className="h-4 w-4" />
+                  </span>
+                </a>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ========================
+          Feature Layout 1 — Clanora mirror
+      =========================== */}
+      <section className="relative bg-gray-900 py-24 sm:py-32 overflow-hidden">
+        {/* Background overlay */}
+        <div className="absolute inset-0 bg-gradient-to-br from-blue-950/90 via-gray-900 to-blue-950/80" />
+        <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxnIGZpbGw9IiNmZmYiIGZpbGwtb3BhY2l0eT0iMC4wMiI+PHBhdGggZD0iTTM2IDM0djItSDI0di0yaDEyek0zNiAyNHYySDI0di0yaDEyeiIvPjwvZz48L2c+PC9zdmc+')]" />
+
+        <div className="relative mx-auto max-w-7xl px-6 lg:px-8">
+          {/* Heading row */}
+          <div className="mb-16">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.5 }}
+            >
+              <h2 className="text-sm font-semibold tracking-[0.2em] uppercase text-blue-400">
+                {t("landing.featuresSection.title")}
+              </h2>
+            </motion.div>
+            <div className="mt-2 lg:grid lg:grid-cols-12 lg:gap-8 items-start">
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.5, delay: 0.1 }}
+                className="lg:col-span-5"
+              >
+                <h3 className="text-3xl font-bold text-white sm:text-4xl">
+                  {t("landing.featuresSection.heading")}
+                </h3>
+              </motion.div>
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.5, delay: 0.2 }}
+                className="mt-6 lg:mt-0 lg:col-span-6 lg:col-start-7"
+              >
+                <p className="text-base font-semibold leading-7 text-gray-300">
+                  {t("landing.featuresSection.description")}
+                </p>
+                <div className="mt-8 flex flex-wrap gap-4">
+                  <button
+                    onClick={handleRequestDemo}
+                    className="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-500 text-white rounded-full px-6 py-3 text-sm font-semibold transition-all"
+                  >
+                    <span>{t("landing.hero.cta")}</span>
+                    <i className="icon-arrow-right"><ArrowRight className="h-4 w-4" /></i>
+                  </button>
+                  <button
+                    onClick={handleContactSales}
+                    className="inline-flex items-center gap-2 border-2 border-white/30 hover:border-white/50 text-white rounded-full px-6 py-3 text-sm font-semibold transition-all"
+                  >
+                    {t("landing.pricing.subscribe")}
+                  </button>
+                </div>
+              </motion.div>
+            </div>
+          </div>
+
+          {/* Feature cards carousel/grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            {[
+              { icon: Activity, title: t("landing.featuresSection.item1Title"), desc: t("landing.featuresSection.item1Desc") },
+              { icon: Key, title: t("landing.featuresSection.item2Title"), desc: t("landing.featuresSection.item2Desc") },
+              { icon: Zap, title: t("landing.featuresSection.item3Title"), desc: t("landing.featuresSection.item3Desc") },
+              { icon: BarChart3, title: t("landing.featuresSection.item4Title"), desc: t("landing.featuresSection.item4Desc") },
+              { icon: Smartphone, title: t("landing.featuresSection.item5Title"), desc: t("landing.featuresSection.item5Desc") },
+            ].map((item, i) => (
+              <motion.div
+                key={i}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.4, delay: i * 0.08 }}
+                className="group bg-white dark:bg-gray-800 rounded-lg overflow-hidden shadow-lg transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl flex flex-col"
+              >
+                {/* Body */}
+                <div className="p-7 flex-1 flex flex-col">
+                  <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-blue-50 dark:bg-blue-950/50 text-blue-600 dark:text-blue-400 mb-5 group-hover:bg-blue-600 group-hover:text-white transition-colors duration-300">
+                    <item.icon className="h-5 w-5" />
+                  </div>
+                  <h4 className="text-base font-bold text-gray-900 dark:text-white">{item.title}</h4>
+                  <p className="mt-2 text-sm leading-6 text-gray-500 dark:text-gray-400 flex-1">{item.desc}</p>
+                  <a
+                    href="#contact"
+                    className="mt-5 inline-flex items-center gap-2 text-sm font-semibold text-blue-600 dark:text-blue-400 hover:text-blue-500 dark:hover:text-blue-300 transition-colors group/link"
+                  >
+                    <span>{t("landing.hero.learnMore")}</span>
+                    <span className="flex items-center justify-center w-6 h-6 rounded-full border border-current group-hover/link:bg-blue-600 group-hover/link:text-white group-hover/link:border-blue-600 transition-all">
+                      <ArrowRight className="h-3 w-3" />
+                    </span>
+                  </a>
+                </div>
+                {/* Image area */}
+                <div className="h-40 bg-gradient-to-br from-blue-500/40 to-purple-600/40 flex items-center justify-center overflow-hidden">
+                  <div className="w-full h-full bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iODAiIGhlaWdodD0iODAiIHZpZXdCb3g9IjAgMCA4MCA4MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxnIGZpbGw9IiNmZmYiIGZpbGwtb3BhY2l0eT0iLjA2Ij48Y2lyY2xlIGN4PSI0MCIgY3k9IjQwIiByPSI0MCIvPjwvZz48L2c+PC9zdmc+')] bg-cover" />
+                </div>
+              </motion.div>
+            ))}
+          </div>
+
+          {/* Bottom row: rating + cta banner */}
+          <div className="mt-16 grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.5 }}
+              className="flex items-start gap-4"
+            >
+              <div className="flex gap-1 text-yellow-400 shrink-0 mt-1">
+                {[...Array(5)].map((_, i) => (
+                  <svg key={i} className="w-5 h-5 fill-current" viewBox="0 0 20 20">
+                    <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                  </svg>
+                ))}
+              </div>
+              <p className="text-sm leading-6 text-gray-300">
+                <span className="font-bold text-white">99.9% Customer Satisfaction</span> based on 750+ reviews from our beloved customers and 20,000 vehicles parked!
+              </p>
+            </motion.div>
+
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.5, delay: 0.15 }}
+              className="relative rounded-lg overflow-hidden bg-gradient-to-r from-blue-700 to-blue-600 flex items-stretch min-h-[140px]"
+            >
+              <div className="w-1/3 bg-blue-800/50 flex items-center justify-center p-4">
+                <Smartphone className="w-12 h-12 text-white/80" />
+              </div>
+              <div className="flex-1 p-6 flex flex-col justify-center">
+                <h4 className="text-lg font-bold text-white">Parkit App</h4>
+                <p className="mt-1 text-sm text-blue-100">Descarga nuestra app y gestiona tu estacionamiento desde cualquier lugar.</p>
+                <button
+                  onClick={handleRequestDemo}
+                  className="mt-3 inline-flex items-center gap-2 text-sm font-semibold text-white hover:text-blue-200 transition-colors group/btn"
+                >
+                  <span>Explorar</span>
+                  <ArrowRight className="h-3.5 w-3.5 group-hover/btn:translate-x-1 transition-transform" />
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        </div>
+      </section>
 
       {/* Pricing Section */}
       <section id="pricing" className="bg-white dark:bg-gray-900 py-24 sm:py-32">
@@ -772,6 +1067,8 @@ export default function Home() {
           </motion.div>
         </div>
       </section>
+
+
 
       {/* Footer */}
       <footer className="bg-black" aria-labelledby="footer-heading">

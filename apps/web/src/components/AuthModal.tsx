@@ -239,7 +239,7 @@ function LoginView({ onSwitch }: { onSwitch: (v: AuthView) => void }) {
       </form>
       <div className="relative my-5">
         <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-slate-200 dark:border-slate-700" /></div>
-        <div className="relative flex justify-center text-xs"><span className="bg-white/95 dark:bg-slate-900/95 px-2 text-slate-500 dark:text-slate-400">{t("auth.orContinueWith")}</span></div>
+        <div className="relative flex justify-center text-xs"><span className="bg-white dark:bg-slate-900 px-2 text-slate-500 dark:text-slate-400">{t("auth.orContinueWith")}</span></div>
       </div>
       <div className="flex items-center justify-center gap-3">
         <button type="button" onClick={() => handleOAuthLogin("google")} className="flex items-center justify-center rounded-full border border-slate-200 dark:border-slate-700 bg-white/90 dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 transition-all h-10 w-10" title={t("auth.continueWithGoogle")}><GoogleIcon className="h-5 w-5 text-red-500" /></button>
