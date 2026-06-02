@@ -3,7 +3,8 @@
 import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { AuthModal } from "@/components/AuthModal";
-import { ArrowRight, Menu, X, Mail, Phone, MapPin, Plus, Minus, Check, Smartphone, Activity, BarChart3, Key, Monitor, Building2, Palette, Cpu, UtensilsCrossed, Heart, ShoppingBag, Calendar, RefreshCw, Plane, Truck, Star, Zap } from "lucide-react";
+import { ArrowRight, Menu, X, Plus, Minus, Check, Mail } from "lucide-react";
+import { DeviceMobile, LayoutDashboard, Gauge, Briefcase, CalendarEvent, Receipt, Award, ParkingCircle, CarGarage, TrendingUp } from "@/lib/premiumIcons";
 import Hyperspeed from "@/components/effects/Hyperspeed";
 import { hyperspeedPresets } from "@/components/effects/hyperspeedPresets";
 import { useRouter } from "next/navigation";
@@ -12,45 +13,6 @@ import { ThemeToggleSimple } from "@/components/ThemeToggleSimple";
 import { LocaleToggle } from "@/components/LocaleToggle";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useTheme } from "next-themes";
-
-function AnimatedStat({ to, suffix }: { to: number; suffix: string }) {
-  const ref = useRef<HTMLSpanElement>(null);
-  const [inView, setInView] = useState(false);
-  const [count, setCount] = useState(0);
-
-  useEffect(() => {
-    const el = ref.current;
-    if (!el) return;
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting) {
-          setInView(true);
-          observer.disconnect();
-        }
-      },
-      { threshold: 0.3 },
-    );
-    observer.observe(el);
-    return () => observer.disconnect();
-  }, []);
-
-  useEffect(() => {
-    if (!inView) return;
-    const duration = 2000;
-    const start = performance.now();
-    let raf: number;
-    const step = (now: number) => {
-      const t = Math.min((now - start) / duration, 1);
-      const eased = 1 - Math.pow(1 - t, 3);
-      setCount(Math.round(eased * to));
-      if (t < 1) raf = requestAnimationFrame(step);
-    };
-    raf = requestAnimationFrame(step);
-    return () => cancelAnimationFrame(raf);
-  }, [inView, to]);
-
-  return <span ref={ref}>{count}{suffix}</span>;
-}
 
 export default function Home() {
   const router = useRouter();
@@ -63,6 +25,7 @@ export default function Home() {
   const [authModalOpen, setAuthModalOpen] = useState(false);
   const [authModalView, setAuthModalView] = useState<"login" | "request-access">("login");
   const [authAnchor, setAuthAnchor] = useState<"sign-in" | "request-access" | null>(null);
+  const [aboutTab, setAboutTab] = useState<"mission" | "vision">("mission");
   const signInBtnRef = useRef<HTMLButtonElement>(null);
   const requestAccessBtnRef = useRef<HTMLButtonElement>(null);
 
@@ -87,22 +50,13 @@ export default function Home() {
     router.push("/demo-request");
   };
 
-  const handleLearnMore = () => {
-    const featuresSection = document.getElementById("features");
-    featuresSection?.scrollIntoView({ behavior: "smooth" });
-  };
-
-  const handleGetStarted = () => {
-    router.push("/signup");
-  };
-
   const handleContactSales = () => {
     router.push("/contact");
   };
 
   const navigation = [
-    { name: t("landing.nav.features"), href: "#features" },
-    { name: t("landing.nav.solutions"), href: "#solutions" },
+    { name: t("landing.nav.features"), href: "#about" },
+    { name: t("landing.nav.solutions"), href: "#services" },
     { name: t("landing.nav.pricing"), href: "#pricing" },
     { name: t("landing.nav.faq"), href: "#faq" },
   ];
@@ -112,10 +66,10 @@ export default function Home() {
       title: t("landing.footer.solutions"),
       idPrefix: "footer-solutions",
       links: [
-        { name: t("landing.footer.linksValet"), href: "#features" },
-        { name: t("landing.footer.linksAccess"), href: "#features" },
-        { name: t("landing.footer.linksReports"), href: "#features" },
-        { name: t("landing.footer.linksApp"), href: "#features" },
+        { name: t("landing.footer.linksValet"), href: "#pricing" },
+        { name: t("landing.footer.linksAccess"), href: "#pricing" },
+        { name: t("landing.footer.linksReports"), href: "#pricing" },
+        { name: t("landing.footer.linksApp"), href: "#pricing" },
       ],
     },
     {
@@ -123,8 +77,8 @@ export default function Home() {
       idPrefix: "footer-support",
       links: [
         { name: t("landing.footer.linksHelp"), href: "#faq" },
-        { name: t("landing.footer.linksDocs"), href: "#features" },
-        { name: t("landing.footer.linksApi"), href: "#features" },
+        { name: t("landing.footer.linksDocs"), href: "#pricing" },
+        { name: t("landing.footer.linksApi"), href: "#pricing" },
         { name: t("landing.footer.linksStatus"), href: "#pricing" },
       ],
     },
@@ -132,7 +86,7 @@ export default function Home() {
       title: t("landing.footer.company"),
       idPrefix: "footer-company",
       links: [
-        { name: t("landing.footer.linksAbout"), href: "#features" },
+        { name: t("landing.footer.linksAbout"), href: "#pricing" },
         { name: t("landing.footer.linksBlog"), href: "#faq" },
         { name: t("landing.footer.linksJobs"), href: "#faq" },
         { name: t("landing.footer.linksPress"), href: "#faq" },
@@ -227,14 +181,14 @@ export default function Home() {
                 initial={{ opacity: 0, y: -20 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -20 }}
-                className="fixed inset-x-0 top-0 bg-white dark:bg-gray-900 p-6"
+                className="fixed inset-x-0 top-0 bg-surface p-6"
               >
                 <div className="flex items-center justify-between">
                   <Logo variant={logoVariant} />
                   <button
                     type="button"
                     onClick={() => setMobileMenuOpen(false)}
-                    className="-m-2.5 rounded-full p-2.5 text-gray-700 dark:text-gray-300"
+                    className="-m-2.5 rounded-full p-2.5 text-text-secondary"
                   >
                     <X className="h-6 w-6" />
                   </button>
@@ -246,7 +200,7 @@ export default function Home() {
                         key={item.name}
                         href={item.href}
                         onClick={() => setMobileMenuOpen(false)}
-                        className="block text-base font-semibold leading-7 text-gray-900 dark:text-white hover:text-blue-600"
+                        className="block text-base font-semibold leading-7 text-gray-900 dark:text-white hover:text-company-primary"
                       >
                         {item.name}
                       </a>
@@ -262,7 +216,7 @@ export default function Home() {
                       </button>
                       <button
                         onClick={() => { setAuthAnchor(null); setMobileMenuOpen(false); setAuthModalView("request-access"); setAuthModalOpen(true); }}
-                        className="w-full rounded-full border border-white/30 px-5 py-3 text-base font-semibold text-gray-900 dark:text-white hover:bg-gray-50 dark:hover:bg-gray-800 transition-all"
+                        className="w-full rounded-full border border-white/30 px-5 py-3 text-base font-semibold text-text-primary hover:bg-surface-hover transition-all"
                       >
                         {t("auth.requestAccess")}
                       </button>
@@ -310,7 +264,7 @@ export default function Home() {
                 </motion.span>
               ))}
               <br />
-              <span className="text-blue-600 dark:text-blue-500">{t("landing.hero.subtitle")}</span>
+              <span className="text-company-primary">{t("landing.hero.subtitle")}</span>
             </h1>
 
             {/* Hero Subtitle */}
@@ -344,196 +298,131 @@ export default function Home() {
                 </span>
               </motion.button>
 
-              <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                onClick={handleLearnMore}
-                className="rounded-full px-8 py-4 text-base font-semibold text-white border-2 border-white/30 hover:border-white/50 transition-all"
-              >
-                {t("landing.hero.learnMore")}
-              </motion.button>
             </motion.div>
 
           </motion.div>
         </div>
       </div>
 
-      {/* Stats Section */}
-      <div className="bg-white dark:bg-gray-900 py-24 sm:py-32">
+      {/* About Section — Bizidea mirror */}
+      <section id="about" className="bg-surface py-24 sm:py-32">
         <div className="mx-auto max-w-7xl px-6 lg:px-8">
-          <dl className="grid grid-cols-1 gap-x-8 gap-y-16 text-center lg:grid-cols-4">
-            {[
-              { label: t("landing.stats.vehicles"), value: 2, suffix: "M+" },
-              { label: t("landing.stats.companies"), value: 500, suffix: "+" },
-              { label: t("landing.stats.valets"), value: 10, suffix: "K+" },
-              { label: t("landing.stats.coverage"), value: 15, suffix: "" },
-            ].map((stat) => (
-              <motion.div
-                key={stat.label}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.6 }}
-                className="mx-auto flex max-w-xs flex-col gap-y-4"
-              >
-                <dt className="text-base/7 text-gray-600 dark:text-gray-400">{stat.label}</dt>
-                <dd className="order-first text-3xl font-semibold tracking-tight text-gray-900 dark:text-white sm:text-5xl">
-                  <AnimatedStat to={stat.value} suffix={stat.suffix} />
-                </dd>
-              </motion.div>
-            ))}
-          </dl>
-        </div>
-      </div>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+            {/* Left — Image */}
+            <motion.div
+              initial={{ opacity: 0, x: -30 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.6 }}
+            >
+              <div className="rounded-2xl bg-gradient-to-br from-company-primary/20 to-company-primary/5 p-8 flex items-center justify-center aspect-[4/3]">
+                <ParkingCircle className="text-company-primary/30" width={180} height={180} strokeWidth={1} />
+              </div>
+            </motion.div>
 
-      {/* How It Works */}
-      <section id="how-it-works" className="bg-gray-50 dark:bg-gray-800 py-24 sm:py-32">
-        <div className="mx-auto max-w-7xl px-6 lg:px-8">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.5 }}
-            className="text-center"
-          >
-            <h2 className="text-lg font-semibold leading-8 tracking-tight text-blue-600">
-              {t("landing.howItWorks.title")}
-            </h2>
-            <p className="mt-2 text-3xl font-bold tracking-tight text-gray-900 dark:text-white sm:text-4xl">
-              {t("landing.howItWorks.heading")}
-            </p>
-            <p className="mt-4 text-lg leading-8 text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
-              {t("landing.howItWorks.description")}
-            </p>
-          </motion.div>
+            {/* Right — Content */}
+            <motion.div
+              initial={{ opacity: 0, x: 30 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.6 }}
+            >
+              <h2 className="text-base/7 font-semibold text-company-primary tracking-wide uppercase">{t("landing.about.title")}</h2>
+              <p className="mt-3 text-3xl font-semibold tracking-tight text-text-primary sm:text-4xl">
+                {t("landing.about.heading")}
+              </p>
+              <p className="mt-5 text-base text-text-secondary leading-relaxed">
+                {t("landing.about.description")}
+              </p>
 
-          <div className="relative mx-auto mt-20 grid max-w-5xl grid-cols-1 gap-12 lg:grid-cols-3">
-            {/* Connecting line */}
-            <div className="absolute left-1/2 top-16 hidden h-[calc(100%-8rem)] w-px bg-gradient-to-b from-blue-200 via-blue-400 to-blue-200 dark:from-blue-800 dark:via-blue-600 dark:to-blue-800 lg:block" />
-
-            {[
-              { step: "01", icon: Smartphone, title: t("landing.howItWorks.step1Title"), desc: t("landing.howItWorks.step1Desc") },
-              { step: "02", icon: Activity, title: t("landing.howItWorks.step2Title"), desc: t("landing.howItWorks.step2Desc") },
-              { step: "03", icon: BarChart3, title: t("landing.howItWorks.step3Title"), desc: t("landing.howItWorks.step3Desc") },
-            ].map((item, i) => (
-              <motion.div
-                key={i}
-                initial={{ opacity: 0, y: 30 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.5, delay: i * 0.15 }}
-                className="relative flex flex-col items-center text-center"
-              >
-                <div className="relative z-10 flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-600 to-blue-700 text-white shadow-lg shadow-blue-600/20">
-                  <item.icon className="h-6 w-6" />
+              {/* Tabs */}
+              <div className="mt-10">
+                <div className="flex gap-8 border-b border-border-color">
+                  <button
+                    onClick={() => setAboutTab("mission")}
+                    className={`pb-3 text-sm font-semibold tracking-wide transition-colors relative ${aboutTab === "mission" ? "text-company-primary" : "text-text-secondary hover:text-text-primary"}`}
+                  >
+                    {t("landing.about.missionTab")}
+                    {aboutTab === "mission" && <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-company-primary" />}
+                  </button>
+                  <button
+                    onClick={() => setAboutTab("vision")}
+                    className={`pb-3 text-sm font-semibold tracking-wide transition-colors relative ${aboutTab === "vision" ? "text-company-primary" : "text-text-secondary hover:text-text-primary"}`}
+                  >
+                    {t("landing.about.visionTab")}
+                    {aboutTab === "vision" && <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-company-primary" />}
+                  </button>
                 </div>
-                <span className="mt-4 text-sm font-semibold text-blue-600">{item.step}</span>
-                <h3 className="mt-2 text-lg font-semibold text-gray-900 dark:text-white">{item.title}</h3>
-                <p className="mt-3 text-sm leading-6 text-gray-500 dark:text-gray-400 max-w-xs">{item.desc}</p>
-              </motion.div>
-            ))}
+
+                <AnimatePresence mode="wait">
+                  <motion.div
+                    key={aboutTab}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -10 }}
+                    transition={{ duration: 0.2 }}
+                    className="mt-6"
+                  >
+                    <p className="text-text-secondary leading-relaxed text-sm">
+                      {aboutTab === "mission"
+                        ? "Our mission is to transform valet parking operations worldwide through innovative technology, eliminating manual processes and delivering real-time visibility."
+                        : "Our vision is to become the global standard in valet parking technology, empowering operators with AI-driven insights and seamless automation."}
+                    </p>
+                    <ul className="mt-5 space-y-3">
+                      {(aboutTab === "mission"
+                        ? [t("landing.about.missionItem1"), t("landing.about.missionItem2"), t("landing.about.missionItem3")]
+                        : [t("landing.about.visionItem1"), t("landing.about.visionItem2"), t("landing.about.visionItem3")]
+                      ).map((item, i) => (
+                        <li key={i} className="flex items-center gap-3 text-sm text-text-secondary">
+                          <Check className="h-4 w-4 shrink-0 text-company-primary" />
+                          <span>{item}</span>
+                        </li>
+                      ))}
+                    </ul>
+                    <button
+                      onClick={handleRequestDemo}
+                      className="mt-6 inline-flex items-center gap-2 text-sm font-semibold text-company-primary hover:underline"
+                    >
+                      {t("landing.about.seeMore")}
+                      <ArrowRight className="h-4 w-4" />
+                    </button>
+                  </motion.div>
+                </AnimatePresence>
+              </div>
+            </motion.div>
           </div>
         </div>
       </section>
 
-      {/* Features */}
-      <section id="features" className="bg-white dark:bg-gray-900 py-24 sm:py-32">
+      {/* Stats Section — Bizidea mirror */}
+      <section className="bg-page-alt py-16">
         <div className="mx-auto max-w-7xl px-6 lg:px-8">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.5 }}
-            className="text-center"
-          >
-            <h2 className="text-lg font-semibold leading-8 tracking-tight text-blue-600">
-              {t("landing.whyFeatures.title")}
-            </h2>
-            <p className="mt-2 text-3xl font-bold tracking-tight text-gray-900 dark:text-white sm:text-4xl">
-              {t("landing.whyFeatures.heading")}
-            </p>
-          </motion.div>
-
-          <div className="mx-auto mt-16 grid max-w-2xl grid-cols-1 gap-6 lg:max-w-none lg:grid-cols-3">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-8">
             {[
-              { icon: Key, title: t("landing.whyFeatures.item1Title"), desc: t("landing.whyFeatures.item1Desc") },
-              { icon: Monitor, title: t("landing.whyFeatures.item2Title"), desc: t("landing.whyFeatures.item2Desc") },
-              { icon: BarChart3, title: t("landing.whyFeatures.item3Title"), desc: t("landing.whyFeatures.item3Desc") },
-              { icon: Building2, title: t("landing.whyFeatures.item4Title"), desc: t("landing.whyFeatures.item4Desc") },
-              { icon: Palette, title: t("landing.whyFeatures.item5Title"), desc: t("landing.whyFeatures.item5Desc") },
-              { icon: Cpu, title: t("landing.whyFeatures.item6Title"), desc: t("landing.whyFeatures.item6Desc") },
-            ].map((item, i) => (
+              { value: t("landing.about.stat1Value"), label: t("landing.about.stat1") },
+              { value: t("landing.about.stat2Value"), label: t("landing.about.stat2") },
+              { value: t("landing.about.stat3Value"), label: t("landing.about.stat3") },
+              { value: t("landing.about.stat4Value"), label: t("landing.about.stat4") },
+            ].map((stat, i) => (
               <motion.div
                 key={i}
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ duration: 0.4, delay: i * 0.08 }}
-                className="group relative rounded-2xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-7 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:shadow-blue-500/5 dark:hover:shadow-blue-500/10"
+                className="text-center py-6"
               >
-                <div className="absolute inset-x-0 top-0 h-1 rounded-t-2xl bg-gradient-to-r from-blue-500 to-blue-600 opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
-                <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-blue-50 dark:bg-blue-950/50 text-blue-600 dark:text-blue-400 transition-colors duration-300 group-hover:bg-blue-600 group-hover:text-white">
-                  <item.icon className="h-5 w-5" />
-                </div>
-                <h3 className="mt-5 text-base font-semibold text-gray-900 dark:text-white">{item.title}</h3>
-                <p className="mt-2 text-sm leading-6 text-gray-500 dark:text-gray-400">{item.desc}</p>
+                <p className="text-4xl font-bold text-company-primary">{stat.value}</p>
+                <p className="mt-2 text-sm font-medium text-text-secondary">{stat.label}</p>
               </motion.div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* Use Cases */}
-      <section id="use-cases" className="bg-gray-50 dark:bg-gray-800 py-24 sm:py-32">
+      {/* Services Section — Bizidea mirror */}
+      <section id="services" className="bg-surface py-24 sm:py-32">
         <div className="mx-auto max-w-7xl px-6 lg:px-8">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.5 }}
-            className="text-center"
-          >
-            <h2 className="text-lg font-semibold leading-8 tracking-tight text-blue-600">
-              {t("landing.useCases.title")}
-            </h2>
-            <p className="mt-2 text-3xl font-bold tracking-tight text-gray-900 dark:text-white sm:text-4xl">
-              {t("landing.useCases.heading")}
-            </p>
-          </motion.div>
-
-          <div className="mx-auto mt-16 grid max-w-2xl grid-cols-1 gap-6 lg:max-w-none lg:grid-cols-4">
-            {[
-              { icon: Building2, title: t("landing.useCases.item1Title"), desc: t("landing.useCases.item1Desc") },
-              { icon: UtensilsCrossed, title: t("landing.useCases.item2Title"), desc: t("landing.useCases.item2Desc") },
-              { icon: Heart, title: t("landing.useCases.item3Title"), desc: t("landing.useCases.item3Desc") },
-              { icon: ShoppingBag, title: t("landing.useCases.item4Title"), desc: t("landing.useCases.item4Desc") },
-            ].map((item, i) => (
-              <motion.div
-                key={i}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.4, delay: i * 0.1 }}
-                className="group relative rounded-2xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-8 text-center transition-all duration-300 hover:-translate-y-1 hover:shadow-lg"
-              >
-                <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-950/50 dark:to-blue-900/50 text-blue-600 dark:text-blue-400 transition-all duration-300 group-hover:scale-110 group-hover:from-blue-600 group-hover:to-blue-700 group-hover:text-white">
-                  <item.icon className="h-6 w-6" />
-                </div>
-                <h3 className="mt-6 text-base font-semibold text-gray-900 dark:text-white">{item.title}</h3>
-                <p className="mt-3 text-sm leading-6 text-gray-500 dark:text-gray-400">{item.desc}</p>
-              </motion.div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ========================
-          Services Layout 1 — Clanora mirror
-      =========================== */}
-      <section id="services" className="relative bg-gray-900 py-24 sm:py-32 overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-gray-900 via-blue-950/30 to-gray-900" />
-        <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxnIGZpbGw9IiNmZmYiIGZpbGwtb3BhY2l0eT0iMC4wMyI+PHBhdGggZD0iTTM2IDM0djItSDI0di0yaDEyek0zNiAyNHYySDI0di0yaDEyeiIvPjwvZz48L2c+PC9zdmc+')] opacity-40" />
-        <div className="relative mx-auto max-w-7xl px-6 lg:px-8">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
@@ -541,212 +430,104 @@ export default function Home() {
             transition={{ duration: 0.5 }}
             className="text-center max-w-2xl mx-auto mb-16"
           >
-            <h2 className="text-sm font-semibold tracking-[0.2em] uppercase text-blue-400">
-              {t("landing.servicesSection.subtitle")}
-            </h2>
-            <h3 className="mt-3 text-3xl font-bold text-white sm:text-4xl">
-              {t("landing.servicesSection.heading")}
-            </h3>
+            <h2 className="text-base/7 font-semibold text-company-primary tracking-wide uppercase">{t("landing.services.title")}</h2>
+            <p className="mt-3 text-3xl font-semibold tracking-tight text-text-primary sm:text-4xl">
+              {t("landing.services.heading")}
+            </p>
+            <p className="mt-4 text-base text-text-secondary leading-relaxed">
+              {t("landing.services.description")}
+            </p>
           </motion.div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
             {[
-              { icon: Building2, title: t("landing.servicesSection.item1Title"), desc: t("landing.servicesSection.item1Desc") },
-              { icon: Calendar, title: t("landing.servicesSection.item2Title"), desc: t("landing.servicesSection.item2Desc") },
-              { icon: RefreshCw, title: t("landing.servicesSection.item3Title"), desc: t("landing.servicesSection.item3Desc") },
-              { icon: Plane, title: t("landing.servicesSection.item4Title"), desc: t("landing.servicesSection.item4Desc") },
-              { icon: Truck, title: t("landing.servicesSection.item5Title"), desc: t("landing.servicesSection.item5Desc") },
-              { icon: Star, title: t("landing.servicesSection.item6Title"), desc: t("landing.servicesSection.item6Desc") },
-            ].map((item, i) => (
+              { Icon: Briefcase, title: t("landing.services.item1Title"), desc: t("landing.services.item1Desc") },
+              { Icon: CalendarEvent, title: t("landing.services.item2Title"), desc: t("landing.services.item2Desc") },
+              { Icon: Receipt, title: t("landing.services.item3Title"), desc: t("landing.services.item3Desc") },
+              { Icon: Award, title: t("landing.services.item4Title"), desc: t("landing.services.item4Desc") },
+            ].map(({ Icon, title, desc }, i) => (
               <motion.div
                 key={i}
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
-                transition={{ duration: 0.4, delay: i * 0.08 }}
-                className="group bg-white dark:bg-gray-800 rounded-lg overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 hover:-translate-y-1"
+                transition={{ duration: 0.4, delay: i * 0.1 }}
+                className="group rounded-xl bg-page-alt p-8 border border-border-color hover:shadow-lg hover:border-company-primary/20 transition-all"
               >
-                {/* Overlay image area */}
-                <div className="relative h-48 bg-gradient-to-br from-blue-600/80 to-blue-900/80 flex items-center justify-center overflow-hidden">
-                  <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCA0MCA0MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cGF0aCBkPSJNMjAgM0wzNyA3bC00IDE3TDIwIDM3IDcgMjRsLTEtMTd6IiBmaWxsPSIjZmZmIiBmaWxsLW9wYWNpdHk9Ii4wNSIvPjwvc3ZnPg==')] opacity-60" />
-                  <div className="relative flex h-16 w-16 items-center justify-center rounded-2xl bg-white/20 backdrop-blur-sm text-white group-hover:scale-110 transition-transform duration-300">
-                    <item.icon className="h-7 w-7" />
-                  </div>
+                <div className="w-14 h-14 rounded-lg bg-company-primary/10 flex items-center justify-center mb-6 group-hover:bg-company-primary/20 transition-colors">
+                  <Icon className="text-company-primary" width={28} height={28} strokeWidth={1.5} />
                 </div>
-                {/* Body */}
-                <div className="p-7">
-                  <h4 className="text-lg font-bold text-gray-900 dark:text-white">{item.title}</h4>
-                  <p className="mt-3 text-sm leading-6 text-gray-500 dark:text-gray-400">{item.desc}</p>
-                </div>
-                {/* Full width button */}
-                <a
-                  href="#contact"
-                  className="flex items-center justify-between border-t border-gray-100 dark:border-gray-700 px-7 py-3.5 text-sm font-semibold text-blue-600 dark:text-blue-400 hover:bg-gray-50 dark:hover:bg-gray-750 transition-colors group/btn"
-                >
-                  <span>{t("landing.hero.learnMore")}</span>
-                  <span className="flex items-center justify-center w-8 h-8 rounded-full border border-blue-600 dark:border-blue-400 text-blue-600 dark:text-blue-400 group-hover/btn:bg-blue-600 group-hover/btn:text-white transition-colors">
-                    <ArrowRight className="h-4 w-4" />
-                  </span>
-                </a>
+                <h3 className="text-lg font-semibold text-text-primary">{title}</h3>
+                <p className="mt-3 text-sm text-text-secondary leading-relaxed">{desc}</p>
+                <button className="mt-5 inline-flex items-center gap-2 text-sm font-semibold text-company-primary hover:underline group/btn">
+                  {t("landing.services.title") === "Services" ? "Read More" : "Leer más"}
+                  <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover/btn:translate-x-1" />
+                </button>
               </motion.div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* ========================
-          Feature Layout 1 — Clanora mirror
-      =========================== */}
-      <section className="relative bg-gray-900 py-24 sm:py-32 overflow-hidden">
-        {/* Background overlay */}
-        <div className="absolute inset-0 bg-gradient-to-br from-blue-950/90 via-gray-900 to-blue-950/80" />
-        <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxnIGZpbGw9IiNmZmYiIGZpbGwtb3BhY2l0eT0iMC4wMiI+PHBhdGggZD0iTTM2IDM0djItSDI0di0yaDEyek0zNiAyNHYySDI0di0yaDEyeiIvPjwvZz48L2c+PC9zdmc+')]" />
+      {/* How It Works — OnePirate mirror */}
+      <section id="how-it-works" className="bg-page-alt overflow-hidden">
+        <div className="mx-auto max-w-7xl px-6 lg:px-8 relative flex flex-col items-center pt-20 pb-32">
+          {/* Curvy lines decoration */}
+          <img
+            className="pointer-events-none select-none absolute opacity-70"
+            style={{ top: '-180px' }}
+            src="https://mui.com/static/themes/onepirate/productCurvyLines.png"
+            alt=""
+          />
 
-        <div className="relative mx-auto max-w-7xl px-6 lg:px-8">
-          {/* Heading row */}
-          <div className="mb-16">
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.5 }}
-            >
-              <h2 className="text-sm font-semibold tracking-[0.2em] uppercase text-blue-400">
-                {t("landing.featuresSection.title")}
-              </h2>
-            </motion.div>
-            <div className="mt-2 lg:grid lg:grid-cols-12 lg:gap-8 items-start">
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.5, delay: 0.1 }}
-                className="lg:col-span-5"
-              >
-                <h3 className="text-3xl font-bold text-white sm:text-4xl">
-                  {t("landing.featuresSection.heading")}
-                </h3>
-              </motion.div>
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.5, delay: 0.2 }}
-                className="mt-6 lg:mt-0 lg:col-span-6 lg:col-start-7"
-              >
-                <p className="text-base font-semibold leading-7 text-gray-300">
-                  {t("landing.featuresSection.description")}
-                </p>
-                <div className="mt-8 flex flex-wrap gap-4">
-                  <button
-                    onClick={handleRequestDemo}
-                    className="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-500 text-white rounded-full px-6 py-3 text-sm font-semibold transition-all"
-                  >
-                    <span>{t("landing.hero.cta")}</span>
-                    <i className="icon-arrow-right"><ArrowRight className="h-4 w-4" /></i>
-                  </button>
-                  <button
-                    onClick={handleContactSales}
-                    className="inline-flex items-center gap-2 border-2 border-white/30 hover:border-white/50 text-white rounded-full px-6 py-3 text-sm font-semibold transition-all"
-                  >
-                    {t("landing.pricing.subscribe")}
-                  </button>
-                </div>
-              </motion.div>
-            </div>
-          </div>
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.5 }}
+            className="text-center mb-28"
+          >
+            <h2 className="text-base/7 font-semibold text-company-primary">{t("landing.howItWorks.title")}</h2>
+            <p className="mt-2 text-4xl font-semibold tracking-tight text-pretty text-text-primary sm:text-5xl">
+              {t("landing.howItWorks.heading")}
+            </p>
+          </motion.div>
 
-          {/* Feature cards carousel/grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.5, delay: 0.15 }}
+            className="w-full grid grid-cols-1 md:grid-cols-3 gap-10"
+          >
             {[
-              { icon: Activity, title: t("landing.featuresSection.item1Title"), desc: t("landing.featuresSection.item1Desc") },
-              { icon: Key, title: t("landing.featuresSection.item2Title"), desc: t("landing.featuresSection.item2Desc") },
-              { icon: Zap, title: t("landing.featuresSection.item3Title"), desc: t("landing.featuresSection.item3Desc") },
-              { icon: BarChart3, title: t("landing.featuresSection.item4Title"), desc: t("landing.featuresSection.item4Desc") },
-              { icon: Smartphone, title: t("landing.featuresSection.item5Title"), desc: t("landing.featuresSection.item5Desc") },
-            ].map((item, i) => (
+              { num: "1", stepTitle: t("landing.howItWorks.step1Title"), stepDesc: t("landing.howItWorks.step1Desc"), Icon: DeviceMobile },
+              { num: "2", stepTitle: t("landing.howItWorks.step2Title"), stepDesc: t("landing.howItWorks.step2Desc"), Icon: LayoutDashboard },
+              { num: "3", stepTitle: t("landing.howItWorks.step3Title"), stepDesc: t("landing.howItWorks.step3Desc"), Icon: Gauge },
+            ].map(({ num, stepTitle, stepDesc, Icon }, i) => (
               <motion.div
                 key={i}
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
-                transition={{ duration: 0.4, delay: i * 0.08 }}
-                className="group bg-white dark:bg-gray-800 rounded-lg overflow-hidden shadow-lg transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl flex flex-col"
+                transition={{ duration: 0.4, delay: i * 0.12 }}
+                className="flex flex-col items-center text-center px-10"
               >
-                {/* Body */}
-                <div className="p-7 flex-1 flex flex-col">
-                  <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-blue-50 dark:bg-blue-950/50 text-blue-600 dark:text-blue-400 mb-5 group-hover:bg-blue-600 group-hover:text-white transition-colors duration-300">
-                    <item.icon className="h-5 w-5" />
-                  </div>
-                  <h4 className="text-base font-bold text-gray-900 dark:text-white">{item.title}</h4>
-                  <p className="mt-2 text-sm leading-6 text-gray-500 dark:text-gray-400 flex-1">{item.desc}</p>
-                  <a
-                    href="#contact"
-                    className="mt-5 inline-flex items-center gap-2 text-sm font-semibold text-blue-600 dark:text-blue-400 hover:text-blue-500 dark:hover:text-blue-300 transition-colors group/link"
-                  >
-                    <span>{t("landing.hero.learnMore")}</span>
-                    <span className="flex items-center justify-center w-6 h-6 rounded-full border border-current group-hover/link:bg-blue-600 group-hover/link:text-white group-hover/link:border-blue-600 transition-all">
-                      <ArrowRight className="h-3 w-3" />
-                    </span>
-                  </a>
-                </div>
-                {/* Image area */}
-                <div className="h-40 bg-gradient-to-br from-blue-500/40 to-purple-600/40 flex items-center justify-center overflow-hidden">
-                  <div className="w-full h-full bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iODAiIGhlaWdodD0iODAiIHZpZXdCb3g9IjAgMCA4MCA4MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxnIGZpbGw9IiNmZmYiIGZpbGwtb3BhY2l0eT0iLjA2Ij48Y2lyY2xlIGN4PSI0MCIgY3k9IjQwIiByPSI0MCIvPjwvZz48L2c+PC9zdmc+')] bg-cover" />
-                </div>
+                <span className="text-2xl font-bold text-company-primary">
+                  {num}.
+                </span>
+                <Icon className="my-8 stroke-current text-text-primary" width={55} height={55} strokeWidth={1.5} />
+                <p className="font-light text-text-primary leading-relaxed max-w-xs">
+                  {stepDesc}
+                </p>
               </motion.div>
             ))}
-          </div>
-
-          {/* Bottom row: rating + cta banner */}
-          <div className="mt-16 grid grid-cols-1 lg:grid-cols-2 gap-8">
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.5 }}
-              className="flex items-start gap-4"
-            >
-              <div className="flex gap-1 text-yellow-400 shrink-0 mt-1">
-                {[...Array(5)].map((_, i) => (
-                  <svg key={i} className="w-5 h-5 fill-current" viewBox="0 0 20 20">
-                    <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                  </svg>
-                ))}
-              </div>
-              <p className="text-sm leading-6 text-gray-300">
-                <span className="font-bold text-white">99.9% Customer Satisfaction</span> based on 750+ reviews from our beloved customers and 20,000 vehicles parked!
-              </p>
-            </motion.div>
-
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.5, delay: 0.15 }}
-              className="relative rounded-lg overflow-hidden bg-gradient-to-r from-blue-700 to-blue-600 flex items-stretch min-h-[140px]"
-            >
-              <div className="w-1/3 bg-blue-800/50 flex items-center justify-center p-4">
-                <Smartphone className="w-12 h-12 text-white/80" />
-              </div>
-              <div className="flex-1 p-6 flex flex-col justify-center">
-                <h4 className="text-lg font-bold text-white">Parkit App</h4>
-                <p className="mt-1 text-sm text-blue-100">Descarga nuestra app y gestiona tu estacionamiento desde cualquier lugar.</p>
-                <button
-                  onClick={handleRequestDemo}
-                  className="mt-3 inline-flex items-center gap-2 text-sm font-semibold text-white hover:text-blue-200 transition-colors group/btn"
-                >
-                  <span>Explorar</span>
-                  <ArrowRight className="h-3.5 w-3.5 group-hover/btn:translate-x-1 transition-transform" />
-                </button>
-              </div>
-            </motion.div>
-          </div>
+          </motion.div>
         </div>
       </section>
 
       {/* Pricing Section */}
-      <section id="pricing" className="bg-white dark:bg-gray-900 py-24 sm:py-32">
+      <section id="pricing" className="bg-surface py-24 sm:py-32">
         <div className="mx-auto max-w-7xl px-6 lg:px-8">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -755,8 +536,8 @@ export default function Home() {
             transition={{ duration: 0.6 }}
             className="mx-auto max-w-4xl text-center"
           >
-            <h2 className="text-base/7 font-semibold text-blue-600">{t("landing.pricing.title")}</h2>
-            <p className="mt-2 text-4xl font-semibold tracking-tight text-pretty text-gray-900 dark:text-white sm:text-5xl lg:text-balance">
+            <h2 className="text-base/7 font-semibold text-company-primary">{t("landing.pricing.title")}</h2>
+            <p className="mt-2 text-4xl font-semibold tracking-tight text-pretty text-text-primary sm:text-5xl lg:text-balance">
               {t("landing.pricing.heading")}
             </p>
           </motion.div>
@@ -765,7 +546,7 @@ export default function Home() {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.6, delay: 0.1 }}
-            className="mx-auto mt-6 max-w-2xl text-center text-lg/8 text-gray-600 dark:text-gray-300"
+            className="mx-auto mt-6 max-w-2xl text-center text-lg/8 text-text-secondary"
           >
             {t("landing.pricing.description")}
           </motion.p>
@@ -777,7 +558,7 @@ export default function Home() {
             className="mt-10 flex justify-center"
           >
             <fieldset aria-label={t("landing.pricing.frequencyLabel")}>
-              <div className="grid grid-cols-2 gap-x-1 rounded-full bg-gray-950/5 dark:bg-white/10 p-1 text-center text-xs/5 font-semibold text-gray-500 dark:text-gray-400">
+              <div className="grid grid-cols-2 gap-x-1 rounded-full bg-gray-950/5 dark:bg-white/10 p-1 text-center text-xs/5 font-semibold text-text-muted">
                 <label className="cursor-pointer rounded-full px-2.5 py-1 has-checked:bg-white dark:has-checked:bg-gray-600 has-checked:text-gray-900 dark:has-checked:text-white has-checked:shadow">
                   <input
                     type="radio"
@@ -863,28 +644,28 @@ export default function Home() {
                 key={index}
                 className={`rounded-3xl p-8 ring-1 ${
                   tier.featured
-                    ? "relative bg-gray-900 shadow-2xl ring-2 ring-blue-500/30"
-                    : "bg-white dark:bg-gray-800 ring-gray-200 dark:ring-gray-700"
+                    ? "relative bg-gray-900 shadow-2xl ring-2 ring-company-primary/30"
+                    : "bg-surface ring-gray-200 dark:ring-gray-700"
                 }`}
               >
                 <div className="flex items-center justify-between">
                   <h3
                     id={`tier-${tier.name}`}
                     className={`text-lg/7 font-semibold ${
-                      tier.featured ? "text-white" : "text-gray-900 dark:text-white"
+                      tier.featured ? "text-white" : "text-text-primary"
                     }`}
                   >
                     {tier.name}
                   </h3>
                   {tier.featured && (
-                    <p className="rounded-full bg-blue-600 px-2.5 py-1 text-xs/5 font-semibold text-white">
+                    <p className="rounded-full bg-company-primary px-2.5 py-1 text-xs/5 font-semibold text-white">
                       {t("landing.pricing.popular")}
                     </p>
                   )}
                 </div>
                 <p
                   className={`mt-4 text-sm/6 ${
-                    tier.featured ? "text-gray-300" : "text-gray-600 dark:text-gray-400"
+                    tier.featured ? "text-gray-300" : "text-text-secondary"
                   }`}
                 >
                   {tier.desc}
@@ -892,14 +673,14 @@ export default function Home() {
                 <p className="mt-6 flex items-baseline gap-x-1">
                   <span
                     className={`text-4xl font-semibold tracking-tight ${
-                      tier.featured ? "text-white" : "text-gray-900 dark:text-white"
+                      tier.featured ? "text-white" : "text-text-primary"
                     }`}
                   >
                     {annual ? tier.annualPrice : tier.monthlyPrice}
                   </span>
                   <span
                     className={`text-sm/6 font-semibold ${
-                      tier.featured ? "text-gray-300" : "text-gray-600 dark:text-gray-400"
+                      tier.featured ? "text-gray-300" : "text-text-secondary"
                     }`}
                   >
                     /{annual ? t("landing.pricing.perYear") : t("landing.pricing.perMonth")}
@@ -910,8 +691,8 @@ export default function Home() {
                   aria-describedby={`tier-${tier.name}`}
                   className={`mt-6 block rounded-full px-3 py-2 text-center text-sm/6 font-semibold shadow-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 ${
                     tier.featured
-                      ? "bg-blue-600 text-white hover:bg-blue-500 focus-visible:outline-blue-600"
-                      : "bg-gray-900 text-white hover:bg-gray-800 focus-visible:outline-gray-900 dark:bg-blue-600 dark:hover:bg-blue-500"
+                      ? "bg-company-primary text-white hover:brightness-110 focus-visible:outline-company-primary"
+                      : "bg-gray-900 text-white hover:bg-gray-800 focus-visible:outline-gray-900 dark:bg-company-primary dark:hover:brightness-110"
                   }`}
                 >
                   {t("landing.pricing.subscribe")}
@@ -919,14 +700,14 @@ export default function Home() {
                 <ul
                   role="list"
                   className={`mt-8 space-y-3 text-sm/6 ${
-                    tier.featured ? "text-gray-300" : "text-gray-600 dark:text-gray-400"
+                    tier.featured ? "text-gray-300" : "text-text-secondary"
                   }`}
                 >
                   {tier.features.map((feature) => (
                     <li key={feature} className="flex gap-x-3">
                       <Check
                         className={`h-6 w-5 flex-none ${
-                          tier.featured ? "text-blue-400" : "text-blue-600"
+                          tier.featured ? "text-company-primary" : "text-company-primary"
                         }`}
                       />
                       {feature}
@@ -940,16 +721,16 @@ export default function Home() {
       </section>
 
       {/* FAQ Section */}
-      <section id="faq" className="bg-gray-50 dark:bg-gray-800">
+      <section id="faq" className="bg-page-alt">
         <div className="mx-auto max-w-7xl px-6 py-24 sm:py-32 lg:px-8 lg:py-40">
           <div className="mx-auto max-w-4xl">
-            <h2 className="text-center text-3xl font-bold tracking-tight text-gray-900 dark:text-white sm:text-4xl">
+            <h2 className="text-center text-3xl font-bold tracking-tight text-text-primary sm:text-4xl">
               {t("landing.faq.title")}
             </h2>
-            <p className="mt-4 text-center text-lg leading-8 text-gray-600 dark:text-gray-300">
+            <p className="mt-4 text-center text-lg leading-8 text-text-secondary">
               {t("landing.faq.subtitle")}
             </p>
-            <dl className="mt-12 space-y-6 divide-y divide-gray-200 dark:divide-white/10">
+            <dl className="mt-12 space-y-6 divide-y divide-card-border">
               {[
                 { q: t("landing.faq.q1"), a: t("landing.faq.a1") },
                 { q: t("landing.faq.q2"), a: t("landing.faq.a2") },
@@ -963,7 +744,7 @@ export default function Home() {
                   <dt>
                     <button
                       onClick={() => setOpenFaq(openFaq === index ? null : index)}
-                      className="flex w-full items-start justify-between text-left text-gray-900 dark:text-white"
+                      className="flex w-full items-start justify-between text-left text-text-primary"
                     >
                       <span className="text-base font-semibold leading-7">{faq.q}</span>
                       <span className="ml-6 flex h-7 items-center">
@@ -981,7 +762,7 @@ export default function Home() {
                         initial={{ opacity: 0, height: 0 }}
                         animate={{ opacity: 1, height: "auto" }}
                         transition={{ duration: 0.2 }}
-                        className="text-base leading-7 text-gray-600 dark:text-gray-300"
+                        className="text-base leading-7 text-text-secondary"
                       >
                         {faq.a}
                       </motion.div>
@@ -993,12 +774,12 @@ export default function Home() {
 
             {/* Bottom CTA */}
             <div className="mt-16 text-center">
-              <p className="text-base leading-7 text-gray-600 dark:text-gray-300">
+              <p className="text-base leading-7 text-text-secondary">
                 {t("landing.faq.bottomQuestion")}
               </p>
               <button
                 onClick={handleContactSales}
-                className="mt-2 font-semibold text-blue-600 dark:text-blue-400 hover:text-blue-500 dark:hover:text-blue-300"
+                className="mt-2 font-semibold text-company-primary hover:text-company-primary/80"
               >
                 {t("landing.faq.bottomContact")}
               </button>
@@ -1007,68 +788,30 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Contact Section */}
-      <section id="contact" className="bg-white dark:bg-gray-900 py-24 sm:py-32">
-        <div className="mx-auto max-w-7xl px-6 lg:px-8">
+      {/* CTA Section — Bizidea mirror */}
+      <section className="bg-page-alt py-24 sm:py-32">
+        <div className="mx-auto max-w-4xl px-6 lg:px-8 text-center">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.5 }}
-            className="mx-auto max-w-2xl text-center"
           >
-            <h2 className="text-3xl font-bold tracking-tight text-gray-900 dark:text-white sm:text-4xl">
-              {t("landing.contact.title")}
-            </h2>
-            <p className="mt-2 text-lg leading-8 text-gray-600 dark:text-gray-300">
-              {t("landing.contact.subtitle")}
+            <p className="text-3xl font-semibold tracking-tight text-text-primary sm:text-4xl">
+              {t("landing.cta.heading")}
             </p>
-          </motion.div>
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.5, delay: 0.15 }}
-            className="mx-auto mt-16 grid max-w-4xl grid-cols-1 gap-12 sm:grid-cols-3"
-          >
-            <div className="flex flex-col items-center text-center">
-              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-blue-50 dark:bg-blue-950/50 text-blue-600 dark:text-blue-400">
-                <Mail className="h-6 w-6" />
-              </div>
-              <h3 className="mt-6 text-base font-semibold text-gray-900 dark:text-white">
-                {t("landing.contact.emailLabel")}
-              </h3>
-              <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
-                {t("landing.contact.emailValue")}
-              </p>
-            </div>
-            <div className="flex flex-col items-center text-center">
-              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-blue-50 dark:bg-blue-950/50 text-blue-600 dark:text-blue-400">
-                <Phone className="h-6 w-6" />
-              </div>
-              <h3 className="mt-6 text-base font-semibold text-gray-900 dark:text-white">
-                {t("landing.contact.phoneLabel")}
-              </h3>
-              <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
-                {t("landing.contact.phoneValue")}
-              </p>
-            </div>
-            <div className="flex flex-col items-center text-center">
-              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-blue-50 dark:bg-blue-950/50 text-blue-600 dark:text-blue-400">
-                <MapPin className="h-6 w-6" />
-              </div>
-              <h3 className="mt-6 text-base font-semibold text-gray-900 dark:text-white">
-                {t("landing.contact.officeLabel")}
-              </h3>
-              <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
-                {t("landing.contact.officeValue")}
-              </p>
-            </div>
+            <p className="mt-6 text-base text-text-secondary leading-relaxed max-w-2xl mx-auto">
+              {t("landing.ctaBanner.description")}
+            </p>
+            <button
+              onClick={handleRequestDemo}
+              className="mt-10 rounded-full bg-company-primary px-10 py-4 text-base font-semibold text-white shadow-sm hover:brightness-110 transition-all"
+            >
+              {t("landing.cta.button")}
+            </button>
           </motion.div>
         </div>
       </section>
-
-
 
       {/* Footer */}
       <footer className="bg-black" aria-labelledby="footer-heading">
@@ -1076,33 +819,7 @@ export default function Home() {
           {t("landing.footer.footerLabel")}
         </h2>
         <div className="mx-auto max-w-7xl px-6 py-16 sm:py-24 lg:px-8">
-          <div className="border-b border-white/10 pb-16 sm:pb-20 lg:flex lg:items-center lg:justify-between">
-            <div className="max-w-2xl">
-              <h2 className="text-3xl font-bold tracking-tight text-white sm:text-4xl">
-                {t("landing.footer.heading")}
-              </h2>
-              <p className="mt-6 text-lg leading-8 text-gray-300">
-                {t("landing.footer.description")}
-              </p>
-            </div>
-            <div className="mt-10 flex flex-col gap-4 sm:flex-row lg:mt-0 lg:flex-shrink-0">
-              <button
-                onClick={handleGetStarted}
-                id="footer-cta-btn"
-                className="inline-flex items-center justify-center rounded-full bg-white px-5 py-3 text-sm font-semibold text-gray-950 shadow-sm transition-colors hover:bg-gray-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
-              >
-                {t("landing.footer.cta")}
-              </button>
-              <button
-                onClick={handleRequestDemo}
-                className="inline-flex items-center justify-center rounded-full bg-white/10 px-5 py-3 text-sm font-semibold text-white transition-colors hover:bg-white/20 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
-              >
-                {t("landing.footer.ctaDemo")} <ArrowRight className="ml-2 h-4 w-4" />
-              </button>
-            </div>
-          </div>
-
-          <div className="mt-16 xl:grid xl:grid-cols-3 xl:gap-8">
+          <div className="xl:grid xl:grid-cols-3 xl:gap-8">
             <div>
               <Logo variant="onDark" />
               <p className="mt-6 max-w-sm text-sm leading-6 text-gray-400">
@@ -1181,6 +898,7 @@ export default function Home() {
           </div>
         </div>
       </footer>
+
       <AuthModal
         open={authModalOpen}
         onClose={() => setAuthModalOpen(false)}

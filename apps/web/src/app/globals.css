@@ -4,33 +4,61 @@
 
 @layer base {
   :root {
-    --page-bg: #f8fafc;
-    --card-bg: rgba(255, 255, 255, 0.9);
-    --card-border: rgba(0, 0, 0, 0.08);
-    --text-primary: #0f172a;
-    --text-secondary: #475569;
-    --text-muted: #64748b;
-    --input-bg: rgba(0, 0, 0, 0.04);
-    --input-border: rgba(0, 0, 0, 0.1);
-    /* Company colors (Settings). Default values = lib/themeDefaults.ts (light). Secondary/tertiary slightly darker for inactive sidebar text. */
+    --page-bg: #f3f6fc;
+    --page-bg-alt: #f0f3fa;
+    --surface: #ffffff;
+    --surface-hover: #f5f7fc;
+    --card-bg: rgba(255, 255, 255, 0.92);
+    --card-border: rgba(0, 0, 0, 0.06);
+    --text-primary: #0b1120;
+    --text-secondary: #3d4a5c;
+    --text-muted: #8896ab;
+    --text-disabled: #b8c2d4;
+    --input-bg: rgba(0, 0, 0, 0.03);
+    --input-border: rgba(0, 0, 0, 0.08);
+    --overlay: rgba(11, 17, 32, 0.5);
+    /* Company colors (Settings). Default values = lib/themeDefaults.ts (light). */
     --company-primary: #2563eb;
     --company-secondary: #475569;
     --company-tertiary: #64748b;
+    /* Semantic accent colors */
+    --success: #059669;
+    --success-bg: #eafaf3;
+    --warning: #d97706;
+    --warning-bg: #fffbeb;
+    --error: #dc2626;
+    --error-bg: #fef2f2;
+    --info: #2563eb;
+    --info-bg: #eff4ff;
   }
 
   .dark {
-    --page-bg: #0a0a0f;
+    --page-bg: #070a14;
+    --page-bg-alt: #0b0f1e;
+    --surface: #0f1424;
+    --surface-hover: #151b30;
     --card-bg: rgba(255, 255, 255, 0.04);
-    --card-border: rgba(255, 255, 255, 0.08);
-    --text-primary: #ffffff;
-    --text-secondary: #e2e8f0;
-    --text-muted: #94a3b8;
-    --input-bg: rgba(255, 255, 255, 0.06);
-    --input-border: rgba(255, 255, 255, 0.1);
+    --card-border: rgba(255, 255, 255, 0.06);
+    --text-primary: #edf1f7;
+    --text-secondary: #b8c2d4;
+    --text-muted: #6a7893;
+    --text-disabled: #3d4a5c;
+    --input-bg: rgba(255, 255, 255, 0.04);
+    --input-border: rgba(255, 255, 255, 0.08);
+    --overlay: rgba(7, 10, 20, 0.7);
     /* Default values = lib/themeDefaults.ts (dark) */
     --company-primary: #3b82f6;
     --company-secondary: #94a3b8;
     --company-tertiary: #cbd5e1;
+    /* Semantic accent colors */
+    --success: #34d399;
+    --success-bg: rgba(52, 211, 153, 0.1);
+    --warning: #fbbf24;
+    --warning-bg: rgba(251, 191, 36, 0.1);
+    --error: #f87171;
+    --error-bg: rgba(248, 113, 113, 0.1);
+    --info: #60a5fa;
+    --info-bg: rgba(96, 165, 250, 0.1);
   }
 }
 
@@ -39,7 +67,7 @@ html {
 }
 
 body {
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial,
+  font-family: var(--font-work-sans), -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial,
     sans-serif;
   background-color: var(--page-bg);
   color: var(--text-primary);
