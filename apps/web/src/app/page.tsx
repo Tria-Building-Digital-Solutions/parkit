@@ -6,6 +6,7 @@ import { AuthModal } from "@/components/AuthModal";
 import { ArrowRight, Menu, X, Plus, Minus, Check, Mail } from "lucide-react";
 import { DeviceMobile, LayoutDashboard, Gauge, Briefcase, CalendarEvent, Receipt, Award, ParkingCircle, CarGarage, TrendingUp } from "@/lib/premiumIcons";
 import Hyperspeed from "@/components/effects/Hyperspeed";
+import { BackgroundBeams } from "@/components/ui/background-beams";
 import { hyperspeedPresets } from "@/components/effects/hyperspeedPresets";
 import { useRouter } from "next/navigation";
 import { Logo } from "@/components/Logo";
@@ -470,15 +471,9 @@ export default function Home() {
       </section>
 
       {/* How It Works — OnePirate mirror */}
-      <section id="how-it-works" className="bg-page-alt overflow-hidden">
-        <div className="mx-auto max-w-7xl px-6 lg:px-8 relative flex flex-col items-center pt-20 pb-32">
-          {/* Curvy lines decoration */}
-          <img
-            className="pointer-events-none select-none absolute opacity-70"
-            style={{ top: '-180px' }}
-            src="https://mui.com/static/themes/onepirate/productCurvyLines.png"
-            alt=""
-          />
+      <section id="how-it-works" className="bg-page-alt overflow-hidden relative">
+        <BackgroundBeams />
+        <div className="mx-auto max-w-7xl px-6 lg:px-8 relative flex flex-col items-center pt-20 pb-32 z-10">
 
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -487,7 +482,7 @@ export default function Home() {
             transition={{ duration: 0.5 }}
             className="text-center mb-28"
           >
-            <h2 className="text-base/7 font-semibold text-company-primary">{t("landing.howItWorks.title")}</h2>
+            <h2 className="text-base/7 font-semibold text-company-primary tracking-wide uppercase">{t("landing.howItWorks.title")}</h2>
             <p className="mt-2 text-4xl font-semibold tracking-tight text-pretty text-text-primary sm:text-5xl">
               {t("landing.howItWorks.heading")}
             </p>
@@ -536,7 +531,7 @@ export default function Home() {
             transition={{ duration: 0.6 }}
             className="mx-auto max-w-4xl text-center"
           >
-            <h2 className="text-base/7 font-semibold text-company-primary">{t("landing.pricing.title")}</h2>
+            <h2 className="text-base/7 font-semibold text-company-primary tracking-wide uppercase">{t("landing.pricing.title")}</h2>
             <p className="mt-2 text-4xl font-semibold tracking-tight text-pretty text-text-primary sm:text-5xl lg:text-balance">
               {t("landing.pricing.heading")}
             </p>
@@ -723,11 +718,12 @@ export default function Home() {
       {/* FAQ Section */}
       <section id="faq" className="bg-page-alt">
         <div className="mx-auto max-w-7xl px-6 py-24 sm:py-32 lg:px-8 lg:py-40">
-          <div className="mx-auto max-w-4xl">
-            <h2 className="text-center text-3xl font-bold tracking-tight text-text-primary sm:text-4xl">
+          <div className="mx-auto max-w-4xl text-center">
+            <h2 className="text-base/7 font-semibold text-company-primary tracking-wide uppercase">{t("landing.faq.label")}</h2>
+            <p className="mt-3 text-3xl font-semibold tracking-tight text-text-primary sm:text-4xl">
               {t("landing.faq.title")}
-            </h2>
-            <p className="mt-4 text-center text-lg leading-8 text-text-secondary">
+            </p>
+            <p className="mt-4 text-base text-text-secondary">
               {t("landing.faq.subtitle")}
             </p>
             <dl className="mt-12 space-y-6 divide-y divide-card-border">

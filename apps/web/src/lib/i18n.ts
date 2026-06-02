@@ -1320,6 +1320,7 @@ export const translations = {
       faq: {
         title: "Preguntas frecuentes",
         subtitle: "Todo lo que necesitas saber sobre Parkit",
+        label: "FAQ",
         q1: "¿Cómo funciona Parkit?",
         a1: "Parkit es una plataforma integral de gestión de valet parking corporativo. Desde el momento en que un vehículo llega, nuestro sistema registra la entrada, asigna un valet, y gestiona la llave digitalmente. Cada movimiento queda documentado en tiempo real, permitiendo a los administradores tener visibilidad completa de la operación.",
         q2: "¿Qué tipo de empresas pueden usar Parkit?",
@@ -2702,6 +2703,7 @@ export const translations = {
       faq: {
         title: "Frequently asked questions",
         subtitle: "Everything you need to know about Parkit",
+        label: "FAQ",
         q1: "How does Parkit work?",
         a1: "Parkit is a comprehensive corporate valet parking management platform. From the moment a vehicle arrives, our system records the entry, assigns a valet, and manages the key digitally. Every movement is documented in real time, giving administrators full visibility of the operation.",
         q2: "What kind of companies can use Parkit?",
