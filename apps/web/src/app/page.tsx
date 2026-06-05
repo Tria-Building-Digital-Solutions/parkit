@@ -2,9 +2,10 @@
 
 import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { TypewriterEffect } from "@/components/ui/typewriter-effect";
 import { AuthModal } from "@/components/AuthModal";
 import { ArrowRight, Menu, X, Plus, Minus, Check, Mail } from "lucide-react";
-import { DeviceMobile, LayoutDashboard, Gauge, Briefcase, CalendarEvent, Receipt, Award, ParkingCircle, CarGarage, TrendingUp } from "@/lib/premiumIcons";
+import { DeviceMobile, LayoutDashboard, Gauge, ClipboardText, Key, MapPin, Bell } from "@/lib/premiumIcons";
 import Hyperspeed from "@/components/effects/Hyperspeed";
 import { BackgroundBeams } from "@/components/ui/background-beams";
 import { hyperspeedPresets } from "@/components/effects/hyperspeedPresets";
@@ -26,7 +27,7 @@ export default function Home() {
   const [authModalOpen, setAuthModalOpen] = useState(false);
   const [authModalView, setAuthModalView] = useState<"login" | "request-access">("login");
   const [authAnchor, setAuthAnchor] = useState<"sign-in" | "request-access" | null>(null);
-  const [aboutTab, setAboutTab] = useState<"mission" | "vision">("mission");
+  const [scrolled, setScrolled] = useState(false);
   const signInBtnRef = useRef<HTMLButtonElement>(null);
   const requestAccessBtnRef = useRef<HTMLButtonElement>(null);
 
@@ -45,6 +46,13 @@ export default function Home() {
     }
   }, []);
 
+  useEffect(() => {
+    const handleScroll = () => setScrolled(window.scrollY > 20);
+    handleScroll();
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
   const logoVariant = mounted && resolvedTheme === "dark" ? "onDark" : "default";
 
   const handleRequestDemo = () => {
@@ -56,8 +64,8 @@ export default function Home() {
   };
 
   const navigation = [
-    { name: t("landing.nav.features"), href: "#about" },
-    { name: t("landing.nav.solutions"), href: "#services" },
+    { name: t("landing.nav.services"), href: "#services" },
+    { name: t("landing.nav.howItWorks"), href: "#how-it-works" },
     { name: t("landing.nav.pricing"), href: "#pricing" },
     { name: t("landing.nav.faq"), href: "#faq" },
   ];
@@ -87,7 +95,7 @@ export default function Home() {
       title: t("landing.footer.company"),
       idPrefix: "footer-company",
       links: [
-        { name: t("landing.footer.linksAbout"), href: "#pricing" },
+        { name: t("landing.footer.linksAbout"), href: "/about" },
         { name: t("landing.footer.linksBlog"), href: "#faq" },
         { name: t("landing.footer.linksJobs"), href: "#faq" },
         { name: t("landing.footer.linksPress"), href: "#faq" },
@@ -99,7 +107,7 @@ export default function Home() {
       links: [
         { name: t("landing.footer.linksTerms"), href: "/terms" },
         { name: t("landing.footer.linksPrivacy"), href: "/privacy" },
-        { name: t("landing.footer.linksCookies"), href: "/privacy" },
+        { name: t("landing.footer.linksCookies"), href: "/cookies" },
         { name: t("landing.footer.linksContact"), href: "#faq" },
       ],
     },
@@ -116,9 +124,16 @@ export default function Home() {
         </div>
 
         {/* Navbar */}
-        <nav className="relative z-10">
+        <nav
+          className="sticky top-0 z-50 transition-all duration-300"
+          style={{
+            backgroundColor: scrolled ? "rgba(17, 24, 39, 0.85)" : "transparent",
+            backdropFilter: scrolled ? "blur(12px)" : "none",
+            WebkitBackdropFilter: scrolled ? "blur(12px)" : "none",
+          }}
+        >
           <div className="mx-auto max-w-7xl px-6 lg:px-8">
-            <div className="flex items-center justify-between py-5">
+            <div className="flex items-center justify-between py-4">
               <div className="flex lg:flex-1">
                 <a href="#" className="-m-1.5 p-1.5">
                   <Logo variant="onDark" />
@@ -144,7 +159,7 @@ export default function Home() {
                   </a>
                 ))}
               </div>
-              <div className="hidden lg:flex lg:flex-1 lg:items-center lg:justify-end lg:gap-x-3">
+              <div className="hidden lg:flex lg:flex-1 lg:items-center lg:justify-end lg:gap-x-4">
                 <div className="flex items-center gap-1">
                   <ThemeToggleSimple />
                   <LocaleToggle triggerClassName="!text-white/70 hover:!text-white" />
@@ -154,7 +169,7 @@ export default function Home() {
                   onClick={() => { setAuthAnchor("sign-in"); setAuthModalView("login"); setAuthModalOpen(true); }}
                   className="inline-flex items-center gap-2 rounded-full border border-white/20 px-5 py-2.5 text-sm font-semibold text-white/80 hover:text-white hover:border-white/40 transition-all"
                 >
-                  {t("auth.signIn")}<ArrowRight className="h-4 w-4" />
+                  {t("auth.signIn")}
                 </button>
                 <button
                   ref={requestAccessBtnRef}
@@ -209,7 +224,7 @@ export default function Home() {
                     <div className="pt-4 space-y-3">
                       <button
                         onClick={() => { setAuthAnchor(null); setMobileMenuOpen(false); setAuthModalView("login"); setAuthModalOpen(true); }}
-                        className="w-full rounded-full bg-white px-5 py-3 text-base font-semibold text-gray-900 shadow-sm hover:bg-gray-100 transition-all"
+                        className="w-full rounded-full border border-white/30 px-5 py-3 text-base font-semibold text-text-primary hover:bg-surface-hover transition-all"
                       >
                         <span className="flex items-center justify-center gap-2">
                           {t("auth.signIn")}<ArrowRight className="h-4 w-4" />
@@ -217,7 +232,7 @@ export default function Home() {
                       </button>
                       <button
                         onClick={() => { setAuthAnchor(null); setMobileMenuOpen(false); setAuthModalView("request-access"); setAuthModalOpen(true); }}
-                        className="w-full rounded-full border border-white/30 px-5 py-3 text-base font-semibold text-text-primary hover:bg-surface-hover transition-all"
+                        className="w-full text-center text-sm font-medium text-text-secondary hover:text-text-primary transition-all"
                       >
                         {t("auth.requestAccess")}
                       </button>
@@ -247,25 +262,20 @@ export default function Home() {
           >
             {/* Hero Title */}
             <h1 className="text-4xl font-bold tracking-tight text-white sm:text-6xl lg:text-7xl">
-              {t("landing.hero.title").split(" ").map((word, i) => (
-                <motion.span
-                  key={i}
-                  variants={{
-                    hidden: { opacity: 0, y: 30, scale: 0.95 },
-                    visible: {
-                      opacity: 1,
-                      y: 0,
-                      scale: 1,
-                      transition: { type: "spring", stiffness: 120, damping: 14 },
-                    },
-                  }}
-                  className="inline-block"
-                >
-                  {word}{'\u00A0'}
-                </motion.span>
-              ))}
+              {t("landing.hero.title")}
               <br />
-              <span className="text-company-primary">{t("landing.hero.subtitle")}</span>
+              <span>sin </span>
+              <TypewriterEffect
+                words={[
+                  { text: "complicaciones", className: "text-company-primary" },
+                  { text: "estrés", className: "text-company-primary" },
+                  { text: "caos", className: "text-company-primary" },
+                  { text: "desorden", className: "text-company-primary" },
+                  { text: "preocupaciones", className: "text-company-primary" },
+                ]}
+                className="text-company-primary"
+                cursorClassName="bg-company-primary"
+              />
             </h1>
 
             {/* Hero Subtitle */}
@@ -305,131 +315,15 @@ export default function Home() {
         </div>
       </div>
 
-      {/* About Section — Bizidea mirror */}
-      <section id="about" className="bg-surface py-24 sm:py-32">
-        <div className="mx-auto max-w-7xl px-6 lg:px-8">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-            {/* Left — Image */}
-            <motion.div
-              initial={{ opacity: 0, x: -30 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.6 }}
-            >
-              <div className="rounded-2xl bg-gradient-to-br from-company-primary/20 to-company-primary/5 p-8 flex items-center justify-center aspect-[4/3]">
-                <ParkingCircle className="text-company-primary/30" width={180} height={180} strokeWidth={1} />
-              </div>
-            </motion.div>
-
-            {/* Right — Content */}
-            <motion.div
-              initial={{ opacity: 0, x: 30 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.6 }}
-            >
-              <h2 className="text-base/7 font-semibold text-company-primary tracking-wide uppercase">{t("landing.about.title")}</h2>
-              <p className="mt-3 text-3xl font-semibold tracking-tight text-text-primary sm:text-4xl">
-                {t("landing.about.heading")}
-              </p>
-              <p className="mt-5 text-base text-text-secondary leading-relaxed">
-                {t("landing.about.description")}
-              </p>
-
-              {/* Tabs */}
-              <div className="mt-10">
-                <div className="flex gap-8 border-b border-border-color">
-                  <button
-                    onClick={() => setAboutTab("mission")}
-                    className={`pb-3 text-sm font-semibold tracking-wide transition-colors relative ${aboutTab === "mission" ? "text-company-primary" : "text-text-secondary hover:text-text-primary"}`}
-                  >
-                    {t("landing.about.missionTab")}
-                    {aboutTab === "mission" && <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-company-primary" />}
-                  </button>
-                  <button
-                    onClick={() => setAboutTab("vision")}
-                    className={`pb-3 text-sm font-semibold tracking-wide transition-colors relative ${aboutTab === "vision" ? "text-company-primary" : "text-text-secondary hover:text-text-primary"}`}
-                  >
-                    {t("landing.about.visionTab")}
-                    {aboutTab === "vision" && <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-company-primary" />}
-                  </button>
-                </div>
-
-                <AnimatePresence mode="wait">
-                  <motion.div
-                    key={aboutTab}
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -10 }}
-                    transition={{ duration: 0.2 }}
-                    className="mt-6"
-                  >
-                    <p className="text-text-secondary leading-relaxed text-sm">
-                      {aboutTab === "mission"
-                        ? "Our mission is to transform valet parking operations worldwide through innovative technology, eliminating manual processes and delivering real-time visibility."
-                        : "Our vision is to become the global standard in valet parking technology, empowering operators with AI-driven insights and seamless automation."}
-                    </p>
-                    <ul className="mt-5 space-y-3">
-                      {(aboutTab === "mission"
-                        ? [t("landing.about.missionItem1"), t("landing.about.missionItem2"), t("landing.about.missionItem3")]
-                        : [t("landing.about.visionItem1"), t("landing.about.visionItem2"), t("landing.about.visionItem3")]
-                      ).map((item, i) => (
-                        <li key={i} className="flex items-center gap-3 text-sm text-text-secondary">
-                          <Check className="h-4 w-4 shrink-0 text-company-primary" />
-                          <span>{item}</span>
-                        </li>
-                      ))}
-                    </ul>
-                    <button
-                      onClick={handleRequestDemo}
-                      className="mt-6 inline-flex items-center gap-2 text-sm font-semibold text-company-primary hover:underline"
-                    >
-                      {t("landing.about.seeMore")}
-                      <ArrowRight className="h-4 w-4" />
-                    </button>
-                  </motion.div>
-                </AnimatePresence>
-              </div>
-            </motion.div>
-          </div>
-        </div>
-      </section>
-
-      {/* Stats Section — Bizidea mirror */}
-      <section className="bg-page-alt py-16">
-        <div className="mx-auto max-w-7xl px-6 lg:px-8">
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-8">
-            {[
-              { value: t("landing.about.stat1Value"), label: t("landing.about.stat1") },
-              { value: t("landing.about.stat2Value"), label: t("landing.about.stat2") },
-              { value: t("landing.about.stat3Value"), label: t("landing.about.stat3") },
-              { value: t("landing.about.stat4Value"), label: t("landing.about.stat4") },
-            ].map((stat, i) => (
-              <motion.div
-                key={i}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.4, delay: i * 0.08 }}
-                className="text-center py-6"
-              >
-                <p className="text-4xl font-bold text-company-primary">{stat.value}</p>
-                <p className="mt-2 text-sm font-medium text-text-secondary">{stat.label}</p>
-              </motion.div>
-            ))}
-          </div>
-        </div>
-      </section>
-
       {/* Services Section — Bizidea mirror */}
-      <section id="services" className="bg-surface py-24 sm:py-32">
-        <div className="mx-auto max-w-7xl px-6 lg:px-8">
+      <section id="services" className="bg-surface min-h-screen flex items-center">
+        <div className="w-full mx-auto max-w-7xl px-6 lg:px-8 py-12">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.5 }}
-            className="text-center max-w-2xl mx-auto mb-16"
+            className="text-center max-w-2xl mx-auto mb-12"
           >
             <h2 className="text-base/7 font-semibold text-company-primary tracking-wide uppercase">{t("landing.services.title")}</h2>
             <p className="mt-3 text-3xl font-semibold tracking-tight text-text-primary sm:text-4xl">
@@ -440,12 +334,12 @@ export default function Home() {
             </p>
           </motion.div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
             {[
-              { Icon: Briefcase, title: t("landing.services.item1Title"), desc: t("landing.services.item1Desc") },
-              { Icon: CalendarEvent, title: t("landing.services.item2Title"), desc: t("landing.services.item2Desc") },
-              { Icon: Receipt, title: t("landing.services.item3Title"), desc: t("landing.services.item3Desc") },
-              { Icon: Award, title: t("landing.services.item4Title"), desc: t("landing.services.item4Desc") },
+              { Icon: Key, title: t("landing.services.item1Title"), desc: t("landing.services.item1Desc") },
+              { Icon: LayoutDashboard, title: t("landing.services.item2Title"), desc: t("landing.services.item2Desc") },
+              { Icon: DeviceMobile, title: t("landing.services.item3Title"), desc: t("landing.services.item3Desc") },
+              { Icon: ClipboardText, title: t("landing.services.item4Title"), desc: t("landing.services.item4Desc") },
             ].map(({ Icon, title, desc }, i) => (
               <motion.div
                 key={i}
@@ -453,25 +347,46 @@ export default function Home() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ duration: 0.4, delay: i * 0.1 }}
-                className="group rounded-xl bg-page-alt p-8 border border-border-color hover:shadow-lg hover:border-company-primary/20 transition-all"
+                className="group relative flex flex-col rounded-xl bg-page-alt p-8 border border-border-color hover:shadow-lg hover:border-company-primary/20 hover:shadow-company-primary/5 transition-all overflow-hidden"
               >
                 <div className="w-14 h-14 rounded-lg bg-company-primary/10 flex items-center justify-center mb-6 group-hover:bg-company-primary/20 transition-colors">
                   <Icon className="text-company-primary" width={28} height={28} strokeWidth={1.5} />
                 </div>
                 <h3 className="text-lg font-semibold text-text-primary">{title}</h3>
                 <p className="mt-3 text-sm text-text-secondary leading-relaxed">{desc}</p>
-                <button className="mt-5 inline-flex items-center gap-2 text-sm font-semibold text-company-primary hover:underline group/btn">
+                <button className="mt-auto pt-5 inline-flex items-center gap-2 text-sm font-semibold text-company-primary hover:underline group/btn">
                   {t("landing.services.title") === "Services" ? "Read More" : "Leer más"}
                   <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover/btn:translate-x-1" />
                 </button>
               </motion.div>
             ))}
           </div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.5 }}
+            className="text-center mt-16"
+          >
+            <p className="text-2xl font-semibold tracking-tight text-text-primary sm:text-3xl">
+              {t("landing.cta.heading")}
+            </p>
+            <p className="mt-3 text-base text-text-secondary leading-relaxed max-w-2xl mx-auto">
+              {t("landing.ctaBanner.description")}
+            </p>
+            <button
+              onClick={handleRequestDemo}
+              className="mt-6 rounded-full bg-company-primary px-10 py-4 text-base font-semibold text-white shadow-sm hover:brightness-110 transition-all"
+            >
+              {t("landing.cta.button")}
+            </button>
+          </motion.div>
         </div>
       </section>
 
       {/* How It Works — OnePirate mirror */}
-      <section id="how-it-works" className="bg-page-alt overflow-hidden relative">
+      <section id="how-it-works" className="bg-page-alt overflow-hidden relative min-h-screen">
         <BackgroundBeams />
         <div className="mx-auto max-w-7xl px-6 lg:px-8 relative flex flex-col items-center pt-20 pb-32 z-10">
 
@@ -497,9 +412,12 @@ export default function Home() {
           >
             {[
               { num: "1", stepTitle: t("landing.howItWorks.step1Title"), stepDesc: t("landing.howItWorks.step1Desc"), Icon: DeviceMobile },
-              { num: "2", stepTitle: t("landing.howItWorks.step2Title"), stepDesc: t("landing.howItWorks.step2Desc"), Icon: LayoutDashboard },
-              { num: "3", stepTitle: t("landing.howItWorks.step3Title"), stepDesc: t("landing.howItWorks.step3Desc"), Icon: Gauge },
-            ].map(({ num, stepTitle, stepDesc, Icon }, i) => (
+              { num: "2", stepTitle: t("landing.howItWorks.step2Title"), stepDesc: t("landing.howItWorks.step2Desc"), Icon: MapPin },
+              { num: "3", stepTitle: t("landing.howItWorks.step3Title"), stepDesc: t("landing.howItWorks.step3Desc"), Icon: LayoutDashboard },
+              { num: "4", stepTitle: t("landing.howItWorks.step4Title"), stepDesc: t("landing.howItWorks.step4Desc"), Icon: Key },
+              { num: "5", stepTitle: t("landing.howItWorks.step5Title"), stepDesc: t("landing.howItWorks.step5Desc"), Icon: Bell },
+              { num: "6", stepTitle: t("landing.howItWorks.step6Title"), stepDesc: t("landing.howItWorks.step6Desc"), Icon: Gauge },
+            ].map(({ num, stepDesc, Icon }, i) => (
               <motion.div
                 key={i}
                 initial={{ opacity: 0, y: 20 }}
@@ -584,7 +502,7 @@ export default function Home() {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.6, delay: 0.3 }}
-            className="isolate mx-auto mt-16 grid max-w-md grid-cols-1 gap-y-8 lg:mx-0 lg:max-w-none lg:grid-cols-3"
+            className="isolate mx-auto mt-16 grid max-w-md grid-cols-1 gap-8 lg:mx-0 lg:max-w-none lg:grid-cols-3"
           >
             {[
               {
@@ -598,6 +516,7 @@ export default function Home() {
                   t("landing.pricing.plans.basic.feature3"),
                   t("landing.pricing.plans.basic.feature4"),
                   t("landing.pricing.plans.basic.feature5"),
+                  t("landing.pricing.plans.basic.feature6"),
                 ],
                 featured: false,
               },
@@ -637,78 +556,60 @@ export default function Home() {
             ].map((tier, index) => (
               <div
                 key={index}
-                className={`rounded-3xl p-8 ring-1 ${
+                className={`relative rounded-2xl border ${
                   tier.featured
-                    ? "relative bg-gray-900 shadow-2xl ring-2 ring-company-primary/30"
-                    : "bg-surface ring-gray-200 dark:ring-gray-700"
-                }`}
+                    ? "border-company-primary/30 bg-gradient-to-b from-company-primary/5 to-transparent shadow-xl shadow-company-primary/5 scale-105"
+                    : "border-border-color bg-surface hover:shadow-lg hover:border-company-primary/20"
+                } transition-all duration-300`}
               >
-                <div className="flex items-center justify-between">
+                {tier.featured && (
+                  <div className="absolute -top-3 left-1/2 -translate-x-1/2">
+                    <span className="inline-flex rounded-full bg-company-primary px-3 py-1 text-xs font-semibold text-white shadow-sm">
+                      {t("landing.pricing.popular")}
+                    </span>
+                  </div>
+                )}
+                <div className="p-8">
                   <h3
                     id={`tier-${tier.name}`}
-                    className={`text-lg/7 font-semibold ${
-                      tier.featured ? "text-white" : "text-text-primary"
+                    className={`text-lg font-semibold ${
+                      tier.featured ? "text-text-primary" : "text-text-primary"
                     }`}
                   >
                     {tier.name}
                   </h3>
-                  {tier.featured && (
-                    <p className="rounded-full bg-company-primary px-2.5 py-1 text-xs/5 font-semibold text-white">
-                      {t("landing.pricing.popular")}
-                    </p>
-                  )}
+                  <p className={`mt-2 text-sm leading-relaxed ${tier.featured ? "text-text-secondary" : "text-text-secondary"}`}>
+                    {tier.desc}
+                  </p>
+                  <p className="mt-6 flex items-baseline gap-1">
+                    <span className={`text-4xl font-bold tracking-tight ${tier.featured ? "text-company-primary" : "text-text-primary"}`}>
+                      {annual ? tier.annualPrice : tier.monthlyPrice}
+                    </span>
+                    <span className="text-sm font-medium text-text-muted">
+                      /{annual ? t("landing.pricing.perYear") : t("landing.pricing.perMonth")}
+                    </span>
+                  </p>
+                  <button
+                    onClick={handleRequestDemo}
+                    className={`mt-6 w-full rounded-full py-2.5 text-sm font-semibold transition-all ${
+                      tier.featured
+                        ? "bg-company-primary text-white shadow-sm hover:brightness-110"
+                        : "bg-gray-900 text-white hover:bg-gray-800 dark:bg-gray-800 dark:hover:bg-gray-700"
+                    }`}
+                  >
+                    {t("landing.pricing.subscribe")}
+                  </button>
                 </div>
-                <p
-                  className={`mt-4 text-sm/6 ${
-                    tier.featured ? "text-gray-300" : "text-text-secondary"
-                  }`}
-                >
-                  {tier.desc}
-                </p>
-                <p className="mt-6 flex items-baseline gap-x-1">
-                  <span
-                    className={`text-4xl font-semibold tracking-tight ${
-                      tier.featured ? "text-white" : "text-text-primary"
-                    }`}
-                  >
-                    {annual ? tier.annualPrice : tier.monthlyPrice}
-                  </span>
-                  <span
-                    className={`text-sm/6 font-semibold ${
-                      tier.featured ? "text-gray-300" : "text-text-secondary"
-                    }`}
-                  >
-                    /{annual ? t("landing.pricing.perYear") : t("landing.pricing.perMonth")}
-                  </span>
-                </p>
-                <a
-                  href="#"
-                  aria-describedby={`tier-${tier.name}`}
-                  className={`mt-6 block rounded-full px-3 py-2 text-center text-sm/6 font-semibold shadow-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 ${
-                    tier.featured
-                      ? "bg-company-primary text-white hover:brightness-110 focus-visible:outline-company-primary"
-                      : "bg-gray-900 text-white hover:bg-gray-800 focus-visible:outline-gray-900 dark:bg-company-primary dark:hover:brightness-110"
-                  }`}
-                >
-                  {t("landing.pricing.subscribe")}
-                </a>
-                <ul
-                  role="list"
-                  className={`mt-8 space-y-3 text-sm/6 ${
-                    tier.featured ? "text-gray-300" : "text-text-secondary"
-                  }`}
-                >
-                  {tier.features.map((feature) => (
-                    <li key={feature} className="flex gap-x-3">
-                      <Check
-                        className={`h-6 w-5 flex-none ${
-                          tier.featured ? "text-company-primary" : "text-company-primary"
-                        }`}
-                      />
-                      {feature}
-                    </li>
-                  ))}
-                </ul>
+                <div className="border-t border-border-color px-8 py-6">
+                  <ul role="list" className="space-y-3">
+                    {tier.features.map((feature) => (
+                      <li key={feature} className="flex gap-3 text-sm text-text-secondary">
+                        <Check className="h-5 w-5 shrink-0 text-company-primary mt-0.5" />
+                        <span>{feature}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
               </div>
             ))}
           </motion.div>
@@ -781,31 +682,6 @@ export default function Home() {
               </button>
             </div>
           </div>
-        </div>
-      </section>
-
-      {/* CTA Section — Bizidea mirror */}
-      <section className="bg-page-alt py-24 sm:py-32">
-        <div className="mx-auto max-w-4xl px-6 lg:px-8 text-center">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.5 }}
-          >
-            <p className="text-3xl font-semibold tracking-tight text-text-primary sm:text-4xl">
-              {t("landing.cta.heading")}
-            </p>
-            <p className="mt-6 text-base text-text-secondary leading-relaxed max-w-2xl mx-auto">
-              {t("landing.ctaBanner.description")}
-            </p>
-            <button
-              onClick={handleRequestDemo}
-              className="mt-10 rounded-full bg-company-primary px-10 py-4 text-base font-semibold text-white shadow-sm hover:brightness-110 transition-all"
-            >
-              {t("landing.cta.button")}
-            </button>
-          </motion.div>
         </div>
       </section>
 
@@ -888,9 +764,22 @@ export default function Home() {
           </div>
 
           <div className="mt-16 border-t border-white/10 pt-8 sm:mt-20 lg:mt-24">
-            <p className="text-sm leading-6 text-gray-400">
-              &copy; {new Date().getFullYear()} Parkit. {t("landing.footer.rights")}
-            </p>
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-2">
+              <p className="text-sm leading-6 text-gray-400">
+                &copy; {new Date().getFullYear()} Parkit. {t("landing.footer.rights")}
+              </p>
+              <p className="text-xs leading-5 text-gray-500">
+                Powered by{" "}
+                <a
+                  href="https://triacr.com"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="font-medium text-gray-400 transition-colors hover:text-white"
+                >
+                  Tria
+                </a>
+              </p>
+            </div>
           </div>
         </div>
       </footer>

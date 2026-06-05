@@ -66,6 +66,7 @@ import {
   IconHomeBolt,
   IconHomeDollar,
   IconInfoCircle,
+  IconKey,
   IconLayoutDashboard,
   IconLayoutSidebarLeftCollapse,
   IconLayoutSidebarLeftExpand,
@@ -260,6 +261,7 @@ export const Camera = wrap(IconCamera);
 export const FileText = wrap(IconFileDescription);
 export const ImageIcon = wrap(IconPhoto);
 export const PhotoIcon = wrap(IconPhoto);
+export const Key = wrap(IconKey);
 
 // Editing
 export const Edit = wrap(IconEdit);
