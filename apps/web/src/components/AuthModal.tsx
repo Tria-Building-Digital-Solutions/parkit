@@ -16,22 +16,43 @@ type AuthView = "login" | "forgot-password" | "request-access";
 type AuthAnchorRef = React.RefObject<HTMLElement | null>;
 
 export function AuthModal({ open, onClose, buttonRef, initialView }: { open: boolean; onClose: () => void; buttonRef?: AuthAnchorRef; initialView?: AuthView }) {
-  return open && typeof document !== "undefined"
-    ? createPortal(<AuthModalInner onClose={onClose} buttonRef={buttonRef} initialView={initialView} />, document.body)
-    : null;
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  if (!mounted) return null;
+
+  return createPortal(
+    <AuthModalInner open={open} onClose={onClose} buttonRef={buttonRef} initialView={initialView} />,
+    document.body,
+  );
 }
 
-function AuthModalInner({ onClose, buttonRef, initialView }: { onClose: () => void; buttonRef?: AuthAnchorRef; initialView?: AuthView }) {
+function AuthModalInner({ open, onClose, buttonRef, initialView }: { open: boolean; onClose: () => void; buttonRef?: AuthAnchorRef; initialView?: AuthView }) {
   const [view, setView] = useState<AuthView>(initialView ?? "login");
   const [pos, setPos] = useState<{ top: number; left: number; width: number; anchorLeft: number } | null>(null);
   const [isMobile, setIsMobile] = useState(false);
 
   useEffect(() => {
-    setView(initialView ?? "login");
-  }, [initialView]);
+    if (open) {
+      setView(initialView ?? "login");
+    }
+  }, [open, initialView]);
+
+  useEffect(() => {
+    if (open) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+    return () => { document.body.style.overflow = ""; };
+  }, [open]);
 
   useEffect(() => {
     const updatePos = () => {
+      if (!open) return;
       const viewportWidth = window.innerWidth;
       const mobile = viewportWidth < 768;
       setIsMobile(mobile);
@@ -56,20 +77,20 @@ function AuthModalInner({ onClose, buttonRef, initialView }: { onClose: () => vo
         setPos(null);
       }
     };
-    updatePos();
+    if (open) updatePos();
     window.addEventListener("scroll", updatePos, true);
     window.addEventListener("resize", updatePos);
     return () => {
       window.removeEventListener("scroll", updatePos, true);
       window.removeEventListener("resize", updatePos);
     };
-  }, [buttonRef, view]);
+  }, [buttonRef, view, open]);
 
   const anchored = !isMobile && Boolean(pos);
 
   return (
-    <div className="fixed inset-0 z-[99999]" role="dialog" aria-modal="true">
-      <button type="button" className="absolute inset-0 bg-slate-950/30 backdrop-blur-[2px]" onClick={onClose} />
+    <div className={`fixed inset-0 z-[99999] transition-opacity duration-200 ${open ? 'opacity-100' : 'opacity-0 pointer-events-none'}`} role="dialog" aria-modal="true">
+      <button type="button" className={`absolute inset-0 transition-opacity duration-200 ${open ? 'bg-slate-950/30 backdrop-blur-[2px]' : 'bg-transparent'}`} onClick={onClose} />
       <div
         className={anchored ? "absolute" : "absolute inset-0 flex items-center justify-center p-4"}
         style={anchored && pos ? { top: pos.top, left: pos.left, width: pos.width } : undefined}
@@ -82,7 +103,7 @@ function AuthModalInner({ onClose, buttonRef, initialView }: { onClose: () => vo
             aria-hidden
           />
         )}
-        <div className="relative bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl rounded-2xl border border-white/70 dark:border-slate-700 shadow-[0_24px_80px_rgba(15,23,42,0.24),0_8px_24px_rgba(15,23,42,0.12)] dark:shadow-[0_24px_80px_rgba(0,0,0,0.55)] w-full max-w-[calc(100vw-2rem)] max-h-[min(82vh,720px)] overflow-y-auto">
+        <div className="relative bg-white dark:bg-slate-900 rounded-2xl border border-white/70 dark:border-slate-700 shadow-[0_24px_80px_rgba(15,23,42,0.24),0_8px_24px_rgba(15,23,42,0.12)] dark:shadow-[0_24px_80px_rgba(0,0,0,0.55)] w-full max-w-[calc(100vw-2rem)] max-h-[min(82vh,720px)] overflow-y-auto">
           <div className="relative p-6 md:p-8">
             <button type="button" onClick={onClose} className="absolute top-3 right-3 p-1 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 transition-colors">
               <X className="w-5 h-5" />

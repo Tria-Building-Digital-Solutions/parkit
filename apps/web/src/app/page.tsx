@@ -75,10 +75,10 @@ export default function Home() {
       title: t("landing.footer.solutions"),
       idPrefix: "footer-solutions",
       links: [
-        { name: t("landing.footer.linksValet"), href: "#pricing" },
-        { name: t("landing.footer.linksAccess"), href: "#pricing" },
-        { name: t("landing.footer.linksReports"), href: "#pricing" },
-        { name: t("landing.footer.linksApp"), href: "#pricing" },
+        { name: t("landing.footer.linksValet"), href: "#services" },
+        { name: t("landing.footer.linksAccess"), href: "#services" },
+        { name: t("landing.footer.linksReports"), href: "#services" },
+        { name: t("landing.footer.linksApp"), href: "#services" },
       ],
     },
     {
@@ -471,8 +471,13 @@ export default function Home() {
             className="mt-10 flex justify-center"
           >
             <fieldset aria-label={t("landing.pricing.frequencyLabel")}>
-              <div className="grid grid-cols-2 gap-x-1 rounded-full bg-gray-950/5 dark:bg-white/10 p-1 text-center text-xs/5 font-semibold text-text-muted">
-                <label className="cursor-pointer rounded-full px-2.5 py-1 has-checked:bg-white dark:has-checked:bg-gray-600 has-checked:text-gray-900 dark:has-checked:text-white has-checked:shadow">
+              <div className="relative flex bg-gray-100 dark:bg-gray-800 rounded-full p-1 w-60">
+                <div
+                  className={`absolute top-1 bottom-1 w-[calc(50%-2px)] rounded-full bg-white dark:bg-gray-700 shadow-md border border-gray-200 dark:border-gray-600 transition-all duration-300 ease-out ${
+                    annual ? "left-[calc(50%+1px)]" : "left-1"
+                  }`}
+                />
+                <label className="relative flex-1 cursor-pointer select-none text-center">
                   <input
                     type="radio"
                     name="frequency"
@@ -481,9 +486,15 @@ export default function Home() {
                     onChange={() => setAnnual(false)}
                     className="sr-only"
                   />
-                  <span>{t("landing.pricing.monthly")}</span>
+                  <span
+                    className={`relative z-10 flex items-center justify-center rounded-full px-5 py-2 text-sm font-medium transition-colors duration-200 ${
+                      annual ? "text-gray-500 dark:text-gray-400" : "text-gray-900 dark:text-white"
+                    }`}
+                  >
+                    {t("landing.pricing.monthly")}
+                  </span>
                 </label>
-                <label className="cursor-pointer rounded-full px-2.5 py-1 has-checked:bg-white dark:has-checked:bg-gray-600 has-checked:text-gray-900 dark:has-checked:text-white has-checked:shadow">
+                <label className="relative flex-1 cursor-pointer select-none text-center">
                   <input
                     type="radio"
                     name="frequency"
@@ -492,7 +503,18 @@ export default function Home() {
                     onChange={() => setAnnual(true)}
                     className="sr-only"
                   />
-                  <span>{t("landing.pricing.annual")}</span>
+                  <span
+                    className={`relative z-10 flex items-center justify-center rounded-full px-5 py-2 text-sm font-medium transition-colors duration-200 ${
+                      annual ? "text-gray-900 dark:text-white" : "text-gray-500 dark:text-gray-400"
+                    }`}
+                  >
+                    {t("landing.pricing.annual")}
+                    {annual && (
+                      <span className="ml-1.5 rounded-full bg-company-primary/10 px-2 py-0.5 text-[10px] font-semibold text-company-primary">
+                        -16%
+                      </span>
+                    )}
+                  </span>
                 </label>
               </div>
             </fieldset>
