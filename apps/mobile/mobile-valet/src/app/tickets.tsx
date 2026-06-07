@@ -6,17 +6,17 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   Platform,
+  Pressable,
 } from "react-native";
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import { StatusBar } from "react-native";
 import { Redirect, useLocalSearchParams, useRouter } from "expo-router";
-import { Ionicons } from "@expo/vector-icons";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useAuthStore, useLocaleStore } from "@/lib/store";
+import { IconMapPin, IconAlertCircle, IconArrowUndo, IconCircleCheck, IconCar, IconCarOff, IconBell, IconHome2 } from "@/components/Icons";
 import { t } from "@/lib/i18n";
 import { formatVehicleColorLabel } from "@parkit/shared/src/vehicleColors";
 import api from "@/lib/api";
-import { ValetBackButton } from "@/components/ValetBackButton";
 import { useValetProfileSync } from "@/lib/useValetProfileSync";
 import { useOnAppForeground } from "@/lib/useOnAppForeground";
 import { TICKETS_POLL_MS } from "@/lib/syncConstants";
@@ -24,7 +24,6 @@ import { createFeedback } from "@/lib/feedback";
 import {
   useValetTheme,
   statusVisuals as statusVisualsForTheme,
-  ticketsA11y,
   useResponsiveLayout,
 } from "@/theme/valetTheme";
 import { mapApiAssignmentToDisplay } from "@/lib/ticketUtils";
@@ -35,9 +34,9 @@ type Theme = ReturnType<typeof useValetTheme>;
 function createTicketStyles(theme: Theme, contentMaxWidth: number, sectionPadding: number) {
   const C = theme.colors;
   const S = theme.space;
-  const F = ticketsA11y.font;
+  const F = theme.font;
   const R = theme.radius;
-  const M = ticketsA11y.minTouch;
+  const M = theme.minTouch;
   const Fonts = theme.fontFamily;
 
   return StyleSheet.create({
@@ -69,7 +68,7 @@ function createTicketStyles(theme: Theme, contentMaxWidth: number, sectionPaddin
       paddingBottom: S.md,
     },
     screenTitle: {
-      fontSize: Math.round(F.secondary * 0.85),
+      fontSize: F.base,
       fontWeight: "800",
       fontFamily: Fonts.primary,
       color: C.text,
@@ -77,7 +76,7 @@ function createTicketStyles(theme: Theme, contentMaxWidth: number, sectionPaddin
       textAlign: "center",
     },
     intro: {
-      fontSize: Math.round(F.status * 0.65),
+      fontSize: F.base,
       fontFamily: Fonts.primary,
       color: C.textMuted,
       lineHeight: 20,
@@ -109,13 +108,13 @@ function createTicketStyles(theme: Theme, contentMaxWidth: number, sectionPaddin
       gap: 2,
     },
     queueBannerTitle: {
-      fontSize: Math.round(F.status * 0.65),
+      fontSize: F.base,
       fontWeight: "800",
       fontFamily: Fonts.primary,
       color: C.text,
     },
     queueBannerBody: {
-      fontSize: Math.round(F.status * 0.65),
+      fontSize: F.base,
       fontFamily: Fonts.primary,
       color: C.textMuted,
       lineHeight: 18,
@@ -132,13 +131,13 @@ function createTicketStyles(theme: Theme, contentMaxWidth: number, sectionPaddin
     },
     queueBannerBadgeText: {
       color: "#fff",
-      fontSize: Math.round(F.status * 0.65),
+      fontSize: F.base,
       fontWeight: "800",
       fontFamily: Fonts.primary,
     },
     introSecondary: {
       marginTop: S.xs,
-      fontSize: Math.round(F.status * 0.65),
+      fontSize: F.base,
       fontFamily: Fonts.primary,
       color: C.textSubtle,
       lineHeight: 18,
@@ -188,7 +187,7 @@ function createTicketStyles(theme: Theme, contentMaxWidth: number, sectionPaddin
       height: 3,
     },
     plateLabel: {
-      fontSize: Math.round(F.status * 0.65),
+      fontSize: F.base,
       fontWeight: "800",
       fontFamily: Fonts.primary,
       color: C.textMuted,
@@ -196,7 +195,7 @@ function createTicketStyles(theme: Theme, contentMaxWidth: number, sectionPaddin
       marginBottom: 4,
     },
     vehiclePlate: {
-      fontSize: Math.round(F.status * 0.65),
+      fontSize: F.base,
       fontWeight: "800",
       fontFamily: Fonts.primary,
       color: C.text,
@@ -221,12 +220,12 @@ function createTicketStyles(theme: Theme, contentMaxWidth: number, sectionPaddin
       borderRadius: 12,
     },
     statusPillText: {
-      fontSize: Math.round(F.status * 0.65),
+      fontSize: F.base,
       fontWeight: "800",
       fontFamily: Fonts.primary,
     },
     locationLabel: {
-      fontSize: Math.round(F.status * 0.65),
+      fontSize: F.base,
       fontWeight: "800",
       fontFamily: Fonts.primary,
       color: C.textMuted,
@@ -245,7 +244,7 @@ function createTicketStyles(theme: Theme, contentMaxWidth: number, sectionPaddin
     },
     location: {
       flex: 1,
-      fontSize: Math.round(F.status * 0.65),
+      fontSize: F.base,
       lineHeight: 18,
       fontFamily: Fonts.primary,
       color: C.text,
@@ -272,14 +271,14 @@ function createTicketStyles(theme: Theme, contentMaxWidth: number, sectionPaddin
     },
     metaKey: {
       minWidth: 84,
-      fontSize: Math.round(F.status * 0.65),
+      fontSize: F.base,
       fontFamily: Fonts.primary,
       color: C.textMuted,
       fontWeight: "600",
     },
     metaValue: {
       flex: 1,
-      fontSize: Math.round(F.status * 0.65),
+      fontSize: F.base,
       fontFamily: Fonts.primary,
       color: C.text,
       fontWeight: "700",
@@ -311,7 +310,7 @@ function createTicketStyles(theme: Theme, contentMaxWidth: number, sectionPaddin
       color: C.white,
       fontWeight: "800",
       fontFamily: Fonts.primary,
-      fontSize: Math.round(F.status * 0.65),
+      fontSize: F.base,
       textAlign: "center",
       flexShrink: 1,
     },
@@ -329,7 +328,7 @@ function createTicketStyles(theme: Theme, contentMaxWidth: number, sectionPaddin
     },
     completedText: {
       flex: 1,
-      fontSize: Math.round(F.status * 0.65),
+      fontSize: F.base,
       fontWeight: "700",
       fontFamily: Fonts.primary,
       color: C.success,
@@ -347,21 +346,21 @@ function createTicketStyles(theme: Theme, contentMaxWidth: number, sectionPaddin
       flex: 1,
     },
     loadingText: {
-      fontSize: Math.round(F.status * 0.65),
+      fontSize: F.base,
       fontFamily: Fonts.primary,
       color: C.textMuted,
       fontWeight: "600",
       textAlign: "center",
     },
     emptyTitle: {
-      fontSize: Math.round(F.secondary * 0.85),
+      fontSize: F.sm,
       fontWeight: "800",
       fontFamily: Fonts.primary,
       color: C.text,
       textAlign: "center",
     },
     emptyHint: {
-      fontSize: Math.round(F.status * 0.65),
+      fontSize: F.base,
       fontFamily: Fonts.primary,
       lineHeight: 18,
       color: C.textMuted,
@@ -390,7 +389,7 @@ export default function TicketsScreen() {
   const [valetId, setValetId] = useState<string | null>(null);
   const [queueAlertCount, setQueueAlertCount] = useState(0);
 
-  /** Conductor: puede alternar entre ingresos y devoluciones. */
+  /** Driver: can toggle between check-ins and returns. */
   const isDriverUi = user?.valetStaffRole === "DRIVER";
   const { queue } = useLocalSearchParams<{ queue?: string }>();
   const queueMode =
@@ -653,7 +652,7 @@ export default function TicketsScreen() {
 
           <Text style={styles.locationLabel}>{t(locale, "tickets.locationLabel")}</Text>
           <View style={styles.locationRow}>
-            <Ionicons name="location-sharp" size={24} color={C.primary} style={styles.locationIcon} />
+            <IconMapPin size={24} color={C.primary} style={styles.locationIcon} />
             <Text style={styles.location} maxFontSizeMultiplier={2}>
               {item.parkingName}
             </Text>
@@ -689,7 +688,7 @@ export default function TicketsScreen() {
                 accessibilityHint={t(locale, "tickets.confirmGoParkMessage")}
               >
                 <View style={styles.btnIcon}>
-                  <Ionicons name="warning-outline" size={26} color={C.white} />
+                  <IconAlertCircle size={26} color={C.white} />
                 </View>
                 <Text style={styles.btnText} maxFontSizeMultiplier={2}>
                   {t(locale, "tickets.actionGoPark")}
@@ -703,7 +702,7 @@ export default function TicketsScreen() {
                 accessibilityRole="button"
                 accessibilityHint={t(locale, "tickets.confirmRequestReturnMessage")}
               >
-                <Ionicons name="arrow-undo-outline" size={28} color={C.white} style={styles.btnIcon} />
+                <IconArrowUndo size={28} color={C.white} style={styles.btnIcon} />
                 <Text style={styles.btnText} maxFontSizeMultiplier={2}>
                   {t(locale, "tickets.actionRequestReturn")}
                 </Text>
@@ -716,7 +715,7 @@ export default function TicketsScreen() {
                 accessibilityRole="button"
                 accessibilityHint={t(locale, "tickets.confirmMarkDeliveredMessage")}
               >
-                <Ionicons name="checkmark-circle-outline" size={30} color={C.white} style={styles.btnIcon} />
+                <IconCircleCheck size={30} color={C.white} style={styles.btnIcon} />
                 <Text style={styles.btnText} maxFontSizeMultiplier={2}>
                   {t(locale, "tickets.actionMarkDelivered")}
                 </Text>
@@ -724,7 +723,7 @@ export default function TicketsScreen() {
             )}
             {item.ticketStatus === "DELIVERED" && (
               <View style={styles.completedBox}>
-                <Ionicons name="checkmark-done-circle" size={34} color={C.success} />
+                <IconCircleCheck size={34} color={C.success} />
                 <Text style={styles.completedText} maxFontSizeMultiplier={2}>
                   {t(locale, "tickets.completedLine")}
                 </Text>
@@ -759,7 +758,7 @@ export default function TicketsScreen() {
 
         <Text style={styles.locationLabel}>{t(locale, "tickets.locationLabel")}</Text>
         <View style={styles.locationRow}>
-          <Ionicons name="location-sharp" size={24} color={C.primary} style={styles.locationIcon} />
+          <IconMapPin size={24} color={C.primary} style={styles.locationIcon} />
           <Text style={styles.location} maxFontSizeMultiplier={2}>
             {item.parkingName}
           </Text>
@@ -794,7 +793,7 @@ export default function TicketsScreen() {
               accessibilityRole="button"
               accessibilityHint={t(locale, "tickets.confirmStartMessage")}
             >
-              <Ionicons name="car-outline" size={28} color={C.white} style={styles.btnIcon} />
+              <IconCar size={28} color={C.white} style={styles.btnIcon} />
               <Text style={styles.btnText} maxFontSizeMultiplier={2}>
                 {t(locale, "tickets.actionStart")}
               </Text>
@@ -807,7 +806,7 @@ export default function TicketsScreen() {
               accessibilityRole="button"
               accessibilityHint={t(locale, "tickets.confirmCompleteMessage")}
             >
-              <Ionicons name="checkmark-circle-outline" size={30} color={C.white} style={styles.btnIcon} />
+              <IconCircleCheck size={30} color={C.white} style={styles.btnIcon} />
               <Text style={styles.btnText} maxFontSizeMultiplier={2}>
                 {t(locale, "tickets.actionComplete")}
               </Text>
@@ -815,7 +814,7 @@ export default function TicketsScreen() {
           )}
           {item.status === "completed" && (
             <View style={styles.completedBox}>
-              <Ionicons name="checkmark-done-circle" size={34} color={C.success} />
+              <IconCircleCheck size={34} color={C.success} />
               <Text style={styles.completedText} maxFontSizeMultiplier={2}>
                 {t(locale, "tickets.completedLine")}
               </Text>
@@ -841,7 +840,7 @@ export default function TicketsScreen() {
     }
     return (
       <View style={[styles.centerBox, styles.centerBoxEmpty]}>
-        <Ionicons name="car-outline" size={72} color={C.primary} />
+        <IconCarOff size={64} color={C.textMuted} />
         <Text style={styles.emptyTitle}>
           {isDriverUi ? t(locale, "tickets.emptyDriver") : t(locale, "tickets.emptyReception")}
         </Text>
@@ -863,10 +862,7 @@ export default function TicketsScreen() {
         <View style={styles.contentFrame}>
         <View style={styles.header}>
           <View style={[styles.screenHeader, { paddingTop: insets.top + theme.space.md }]}>
-            <ValetBackButton
-              onPress={() => router.replace("/home")}
-              accessibilityLabel={t(locale, "common.back")}
-            />
+            <View style={{ width: 44, height: 44 }} />
             <Text style={styles.screenTitle}>
               {isDriverUi
                 ? queueMode === "parking"
@@ -874,7 +870,9 @@ export default function TicketsScreen() {
                   : t(locale, "tickets.titleDeliveryQueue")
                 : t(locale, "tickets.titleReception")}
             </Text>
-            <View style={{ width: 44 }} />
+            <Pressable onPress={() => router.replace("/home")} style={{ width: 44, alignItems: "center", justifyContent: "center" }}>
+              <IconHome2 size={24} color={C.text} />
+            </Pressable>
           </View>
         </View>
 
@@ -887,7 +885,7 @@ export default function TicketsScreen() {
               {isDriverUi && queueAlertCount > 0 ? (
                 <View style={styles.queueBanner}>
                   <View style={styles.queueBannerIcon}>
-                    <Ionicons name="notifications-outline" size={22} color={C.primary} />
+                    <IconBell size={22} color={C.primary} />
                   </View>
                   <View style={styles.queueBannerText}>
                     <Text style={styles.queueBannerTitle} maxFontSizeMultiplier={2}>

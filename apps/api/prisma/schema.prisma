@@ -1,5 +1,6 @@
 generator client {
   provider = "prisma-client-js"
+  output   = "../node_modules/@prisma/client"
 }
 
 datasource db {
@@ -36,6 +37,13 @@ enum ValetStatus {
 enum ValetStaffRole {
   RECEPTIONIST
   DRIVER
+}
+
+/** Tipo de wizard en el que está trabajando el valet. */
+enum WizardType {
+  RECEIVE
+  PARK
+  RETURN
 }
 
 enum ParkingType {
@@ -75,6 +83,11 @@ enum NotificationType {
   EMAIL
 }
 
+enum NotificationTicketType {
+  PARKING
+  DELIVERY
+}
+
 enum NotificationStatus {
   SENT
   DELIVERED
@@ -85,6 +98,7 @@ enum NotificationStatus {
 enum InvitationStatus {
   PENDING
   ACCEPTED
+  CANCELLED
   EXPIRED
 }
 
@@ -127,8 +141,8 @@ model BankCard {
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 
-  bank            Bank?    @relation(fields: [bankId], references: [id], onDelete: SetNull)
-  clients         Client[] @relation("ClientBankCards")
+  bank            Bank?      @relation(fields: [bankId], references: [id], onDelete: SetNull)
+  customers       Customer[] @relation("CustomerBankCards")
 
   @@index([bankId, isActive, sortOrder])
 }
@@ -138,9 +152,9 @@ model Company {
   legalName      String
   commercialName String?
   taxId          String        @unique
-  industry       String?
-  countryCode    String        @default("CR")
-  currency       String        @default("CRC")
+  industry       String
+  countryCode    String
+  currency       String
   timezone       String        @default("UTC")
   email          String?
   contactPhone   String?
@@ -153,9 +167,9 @@ model Company {
   updatedAt DateTime @updatedAt
 
   // relations
-  users    User[]
-  clients  Client[]
-  valets   Valet[]
+  users     User[]
+  customers Customer[]
+  valets    Valet[]
   parkings Parking[]
   vehicles Vehicle[]
   bookings Booking[]
@@ -178,14 +192,15 @@ model User {
   lastLogin      DateTime?
   isActive       Boolean    @default(true)
   appPreferences Json?
+  pushToken      String?    // Expo push notification token
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   // relations
-  company          Company?          @relation(fields: [companyId], references: [id])
-  client           Client?
-  valet            Valet?
+  company   Company?   @relation(fields: [companyId], references: [id])
+  customer Customer?
+  valet     Valet?
   auditLogs        AuditLog[]
   notificationLogs NotificationLog[]
   oneTimeCodes     OneTimeCode[]
@@ -195,8 +210,14 @@ model User {
 model Invitation {
   id              String           @id @default(uuid())
   email           String
-  companyId       String
+  companyId       String?          // Optional for SUPER_ADMIN invitations
   role            SystemRole       @default(CUSTOMER)
+  
+  // Campos opcionales para valets (cuando role = STAFF)
+  valetStaffRole  ValetStaffRole?
+  licenseNumber   String?
+  licenseExpiry   DateTime?
+  
   token           String           @unique
   status          InvitationStatus @default(PENDING)
   invitedByUserId String
@@ -206,7 +227,7 @@ model Invitation {
   updatedAt DateTime @updatedAt
 
   // relations
-  company   Company @relation(fields: [companyId], references: [id])
+  company   Company? @relation(fields: [companyId], references: [id])
   invitedBy User    @relation("InvitedBy", fields: [invitedByUserId], references: [id])
 
   @@index([email, companyId])
@@ -218,7 +239,7 @@ model Invitation {
  * |--------------------------------------------------------------------------
  */
 
-model Client {
+model Customer {
   id             String @id @default(uuid())
   companyId      String
   userId         String @unique
@@ -229,12 +250,12 @@ model Client {
   updatedAt DateTime @updatedAt
 
   // relations
-  company   Company         @relation(fields: [companyId], references: [id])
-  user      User            @relation(fields: [userId], references: [id])
-  vehicles  ClientVehicle[]
+  company   Company           @relation(fields: [companyId], references: [id])
+  user      User              @relation(fields: [userId], references: [id])
+  vehicles  CustomerVehicle[]
   bookings  Booking[]
   tickets   Ticket[]
-  bankCards BankCard[] @relation("ClientBankCards")
+  bankCards BankCard[] @relation("CustomerBankCards")
 }
 
 model Valet {
@@ -252,6 +273,11 @@ model Valet {
   staffRole        ValetStaffRole?
 
   ratingAvg        Float?
+
+  // Wizard tracking para estado en tiempo real
+  isInWizard       Boolean     @default(false)
+  wizardType       WizardType?
+  wizardStartedAt  DateTime?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -274,13 +300,12 @@ model Parking {
   companyId          String
   name               String
   address            String
-  latitude           Float?
-  longitude          Float?
+  latitude           Float
+  longitude          Float
   geofenceRadius     Float       @default(50)
   type               ParkingType @default(OPEN)
   totalSlots         Int
-  freeBenefitMinutes Int         @default(0)
-  pricePerExtraHour  Decimal?    @db.Decimal(12, 2)
+  dailyPricingConfig Json?       // Configuración por día: {monday: {freeBenefitMinutes: 180, pricePerHour: 1000}, tuesday: {...}, ...}
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -327,23 +352,23 @@ model Vehicle {
   updatedAt DateTime @updatedAt
 
   // relations
-  company  Company         @relation(fields: [companyId], references: [id])
-  owners   ClientVehicle[]
+  company  Company           @relation(fields: [companyId], references: [id])
+  owners   CustomerVehicle[]
   tickets  Ticket[]
   bookings Booking[]
 
   @@unique([plate, countryCode])
 }
 
-model ClientVehicle {
-  id        String  @id @default(uuid())
-  clientId  String
-  vehicleId String
-  isPrimary Boolean @default(false)
+model CustomerVehicle {
+  id         String  @id @default(uuid())
+  customerId String
+  vehicleId  String
+  isPrimary  Boolean @default(false)
 
   // relations
-  client  Client  @relation(fields: [clientId], references: [id])
-  vehicle Vehicle @relation(fields: [vehicleId], references: [id])
+  customer Customer @relation(fields: [customerId], references: [id])
+  vehicle  Vehicle  @relation(fields: [vehicleId], references: [id])
 }
 
 /**
@@ -390,6 +415,7 @@ model VehicleModelVariant {
   lengthCm    Int?
   widthCm     Int?
   heightCm    Int?
+  weightKg    Int?
   isActive    Boolean  @default(true)
 
   createdAt DateTime @default(now())
@@ -422,9 +448,9 @@ model Booking {
   updatedAt DateTime @updatedAt
 
   // relations
-  company Company @relation(fields: [companyId], references: [id])
-  client  Client  @relation(fields: [clientId], references: [id])
-  vehicle Vehicle @relation(fields: [vehicleId], references: [id])
+  company  Company  @relation(fields: [companyId], references: [id])
+  customer Customer @relation(fields: [clientId], references: [id])
+  vehicle  Vehicle  @relation(fields: [vehicleId], references: [id])
   parking Parking @relation(fields: [parkingId], references: [id])
   ticket  Ticket?
 }
@@ -446,11 +472,11 @@ model Ticket {
   exitTime  DateTime?
 
   // relations
-  company     Company            @relation(fields: [companyId], references: [id])
-  booking     Booking?           @relation(fields: [bookingId], references: [id])
-  parking     Parking            @relation(fields: [parkingId], references: [id])
-  vehicle     Vehicle            @relation(fields: [vehicleId], references: [id])
-  client      Client             @relation(fields: [clientId], references: [id])
+  company  Company   @relation(fields: [companyId], references: [id])
+  booking  Booking?  @relation(fields: [bookingId], references: [id])
+  parking  Parking   @relation(fields: [parkingId], references: [id])
+  vehicle  Vehicle   @relation(fields: [vehicleId], references: [id])
+  customer Customer  @relation(fields: [clientId], references: [id])
   slot        ParkingSlot?       @relation(fields: [slotId], references: [id])
   assignments TicketAssignment[]
   damages     DamageReport[]
@@ -539,17 +565,17 @@ model AuditLog {
 }
 
 model NotificationLog {
-  id     String             @id @default(uuid())
-  userId String
-  title  String
-  body   String
-  type   NotificationType
-  status NotificationStatus @default(SENT)
+  id         String               @id @default(uuid())
+  userId     String
+  title      String
+  body       String
+  type       NotificationType
+  ticketType NotificationTicketType?
+  status     NotificationStatus   @default(SENT)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  
   user User @relation(fields: [userId], references: [id])
 }
 

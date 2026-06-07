@@ -1,11 +1,12 @@
 import { ExpoConfig, ConfigContext } from 'expo/config';
+import packageJson from './package.json';
 
 export default ({ config }: ConfigContext): ExpoConfig => ({
   ...config,
   newArchEnabled: true,
   name: 'Parkit Valet',
   slug: 'parkit-valet',
-  version: '1.0.0',
+  version: packageJson.version,
   orientation: 'portrait',
   icon: './assets/icon-1024.png',
   userInterfaceStyle: 'automatic',
@@ -45,6 +46,14 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   },
   plugins: [
     'expo-router',
+    [
+      'expo-notifications',
+      {
+        icon: './assets/icon-1024.png',
+        color: '#020617',
+        sounds: ['default'],
+      },
+    ],
     [
       'expo-location',
       {

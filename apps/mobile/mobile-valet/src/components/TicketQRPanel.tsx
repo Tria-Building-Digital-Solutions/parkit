@@ -8,7 +8,7 @@ import {
   Dimensions,
   Share,
 } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import { IconAlertCircle, IconClose, IconQrCode, IconCar, IconPrint, IconShare } from '@/components/Icons';
 import QRCode from 'qrcode';
 import { t } from '@/lib/i18n';
 import type { Locale } from '@parkit/shared';
@@ -34,10 +34,14 @@ interface TicketQRPanelProps {
     border: string;
   };
   fonts: {
-    secondary: number;
-    body: number;
-    button: number;
-    title: number;
+    xs: number;
+    sm: number;
+    base: number;
+    md: number;
+    lg: number;
+    xl: number;
+    xxl: number;
+    xxxl: number;
   };
   space: {
     sm: number;
@@ -135,32 +139,102 @@ export function TicketQRPanel({
 
       await Share.share(shareData);
     } catch (err) {
-      console.error('Share error:', err);
+      // Silently ignore share errors
     }
   }, [qrDataUrl, ticketCode, keyCode, locale]);
 
-  const styles = StyleSheet.create({
+  const responsiveStyles = {
     container: {
-      flex: 1,
-      backgroundColor: isDark ? '#0F172A' : '#FFFFFF',
       padding: S.md,
     },
     header: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'space-between',
       marginBottom: S.lg,
       paddingTop: S.sm,
     },
     headerTitle: {
-      fontSize: F.secondary - 1,
-      fontWeight: '800',
-      color: C.text,
+      fontSize: F.md,
     },
     closeBtn: {
       width: 44,
       height: 44,
       borderRadius: 22,
+    },
+    qrContainer: {
+      borderRadius: 20,
+      padding: S.lg,
+    },
+    qrImage: {
+      borderRadius: 12,
+    },
+    qrPlaceholder: {
+      borderRadius: 12,
+    },
+    ticketInfo: {
+      marginTop: S.lg,
+    },
+    ticketCode: {
+      fontSize: F.lg,
+      marginBottom: S.xs,
+    },
+    ticketSubtitle: {
+      fontSize: F.base,
+    },
+    vehicleInfo: {
+      marginTop: S.md,
+      gap: S.sm,
+    },
+    vehicleText: {
+      fontSize: F.base,
+    },
+    footer: {
+      marginTop: S.lg,
+      gap: S.md,
+    },
+    actionBtn: {
+      height: 56,
+      borderRadius: 16,
+      gap: S.sm,
+    },
+    primaryBtnText: {
+      fontSize: F.md,
+    },
+    secondaryBtnText: {
+      fontSize: F.md,
+    },
+    errorContainer: {
+      padding: S.lg,
+      borderRadius: 16,
+    },
+    errorText: {
+      fontSize: F.base,
+      marginTop: S.sm,
+    },
+    retryBtn: {
+      marginTop: S.md,
+      paddingHorizontal: S.lg,
+      paddingVertical: S.sm,
+      borderRadius: 12,
+    },
+    retryText: {
+      fontSize: F.md,
+    },
+  };
+
+  const styles = StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: isDark ? '#0F172A' : '#FFFFFF',
+    },
+    header: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+    },
+    headerTitle: {
+      fontWeight: '800',
+      color: C.text,
+    },
+    closeBtn: {
       backgroundColor: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)',
       justifyContent: 'center',
       alignItems: 'center',
@@ -172,8 +246,6 @@ export function TicketQRPanel({
     },
     qrContainer: {
       backgroundColor: '#FFFFFF',
-      borderRadius: 20,
-      padding: S.lg,
       shadowColor: '#000',
       shadowOffset: { width: 0, height: 4 },
       shadowOpacity: 0.15,
@@ -184,53 +256,38 @@ export function TicketQRPanel({
     qrImage: {
       width: QR_SIZE,
       height: QR_SIZE,
-      borderRadius: 12,
     },
     qrPlaceholder: {
       width: QR_SIZE,
       height: QR_SIZE,
-      borderRadius: 12,
       backgroundColor: '#F1F5F9',
       justifyContent: 'center',
       alignItems: 'center',
     },
     ticketInfo: {
-      marginTop: S.lg,
       alignItems: 'center',
     },
     ticketCode: {
-      fontSize: F.body + 4,
       fontWeight: '800',
       color: '#0F172A',
-      marginBottom: S.xs,
     },
     ticketSubtitle: {
-      fontSize: F.secondary,
       color: '#64748B',
       textAlign: 'center',
     },
     vehicleInfo: {
-      marginTop: S.md,
       flexDirection: 'row',
       alignItems: 'center',
-      gap: S.sm,
     },
     vehicleText: {
-      fontSize: F.secondary,
       color: '#475569',
       fontWeight: '600',
     },
-    footer: {
-      marginTop: S.lg,
-      gap: S.md,
-    },
+    footer: {},
     actionBtn: {
-      height: 56,
-      borderRadius: 16,
       flexDirection: 'row',
       alignItems: 'center',
       justifyContent: 'center',
-      gap: S.sm,
     },
     primaryBtn: {
       backgroundColor: C.primary,
@@ -241,36 +298,25 @@ export function TicketQRPanel({
       borderColor: C.border,
     },
     primaryBtnText: {
-      fontSize: F.secondary - 1,
       fontWeight: '800',
       color: '#FFFFFF',
     },
     secondaryBtnText: {
-      fontSize: F.secondary - 1,
       fontWeight: '800',
       color: isDark ? '#CBD5E1' : '#475569',
     },
     errorContainer: {
-      padding: S.lg,
       backgroundColor: 'rgba(239, 68, 68, 0.1)',
-      borderRadius: 16,
       alignItems: 'center',
     },
     errorText: {
-      fontSize: F.secondary,
       color: '#EF4444',
       textAlign: 'center',
-      marginTop: S.sm,
     },
     retryBtn: {
-      marginTop: S.md,
-      paddingHorizontal: S.lg,
-      paddingVertical: S.sm,
       backgroundColor: C.primary,
-      borderRadius: 12,
     },
     retryText: {
-      fontSize: F.secondary - 1,
       fontWeight: '700',
       color: '#FFFFFF',
     },
@@ -278,10 +324,10 @@ export function TicketQRPanel({
 
   if (generating) {
     return (
-      <View style={styles.container}>
+      <View style={[styles.container, responsiveStyles.container]}>
         <View style={styles.content}>
           <ActivityIndicator size="large" color={C.primary} />
-          <Text style={[styles.ticketSubtitle, { marginTop: S.md }]}>
+          <Text style={[styles.ticketSubtitle, responsiveStyles.ticketSubtitle, { marginTop: S.md }]}>
             {t(locale, 'receive.qrGenerating')}
           </Text>
         </View>
@@ -291,13 +337,13 @@ export function TicketQRPanel({
 
   if (error) {
     return (
-      <View style={styles.container}>
+      <View style={[styles.container, responsiveStyles.container]}>
         <View style={styles.content}>
-          <View style={styles.errorContainer}>
-            <Ionicons name="alert-circle" size={48} color="#EF4444" />
-            <Text style={styles.errorText}>{error}</Text>
-            <Pressable style={styles.retryBtn} onPress={generateQR}>
-              <Text style={styles.retryText}>{t(locale, 'common.retry')}</Text>
+          <View style={[styles.errorContainer, responsiveStyles.errorContainer]}>
+            <IconAlertCircle size={48} color="#EF4444" />
+            <Text style={[styles.errorText, responsiveStyles.errorText]}>{error}</Text>
+            <Pressable style={[styles.retryBtn, responsiveStyles.retryBtn]} onPress={generateQR}>
+              <Text style={[styles.retryText, responsiveStyles.retryText]}>{t(locale, 'common.retry')}</Text>
             </Pressable>
           </View>
         </View>
@@ -306,43 +352,43 @@ export function TicketQRPanel({
   }
 
   return (
-    <View style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.headerTitle}>{t(locale, 'receive.ticketQrTitle')}</Text>
+    <View style={[styles.container, responsiveStyles.container]}>
+      <View style={[styles.header, responsiveStyles.header]}>
+        <Text style={[styles.headerTitle, responsiveStyles.headerTitle]}>{t(locale, 'receive.ticketQrTitle')}</Text>
         {onClose && (
-          <Pressable style={styles.closeBtn} onPress={onClose}>
-            <Ionicons name="close" size={24} color={C.text} />
+          <Pressable style={[styles.closeBtn, responsiveStyles.closeBtn]} onPress={onClose}>
+            <IconClose size={24} color={C.text} />
           </Pressable>
         )}
       </View>
 
       <View style={styles.content}>
-        <View style={styles.qrContainer}>
+        <View style={[styles.qrContainer, responsiveStyles.qrContainer]}>
           {qrDataUrl ? (
             <>
               {/* eslint-disable-next-line @typescript-eslint/no-require-imports */}
               <Text style={{ display: 'none' }}>QR Placeholder</Text>
-              <View style={[styles.qrPlaceholder, { backgroundColor: '#FFFFFF' }]}>
-                <Ionicons name="qr-code" size={QR_SIZE * 0.6} color="#0F172A" />
+              <View style={[styles.qrPlaceholder, responsiveStyles.qrPlaceholder, { backgroundColor: '#FFFFFF' }]}>
+                <IconQrCode size={QR_SIZE * 0.6} color="#0F172A" />
               </View>
             </>
           ) : (
-            <View style={styles.qrPlaceholder}>
-              <Ionicons name="qr-code-outline" size={48} color="#94A3B8" />
+            <View style={[styles.qrPlaceholder, responsiveStyles.qrPlaceholder]}>
+              <IconQrCode size={48} color="#94A3B8" />
             </View>
           )}
 
-          <View style={styles.ticketInfo}>
-            <Text style={styles.ticketCode}>{ticketCode}</Text>
+          <View style={[styles.ticketInfo, responsiveStyles.ticketInfo]}>
+            <Text style={[styles.ticketCode, responsiveStyles.ticketCode]}>{ticketCode}</Text>
             {keyCode && keyCode !== ticketCode && (
-              <Text style={styles.ticketSubtitle}>
+              <Text style={[styles.ticketSubtitle, responsiveStyles.ticketSubtitle]}>
                 {t(locale, 'receive.keyCodeLabel')}: {keyCode}
               </Text>
             )}
             {vehiclePlate && (
-              <View style={styles.vehicleInfo}>
-                <Ionicons name="car-outline" size={18} color="#64748B" />
-                <Text style={styles.vehicleText}>
+              <View style={[styles.vehicleInfo, responsiveStyles.vehicleInfo]}>
+                <IconCar size={18} color="#64748B" />
+                <Text style={[styles.vehicleText, responsiveStyles.vehicleText]}>
                   {vehicleBrand} {vehicleModel} • {vehiclePlate}
                 </Text>
               </View>
@@ -351,23 +397,23 @@ export function TicketQRPanel({
         </View>
       </View>
 
-      <View style={styles.footer}>
+      <View style={[styles.footer, responsiveStyles.footer]}>
         {onPrint && (
           <Pressable
-            style={({ pressed }) => [styles.actionBtn, styles.secondaryBtn, pressed && { opacity: 0.9 }]}
+            style={({ pressed }) => [styles.actionBtn, responsiveStyles.actionBtn, styles.secondaryBtn, pressed && { opacity: 0.9 }]}
             onPress={onPrint}
           >
-            <Ionicons name="print-outline" size={20} color={isDark ? '#CBD5E1' : '#475569'} />
-            <Text style={styles.secondaryBtnText}>{t(locale, 'receive.printTicket')}</Text>
+            <IconPrint size={20} color={isDark ? '#CBD5E1' : '#475569'} />
+            <Text style={[styles.secondaryBtnText, responsiveStyles.secondaryBtnText]}>{t(locale, 'receive.printTicket')}</Text>
           </Pressable>
         )}
 
         <Pressable
-          style={({ pressed }) => [styles.actionBtn, styles.primaryBtn, pressed && { opacity: 0.9 }]}
+          style={({ pressed }) => [styles.actionBtn, responsiveStyles.actionBtn, styles.primaryBtn, pressed && { opacity: 0.9 }]}
           onPress={handleShare}
         >
-          <Ionicons name="share-outline" size={20} color="#FFFFFF" />
-          <Text style={styles.primaryBtnText}>{t(locale, 'receive.shareTicket')}</Text>
+          <IconShare size={20} color="#FFFFFF" />
+          <Text style={[styles.primaryBtnText, responsiveStyles.primaryBtnText]}>{t(locale, 'receive.shareTicket')}</Text>
         </Pressable>
       </View>
     </View>

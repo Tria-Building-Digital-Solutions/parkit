@@ -1,16 +1,8 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
-import Link from "next/link";
-import dynamic from "next/dynamic";
-import { Plus } from "@/lib/premiumIcons";
+import { useCallback, useMemo } from "react";
 import { useRouter } from "next/navigation";
-import { PageLoader } from "@/components/PageLoader";
-
-const DashboardDataTablePage = dynamic(
-  () => import("@/components/DashboardDataTablePage").then((m) => ({ default: m.DashboardDataTablePage })),
-  { ssr: false, loading: () => <div className="flex flex-1 items-center justify-center p-8"><PageLoader /></div> }
-);
+import { DashboardDataTablePage } from "@/components/DashboardDataTablePage";
 import { DetailField, DetailSectionLabel } from "@/components/RowDetailModal";
 import { useTranslation } from "@/hooks/useTranslation";
 import { apiClient } from "@/lib/api";
@@ -50,35 +42,6 @@ export default function VehiclesPage() {
   const canManage = superAdmin || user?.systemRole === "ADMIN";
   const router = useRouter();
 
-  // Show create vehicle button only if company has at least one ADMIN or CUSTOMER employee.
-  const [hasEligibleEmployees, setHasEligibleEmployees] = useState<boolean | null>(null);
-
-  useEffect(() => {
-    let cancelled = false;
-    if (!canManage) {
-      setHasEligibleEmployees(false);
-      return;
-    }
-    (async () => {
-      try {
-        const params = new URLSearchParams();
-        params.set("excludeValets", "true");
-        // Customers only (CUSTOMER); vehicles are associated with these beneficiaries.
-        params.append("systemRole", "CUSTOMER");
-        params.set("includeInactives", "true");
-        const users = await apiClient.get<Array<{ id?: string }>>(`/users?${params.toString()}`);
-        if (!cancelled) {
-          setHasEligibleEmployees(Array.isArray(users) && users.length > 0);
-        }
-      } catch {
-        if (!cancelled) setHasEligibleEmployees(false);
-      }
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, [canManage]);
-
   const onUpdate = useCallback(async (row: VehicleRow) => {
     if (!row.id) return;
     const payload: { plate?: string; brand?: string; model?: string; year?: number } = {};
@@ -107,9 +70,9 @@ export default function VehiclesPage() {
         field: "brand" as const,
         editable: canManage,
         cellEditorCatalogType: "make",
-        valueSetter: (row, value) => {
-          (row as VehicleRow).brand = value as string;
-          (row as VehicleRow).model = "";
+        valueSetter: (row: VehicleRow, value: unknown) => {
+          row.brand = value as string;
+          row.model = "";
         },
       },
       {
@@ -143,7 +106,7 @@ export default function VehiclesPage() {
           const widthM = dims?.widthCm != null ? Number((dims.widthCm / 100).toFixed(2)) : null;
           const heightM = dims?.heightCm != null ? Number((dims.heightCm / 100).toFixed(2)) : null;
           return (
-            <dl className="grid grid-cols-3 gap-x-4 gap-y-3">
+            <dl className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-4 gap-y-3">
               <DetailSectionLabel text={t("common.additionalInfo")} />
               <DetailField label={t("vehicles.color")} value={formatVehicleColorLabel(vehicle.color, locale)} />
               {lengthM != null && <DetailField label={t("vehicles.lengthM")} value={`${lengthM} m`} />}
@@ -156,19 +119,6 @@ export default function VehiclesPage() {
         }}
         onEdit={canManage ? (row) => router.push(`/dashboard/vehicles/${row.id}/edit`) : undefined}
         onUpdate={canManage ? onUpdate : undefined}
-        headerAction={
-          canManage && hasEligibleEmployees
-            ? (
-              <Link
-                href="/dashboard/vehicles/new"
-                className="group inline-flex items-center gap-2 px-4 min-h-[42px] rounded-lg bg-company-primary text-white text-sm font-medium hover:bg-company-primary focus:outline-none focus:ring-2 focus:ring-company-primary focus:ring-offset-2 focus:ring-offset-page transition-colors shadow-sm"
-              >
-                <Plus className="w-4 h-4 transition-transform duration-300 group-hover:rotate-90" strokeWidth={2.25} />
-                {t("common.add")}
-              </Link>
-            )
-            : undefined
-        }
       />
     </>
   );

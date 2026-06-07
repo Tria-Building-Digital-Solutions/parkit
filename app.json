@@ -4,6 +4,15 @@
       [
         "@react-native-google-signin/google-signin"
       ]
-    ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "115efac0-434c-4277-a1cb-4bcffba3b985"
+      }
+    },
+    "owner": "lmhq94",
+    "android": {
+      "package": "com.lmhq94.parkit"
+    }
   }
 }

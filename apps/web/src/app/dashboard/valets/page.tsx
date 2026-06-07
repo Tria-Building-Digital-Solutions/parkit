@@ -1,18 +1,12 @@
 "use client";
 
 import { useCallback, useMemo, useState } from "react";
-import Link from "next/link";
-import dynamic from "next/dynamic";
-import { MailOpen, Plus } from "@/lib/premiumIcons";
+import { MailOpen, UserPlus } from "@/lib/premiumIcons";
 import { useRouter } from "next/navigation";
 import type { ICellRendererParams } from "ag-grid-community";
-import { PageLoader } from "@/components/PageLoader";
-
-const DashboardDataTablePage = dynamic(
-  () => import("@/components/DashboardDataTablePage").then((m) => ({ default: m.DashboardDataTablePage })),
-  { ssr: false, loading: () => <div className="flex flex-1 items-center justify-center p-8"><PageLoader /></div> }
-);
+import { DashboardDataTablePage } from "@/components/DashboardDataTablePage";
 import { DetailField, DetailSectionLabel } from "@/components/RowDetailModal";
+import { InviteValetModal } from "@/components/InviteValetModal";
 import { useTranslation } from "@/hooks/useTranslation";
 import { apiClient } from "@/lib/api";
 import { formatDateTimeDisplay } from "@/lib/dateFormat";
@@ -55,7 +49,7 @@ const VALET_STATUS_OPTIONS = [
   { value: "AWAY", key: "AWAY" },
 ] as const;
 
-/** Activo / inactivo (cuenta de usuario), mismo criterio que empleados. */
+/** Active / inactive (user account), same criteria as employees. */
 function ValetAccountStatusCell(
   params: ICellRendererParams<ValetRow> & { t: (key: string) => string }
 ) {
@@ -88,9 +82,10 @@ export default function ValetsPage() {
   const superAdmin = isSuperAdmin(user);
   const router = useRouter();
   const [refreshToken, setRefreshToken] = useState(0);
-  /** Filtro de cuenta de usuario: activo / inactivo (antes que disponibilidad). */
+  const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
+  /** User account filter: active / inactive (before availability). */
   const [accountFilters, setAccountFilters] = useState<string[]>([]);
-  /** Filtro de disponibilidad del valet (AVAILABLE / BUSY / AWAY). */
+  /** Valet availability filter (AVAILABLE / BUSY / AWAY). */
   const [availabilityFilters, setAvailabilityFilters] = useState<string[]>([]);
 
   const fetchData = useCallback(
@@ -170,7 +165,7 @@ export default function ValetsPage() {
         render: (valet: { user?: { email?: string } }) => valet.user?.email ?? "—",
         field: "userEmail",
         editable: superAdmin,
-        linkType: "email",
+        linkType: "email" as const,
         valueGetter: (valet: ValetRow) => valet.user?.email,
         valueSetter: (valet: ValetRow, v: unknown) => {
           if (valet.user) valet.user.email = String(v ?? "");
@@ -255,7 +250,7 @@ export default function ValetsPage() {
         renderRowDetail={
           superAdmin
             ? (valet) => (
-                <dl className="grid grid-cols-3 gap-x-4 gap-y-3">
+                <dl className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-4 gap-y-3">
                   {valet.user?.pendingInvitation && (
                     <>
                       <DetailSectionLabel text={t("tables.employees.pendingInvitation")} />
@@ -322,15 +317,23 @@ export default function ValetsPage() {
         onUpdate={superAdmin ? onUpdate : undefined}
         headerAction={
           superAdmin ? (
-            <Link
-              href="/dashboard/valets/new"
+            <button
+              type="button"
+              onClick={() => setIsInviteModalOpen(true)}
               className="group inline-flex items-center gap-2 px-4 min-h-[42px] rounded-lg bg-company-primary text-white text-sm font-medium hover:bg-company-primary focus:outline-none focus:ring-2 focus:ring-company-primary focus:ring-offset-2 focus:ring-offset-page transition-colors shadow-sm"
             >
-              <Plus className="w-4 h-4 transition-transform duration-300 group-hover:rotate-90" strokeWidth={2.25} />
-              {t("common.add")}
-            </Link>
+              <UserPlus className="w-4 h-4 transition-transform duration-300 group-hover:scale-110" strokeWidth={2.25} />
+              {t("users.inviteUser")}
+            </button>
           ) : undefined
         }
+      />
+      <InviteValetModal
+        open={isInviteModalOpen}
+        onClose={() => setIsInviteModalOpen(false)}
+        onSuccess={() => {
+          setRefreshToken((prev) => prev + 1);
+        }}
       />
     </>
   );

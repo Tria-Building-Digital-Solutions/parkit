@@ -7,7 +7,7 @@ import { getResendClient } from "./resendClient";
 
 const BASE_URL = process.env.INVITATION_BASE_URL || "http://localhost:3000";
 const FROM_EMAIL = process.env.INVITATION_FROM_EMAIL || "Parkit <onboarding@resend.dev>";
-const SUPPORT_EMAIL = process.env.SUPPORT_EMAIL || "soporte@parkitcr.com";
+const SUPPORT_EMAIL = process.env.SUPPORT_EMAIL;
 const PARKIT_LOGO_URL = process.env.PARKIT_LOGO_URL || "";
 
 function buildResetLink(token: string): string {
@@ -46,10 +46,10 @@ export async function sendPasswordResetEmail(params: {
   const cardBorder = "rgba(0, 0, 0, 0.08)";
   const supportMailto = `mailto:${SUPPORT_EMAIL}`;
   const fontFamily =
-    "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif";
+    "'DM Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif";
   const headerLogoHtml = PARKIT_LOGO_URL
     ? `<img src="${PARKIT_LOGO_URL}" alt="Parkit" width="168" height="56" style="display: block; max-height: 56px; width: auto;" />`
-    : `<span style="font-size: 2.25rem; font-weight: 700; letter-spacing: -0.03em;"><span style="color: ${textPrimary};">park</span><span style="color: ${companyPrimary};">it.</span></span>`;
+    : `<span style="font-size: 40px; font-weight: 900; letter-spacing: -0.06em; line-height: 1.1;"><span style="color: #ffffff;">park</span><span style="color: #3b82f6;">it.</span></span>`;
 
   const html = `
 <!DOCTYPE html>
@@ -59,7 +59,7 @@ export async function sendPasswordResetEmail(params: {
   <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:${pageBg};padding:24px 16px;">
     <tr><td align="center">
       <table role="presentation" width="100%" style="max-width:560px;background:#fff;border-radius:16px;border:1px solid ${cardBorder};">
-        <tr><td style="padding:24px 32px;border-bottom:1px solid ${cardBorder};">${headerLogoHtml}</td></tr>
+        <tr><td style="padding:32px 40px;border-bottom:1px solid rgba(255, 255, 255, 0.08);background: linear-gradient(135deg, #0a0a0f 0%, #0f172a 100%);">${headerLogoHtml}</td></tr>
         <tr><td style="padding:32px;">
           <h1 style="margin:0 0 8px;font-size:1.375rem;font-weight:600;">Restablecer contraseña</h1>
           <p style="margin:0 0 24px;color:${textMuted};font-size:0.9375rem;">Parkit · recuperación de acceso</p>
@@ -70,7 +70,9 @@ export async function sendPasswordResetEmail(params: {
           <p style="margin:16px 0 0;font-size:0.8125rem;color:${textMuted};word-break:break-all;">${resetLink}</p>
         </td></tr>
         <tr><td style="padding:20px 32px;background:${pageBg};border-top:1px solid ${cardBorder};text-align:center;">
-          <p style="margin:0;font-size:0.75rem;color:${textMuted};">¿Dudas? <a href="${supportMailto}" style="color:${companyPrimary};text-decoration:none;">Soporte Parkit</a></p>
+          <p style="margin:0 0 8px;font-size:0.8125rem;color:${textMuted};">¿Necesitas ayuda? <a href="${supportMailto}" style="color:${companyPrimary};text-decoration:none;font-weight:500;">Contacta soporte</a></p>
+          <p style="margin:0;font-size:0.6875rem;color:${textMuted};">© ${new Date().getFullYear()} Parkit. Todos los derechos reservados.</p>
+          <p style="margin:8px 0 0;font-size:0.6875rem;color:${textMuted};">Hecho con <span style="color:#ef4444;">&hearts;</span> por el equipo de Parkit</p>
         </td></tr>
       </table>
     </td></tr>
@@ -92,9 +94,6 @@ Soporte: ${SUPPORT_EMAIL}`;
 
   const client = getResendClient();
   if (!client) {
-    console.log("[Password reset email not sent - no RESEND_API_KEY]");
-    console.log(`  Original To: ${to}`);
-    console.log(`  Reset link: ${resetLink}`);
     return { sent: true };
   }
 
@@ -107,13 +106,11 @@ Soporte: ${SUPPORT_EMAIL}`;
       text,
     });
     if (error) {
-      console.error("[Password reset email error]", error);
       return { sent: false, error: error.message };
     }
     return { sent: true };
   } catch (err) {
     const message = err instanceof Error ? err.message : "Unknown error";
-    console.error("[Password reset email error]", err);
     return { sent: false, error: message };
   }
 }

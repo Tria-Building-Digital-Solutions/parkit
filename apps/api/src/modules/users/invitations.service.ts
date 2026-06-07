@@ -1,6 +1,6 @@
 import { prisma } from "../../shared/prisma";
-import { SystemRole, InvitationStatus } from "@prisma/client";
-import { signToken } from "../auth/auth.utils";
+import { SystemRole, InvitationStatus, ValetStaffRole } from "@prisma/client";
+import { signInvitationToken } from "../auth/auth.utils";
 import { sendInvitationStaffEmail } from "../../shared/email/invitationStaffEmail";
 import { sendInvitationEmployeeEmail } from "../../shared/email/invitationEmployeeEmail";
 
@@ -11,11 +11,15 @@ export class InvitationsService {
    */
   static async sendInvitation(data: {
     email: string;
-    companyId: string;
+    companyId: string | null;
     role: SystemRole;
     invitedByUserId: string;
+    // Optional data for valets
+    valetStaffRole?: ValetStaffRole;
+    licenseNumber?: string;
+    licenseExpiry?: string;
   }) {
-    const { email, companyId, role, invitedByUserId } = data;
+    const { email, companyId, role, invitedByUserId, valetStaffRole, licenseNumber, licenseExpiry } = data;
 
     // Check if user already exists
     const existingUser = await prisma.user.findUnique({
@@ -30,46 +34,53 @@ export class InvitationsService {
     expiresAt.setDate(expiresAt.getDate() + 7);
 
     // Create unique token for this invitation
-    const token = signToken({
+    const token = signInvitationToken({
       email,
       companyId,
       role,
-      type: "INVITATION",
     });
 
     // Create record in Invitation table
     const invitation = await prisma.invitation.create({
       data: {
         email,
-        companyId,
         role,
         token,
         invitedByUserId,
         expiresAt,
         status: InvitationStatus.PENDING,
-      },
-      include: {
-        company: {
-          select: { commercialName: true, legalName: true },
-        },
+        ...(role === SystemRole.STAFF ? {} : { companyId: companyId || null }),
+        ...(valetStaffRole && { valetStaffRole }),
+        ...(licenseNumber && { licenseNumber }),
+        ...(licenseExpiry && { licenseExpiry: new Date(licenseExpiry) }),
       },
     });
 
-    const companyName = invitation.company.commercialName || invitation.company.legalName;
+    // Fetch company name if companyId exists
+    let companyName: string | null = null;
+    if (companyId) {
+      const company = await prisma.company.findUnique({
+        where: { id: companyId },
+        select: { commercialName: true, legalName: true },
+      });
+      companyName = company?.commercialName || company?.legalName || null;
+    }
+
     const registerUrl = `${process.env.WEB_APP_URL || "http://localhost:3000"}/register?token=${token}`;
 
     // Send the appropriate email based on role
     if (role === SystemRole.CUSTOMER) {
       await sendInvitationEmployeeEmail({
         to: email,
-        companyName,
+        companyName: companyName || "Parkit",
         invitationLink: registerUrl,
       });
     } else {
       await sendInvitationStaffEmail({
         to: email,
-        companyName,
+        companyName: companyName || "Parkit",
         invitationLink: registerUrl,
+        isValet: role === SystemRole.STAFF, // Show app download buttons for valets
       });
     }
 
@@ -91,17 +102,21 @@ export class InvitationsService {
   static async revoke(invitationId: string, companyId: string) {
     return prisma.invitation.updateMany({
       where: { id: invitationId, companyId, status: InvitationStatus.PENDING },
-      data: { status: InvitationStatus.EXPIRED }, // revoked
+      data: { status: InvitationStatus.CANCELLED },
     });
   }
 
   static async sendInvitationsBatch(data: {
     emails: string[];
-    companyId: string;
+    companyId: string | null;
     role: SystemRole;
     invitedByUserId: string;
+    // Optional data for valets (applied to all emails in the batch)
+    valetStaffRole?: ValetStaffRole;
+    licenseNumber?: string;
+    licenseExpiry?: string;
   }) {
-    const { emails, companyId, role, invitedByUserId } = data;
+    const { emails, companyId, role, invitedByUserId, valetStaffRole, licenseNumber, licenseExpiry } = data;
     const results: Array<{
       email: string;
       success: boolean;
@@ -116,6 +131,9 @@ export class InvitationsService {
           companyId,
           role,
           invitedByUserId,
+          valetStaffRole,
+          licenseNumber,
+          licenseExpiry,
         });
         results.push({ email, success: true, invitation });
       } catch (error: unknown) {

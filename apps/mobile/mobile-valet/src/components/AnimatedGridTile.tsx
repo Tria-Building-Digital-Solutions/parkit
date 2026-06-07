@@ -1,5 +1,4 @@
 import { View, Text, Pressable, Platform, StyleSheet, Animated } from "react-native";
-import { Ionicons } from "@expo/vector-icons";
 import { BlurView } from "expo-blur";
 import type { ComponentType } from "react";
 import { useEffect, useRef } from "react";
@@ -7,8 +6,6 @@ import { useValetTheme } from "@/theme/valetTheme";
 import {
   parkitTilePalette,
   tileIconHex,
-  TILE_ICON_BG_LIGHT,
-  TILE_ICON_BG_DARK,
   TILE_ICON_SIZE,
   type GridVariant,
 } from "@/lib/homeUtils";
@@ -27,6 +24,7 @@ type Styles = {
   tileWorkflow: any;
   tileBadge: any;
   tileBadgeText: any;
+  tileFilled: any;
   tileIconWrap: any;
   tileTitle: any;
   tileSub: any;
@@ -35,9 +33,9 @@ type Styles = {
 
 interface AnimatedGridTileProps {
   variant: GridVariant;
-  icon?: keyof typeof Ionicons.glyphMap;
-  lucideIcon?: TileLucideIcon;
+  lucideIcon: TileLucideIcon;
   iconSize?: number;
+  iconStrokeWidth?: number;
   title: string;
   sub: string;
   badgeCount?: number;
@@ -45,18 +43,17 @@ interface AnimatedGridTileProps {
   styles: Styles;
   isDark: boolean;
   index: number;
-  /** Escala de texto para accesibilidad (1.0 = normal, 1.4 = máximo) */
   textScale?: number;
-  /** Reducir animaciones para accesibilidad */
   reduceMotion?: boolean;
+  centerContent?: boolean;
 }
 
 export function AnimatedGridTile(props: AnimatedGridTileProps) {
   const {
     variant,
-    icon,
     lucideIcon: LucideCmp,
     iconSize = TILE_ICON_SIZE,
+    iconStrokeWidth = 2.25,
     title,
     sub,
     badgeCount = 0,
@@ -66,6 +63,7 @@ export function AnimatedGridTile(props: AnimatedGridTileProps) {
     index,
     textScale = 1,
     reduceMotion = false,
+    centerContent = false,
   } = props;
 
   const theme = useValetTheme();
@@ -73,8 +71,14 @@ export function AnimatedGridTile(props: AnimatedGridTileProps) {
 
   const P = parkitTilePalette(isDark);
   const iconColor = tileIconHex(variant, P);
-  const iconBubbleBg = isDark ? TILE_ICON_BG_DARK[variant] : TILE_ICON_BG_LIGHT[variant];
   const glowColor = iconColor;
+  const isFilled = badgeCount > 0;
+
+  // Calculate responsive dimensions
+  const responsiveIconSize = iconSize;
+  const responsiveIconWrapSize = 56;
+  const responsiveIconWrapRadius = responsiveIconWrapSize / 2;
+  const responsiveStrokeWidth = iconStrokeWidth;
 
   // Simple fade-in animation using React Native Animated
   const fadeAnim = useRef(new Animated.Value(reduceMotion ? 1 : 0)).current;
@@ -108,7 +112,6 @@ export function AnimatedGridTile(props: AnimatedGridTileProps) {
     onPress();
   };
 
-  // Estilos para glow effect
   const glowContainerStyle = [
     StyleSheet.absoluteFill,
     {
@@ -136,12 +139,14 @@ export function AnimatedGridTile(props: AnimatedGridTileProps) {
           variant === "profile" && styles.tileProfile,
           variant === "settings" && styles.tileSettings,
           variant === "workflow" && styles.tileWorkflow,
+          badgeCount > 0 && styles.tileFilled,
           pressed && styles.pressed,
           textScale > 1 && { paddingVertical: 20 + (textScale - 1) * 10 },
+          centerContent && { paddingTop: 28 },
         ]}
         onPress={handlePress}
         accessibilityRole="button"
-        accessibilityLabel={`${title}. ${sub}`}
+        accessibilityLabel={`${title}. ${badgeCount > 0 ? badgeCount : sub}`}
       >
         {/* Glow effect overlay */}
         <View style={glowContainerStyle} pointerEvents="none" />
@@ -156,41 +161,25 @@ export function AnimatedGridTile(props: AnimatedGridTileProps) {
           />
         )}
 
-        {badgeCount > 0 ? (
-          <View style={[styles.tileBadge, textScale > 1 && { minWidth: 28 + (textScale - 1) * 10, height: 28 + (textScale - 1) * 10, borderRadius: 14 + (textScale - 1) * 5 }]}>
-            <Text style={[styles.tileBadgeText, textScale > 1 && { fontSize: 11 + (textScale - 1) * 6 }]}>
-              {badgeCount > 99 ? "99+" : String(badgeCount)}
-            </Text>
-          </View>
-        ) : null}
-
         <View
           style={[
             styles.tileIconWrap,
-            { backgroundColor: iconBubbleBg },
-            textScale > 1 && { width: 56 + (textScale - 1) * 20, height: 56 + (textScale - 1) * 20, borderRadius: 28 + (textScale - 1) * 10 },
+            { backgroundColor: "transparent" },
+            textScale > 1 && { width: responsiveIconWrapSize, height: responsiveIconWrapSize, borderRadius: responsiveIconWrapRadius },
+            centerContent && { marginBottom: 12 },
           ]}
         >
-          {LucideCmp ? (
-            <LucideCmp
-              size={iconSize + (textScale - 1) * 15}
-              color={iconColor}
-              strokeWidth={2.25}
-            />
-          ) : (
-            <Ionicons
-              name={icon ?? "ellipse-outline"}
-              size={iconSize + (textScale - 1) * 15}
-              color={iconColor}
-            />
-          )}
+          <LucideCmp
+            size={responsiveIconSize}
+            color={isFilled ? "#fff" : iconColor}
+            strokeWidth={responsiveStrokeWidth}
+          />
         </View>
 
         <Text
           style={[
             styles.tileTitle,
-            { fontFamily: Fonts.primary },
-            textScale > 1 && { fontSize: Math.round(12 * textScale) },
+            { fontFamily: Fonts.primary, color: badgeCount > 0 ? "#fff" : (theme.isDark ? "#fff" : undefined) },
           ]}
           numberOfLines={2}
           maxFontSizeMultiplier={1.5 + (textScale - 1) * 1}
@@ -200,13 +189,12 @@ export function AnimatedGridTile(props: AnimatedGridTileProps) {
         <Text
           style={[
             styles.tileSub,
-            { fontFamily: Fonts.primary },
-            textScale > 1 && { fontSize: Math.round(12 * textScale), lineHeight: Math.round(15 * textScale) }
+            { fontFamily: Fonts.primary, color: badgeCount > 0 ? "#fff" : (theme.isDark ? "rgba(255,255,255,0.7)" : undefined) },
           ]}
           numberOfLines={2}
           maxFontSizeMultiplier={1.4 + (textScale - 1) * 0.9}
         >
-          {sub}
+          {badgeCount > 0 ? (badgeCount > 99 ? "99+" : String(badgeCount)) : sub}
         </Text>
       </Pressable>
     </Animated.View>

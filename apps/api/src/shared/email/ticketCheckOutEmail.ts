@@ -4,7 +4,7 @@
 
 const FROM_EMAIL =
   process.env.TICKET_CHECKOUT_FROM_EMAIL || "Parkit <onboarding@resend.dev>";
-const SUPPORT_EMAIL = process.env.SUPPORT_EMAIL || "soporte@parkitcr.com";
+const SUPPORT_EMAIL = process.env.SUPPORT_EMAIL;
 
 export interface SendTicketCheckOutParams {
   to: string;
@@ -43,10 +43,6 @@ export async function sendTicketCheckOutEmail(
  
   const apiKey = process.env.RESEND_API_KEY;
   if (!apiKey || apiKey === "re_xxxxxxxxx") {
-    console.log("[Ticket check-out email not sent - no RESEND_API_KEY]");
-    console.log(`  Original To: ${to}`);
-    console.log(`  Ticket code: ${ticketCode}`);
-    console.log(`  Total: ${totalPrice}`);
     return { sent: true };
   }
 
@@ -57,7 +53,7 @@ export async function sendTicketCheckOutEmail(
     <meta content="text/html; charset=UTF-8" http-equiv="Content-Type" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <style>
-      @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;450;500;600;650;700&family=JetBrains+Mono:wght@500;600&display=swap');
+      @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@700;900&family=JetBrains+Mono:wght@500;600&display=swap');
       @media only screen and (max-width: 480px) {
         .container { width: 100% !important; }
         .content { padding: 40px 28px !important; }
@@ -67,7 +63,7 @@ export async function sendTicketCheckOutEmail(
       }
     </style>
   </head>
-  <body style="font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background-color: #f8fafc; margin: 0; padding: 0; -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale;">
+  <body style="font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background-color: #f8fafc; margin: 0; padding: 0; -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale;">
     <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="background-color: #f8fafc;">
       <tr>
         <td align="center" style="padding: 48px 20px;">
@@ -75,12 +71,12 @@ export async function sendTicketCheckOutEmail(
           <table role="presentation" class="container" width="100%" cellspacing="0" cellpadding="0" border="0" style="max-width: 560px; background: #ffffff; border-radius: 20px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.05), 0 10px 30px -5px rgba(0,0,0,0.08);">
             
             <tr>
-              <td style="background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); padding: 44px 40px;">
+              <td style="background: linear-gradient(135deg, #0a0a0f 0%, #0f172a 100%); padding: 32px 40px; border-bottom: 1px solid rgba(255, 255, 255, 0.08);">
                 <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
                   <tr>
                     <td>
-                      <h1 class="brand-text" style="font-size: 34px; font-weight: 700; color: #ffffff; margin: 0; letter-spacing: -0.02em;">
-                        park<span style="color: #2563eb;">it.</span>
+                      <h1 class="brand-text" style="font-size: 40px; font-weight: 900; color: #ffffff; margin: 0; letter-spacing: -0.06em; line-height: 1.1; font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">
+                        park<span style="color: #3b82f6;">it.</span>
                       </h1>
                     </td>
                   </tr>
@@ -172,11 +168,14 @@ export async function sendTicketCheckOutEmail(
                 <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
                   <tr>
                     <td style="text-align: center;">
-                      <p style="margin: 0 0 6px; font-size: 14px; color: #64748b;">
-                        ¿Tienes dudas? <a href="mailto:${SUPPORT_EMAIL}" style="color: #2563eb; text-decoration: none; font-weight: 500;">Contacta soporte</a>
+                      <p style="margin: 0 0 8px; font-size: 13px; color: #64748b;">
+                        ¿Necesitas ayuda? <a href="mailto:${SUPPORT_EMAIL}" style="color: #2563eb; text-decoration: none; font-weight: 500;">Contacta soporte</a>
                       </p>
-                      <p style="margin: 0; font-size: 13px; color: #94a3b8;">
-                        © ${new Date().getFullYear()} Parkit
+                      <p style="margin: 0; font-size: 11px; color: #64748b;">
+                        © ${new Date().getFullYear()} Parkit. Todos los derechos reservados.
+                      </p>
+                      <p style="margin: 8px 0 0; font-size: 11px; color: #64748b;">
+                        Hecho con <span style="color: #ef4444;">&hearts;</span> por el equipo de Parkit
                       </p>
                     </td>
                   </tr>
@@ -209,14 +208,12 @@ export async function sendTicketCheckOutEmail(
     if (!response.ok) {
       const message =
         (result && result.error && result.error.message) || response.statusText;
-      console.error("[Ticket check-out email error]", result);
       return { sent: false, error: message };
     }
 
     return { sent: true };
   } catch (err) {
     const message = err instanceof Error ? err.message : "Unknown error";
-    console.error("[Ticket check-out email error]", err);
     return { sent: false, error: message };
   }
 }

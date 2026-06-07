@@ -194,7 +194,7 @@ export class VehicleCatalogService {
         return dbMakes.map((m, i) => ({ Make_ID: i + 1, Make_Name: m.name }));
       }
     } catch (err) {
-      console.error("[VehicleCatalog] Database query failed for makes:", err);
+      // Silently ignore database errors
     }
 
     // Fallback to external API
@@ -227,7 +227,7 @@ export class VehicleCatalogService {
         return dbMake.models.map((m, i) => ({ Model_ID: i + 1, Model_Name: m.name }));
       }
     } catch (err) {
-      console.error("[VehicleCatalog] Database query failed for models:", err);
+      // Silently ignore database errors
     }
 
     // Fallback to external API
@@ -273,14 +273,27 @@ export class VehicleCatalogService {
 
       const variant = dbModel?.variants?.[0];
       if (variant && variant.lengthCm && variant.widthCm && variant.heightCm) {
+        // If local DB has dimensions but no weight, try to get weight from external API
+        if (!variant.weightKg) {
+          const externalDims = await getDimensionsFromCarQuery(make, model, year);
+          if (externalDims?.weightKg) {
+            return {
+              lengthCm: variant.lengthCm,
+              widthCm: variant.widthCm,
+              heightCm: variant.heightCm,
+              weightKg: externalDims.weightKg,
+            };
+          }
+        }
         return {
           lengthCm: variant.lengthCm,
           widthCm: variant.widthCm,
           heightCm: variant.heightCm,
+          weightKg: variant.weightKg ?? undefined,
         };
       }
     } catch (err) {
-      console.error("[VehicleCatalog] Database query failed for dimensions:", err);
+      // Silently ignore database errors
     }
 
     // Fallback to external API

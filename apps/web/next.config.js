@@ -6,6 +6,7 @@ const nextConfig = {
   transpilePackages: ['@parkit/shared', 'react-native', 'react-native-web'],
   reactStrictMode: true,
 
+
   webpack: (config) => {
     config.resolve.alias = {
       ...(config.resolve.alias || {}),
@@ -22,6 +23,19 @@ const nextConfig = {
    * dependencies back to the monorepo root (where the main node_modules lives).
    */
   outputFileTracingRoot: path.join(__dirname, '../../'),
+
+  async headers() {
+    return [
+      {
+        source: '/:path*',
+        headers: [
+          { key: 'Cache-Control', value: 'no-cache, no-store, must-revalidate' },
+          { key: 'Pragma', value: 'no-cache' },
+          { key: 'Expires', value: '0' },
+        ],
+      },
+    ];
+  },
 
   /**
    * BUILD OPTIMIZATIONS

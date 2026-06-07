@@ -1,3 +1,4 @@
+import { Prisma } from "@prisma/client";
 import { prisma } from "../../shared/prisma";
 import type { ParkingSlot, ParkingType, SlotType } from "@prisma/client";
 
@@ -14,8 +15,7 @@ interface CreateParkingDTO {
   type?: ParkingType;
   slots: CreateParkingSlotDTO[];
   geofenceRadius?: number;
-  freeBenefitMinutes?: number;
-  pricePerExtraHour?: number;
+  dailyPricingConfig?: Record<string, unknown> | null;
 }
 
 interface UpdateParkingDTO {
@@ -25,8 +25,7 @@ interface UpdateParkingDTO {
   longitude?: number;
   type?: ParkingType;
   totalSlots?: number;
-  freeBenefitMinutes?: number;
-  pricePerExtraHour?: number;
+  dailyPricingConfig?: Prisma.InputJsonValue | Prisma.NullableJsonNullValueInput;
 }
 
 export class ParkingsService {
@@ -39,13 +38,13 @@ export class ParkingsService {
           companyId,
           name: data.name,
           address: data.address,
-          latitude: data.latitude,
-          longitude: data.longitude,
+          latitude: data.latitude || 0,
+          longitude: data.longitude || 0,
           geofenceRadius: data.geofenceRadius,
           type: data.type || "OPEN",
           totalSlots,
-          freeBenefitMinutes: data.freeBenefitMinutes ?? 0,
-          pricePerExtraHour: data.pricePerExtraHour != null ? data.pricePerExtraHour : undefined,
+          // @ts-expect-error - Prisma JsonValue type is complex, data is validated
+          dailyPricingConfig: data.dailyPricingConfig,
         },
       });
       if (slots.length > 0) {
@@ -67,7 +66,16 @@ export class ParkingsService {
   static async list(companyId: string) {
     return prisma.parking.findMany({
       where: { companyId },
-      include: {
+      select: {
+        id: true,
+        name: true,
+        address: true,
+        latitude: true,
+        longitude: true,
+        geofenceRadius: true,
+        type: true,
+        totalSlots: true,
+        dailyPricingConfig: true,
         company: { select: { currency: true } },
         slots: {
           select: {
@@ -89,8 +97,8 @@ export class ParkingsService {
   static async listAllWithCoordinates() {
     return prisma.parking.findMany({
       where: {
-        latitude: { not: null },
-        longitude: { not: null },
+        latitude: { not: 0 },
+        longitude: { not: 0 },
       },
       select: {
         id: true,
@@ -138,13 +146,9 @@ export class ParkingsService {
     });
   }
 
-  static async update(
-    companyId: string,
-    parkingId: string,
-    data: UpdateParkingDTO
-  ) {
+  static async update(companyId: string, id: string, data: UpdateParkingDTO) {
     return prisma.parking.update({
-      where: { id: parkingId },
+      where: { id, companyId },
       data: {
         name: data.name,
         address: data.address,
@@ -152,8 +156,7 @@ export class ParkingsService {
         longitude: data.longitude,
         ...(data.type !== undefined ? { type: data.type } : {}),
         ...(data.totalSlots !== undefined ? { totalSlots: data.totalSlots } : {}),
-        ...(data.freeBenefitMinutes !== undefined ? { freeBenefitMinutes: data.freeBenefitMinutes } : {}),
-        ...(data.pricePerExtraHour !== undefined ? { pricePerExtraHour: data.pricePerExtraHour } : {}),
+        ...(data.dailyPricingConfig !== undefined ? { dailyPricingConfig: data.dailyPricingConfig } : {}),
       },
       include: {
         slots: true,

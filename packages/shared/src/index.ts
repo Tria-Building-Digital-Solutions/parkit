@@ -9,3 +9,5 @@ export { Logo } from "./components/Logo";
 export { formatPlate } from "./plate";
 export { messageFromAxios, getTranslatedApiErrorMessage } from "./apiErrors";
 export { getAppVersionString } from "./appVersion";
+export * from "./costaRicaUtils";
+export * from "./geography";

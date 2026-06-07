@@ -2,19 +2,18 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { Plus, Tag, Navigation, Radius, Trash, Clock, Coins, Building, World } from "@/lib/premiumIcons";
-import { FormWizard } from "@/components/FormWizard";
+import { Plus, Tag, Navigation, CircleDashed, Trash, Clock, Building, World } from "@/lib/premiumIcons";
+import { FormWizard, type WizardStep } from "@/components/FormWizard";
 import { SelectField } from "@/components/SelectField";
 import { AddressPickerModal } from "@/components/AddressPickerModal";
 import { useTranslation } from "@/hooks/useTranslation";
 import { apiClient } from "@/lib/api";
 import { useToast } from "@/lib/toastStore";
-import { useAuthStore, useDashboardStore } from "@/lib/store";
+import { useDashboardStore } from "@/lib/store";
 
-const IL = "w-full pl-10 pr-4 py-3 rounded-lg border border-input-border bg-input-bg text-text-primary text-sm transition-all duration-200 ease-out focus:border-company-primary focus:outline-none focus:ring-1 focus:ring-company-primary/20 focus:ring-inset placeholder:text-text-muted";
-/** Input sin icono (mismo estilo que IL en otros formularios). */
-const INPUT = "w-full px-4 py-3 rounded-lg border border-input-border bg-input-bg text-text-primary text-sm transition-all duration-200 ease-out focus:border-company-primary focus:outline-none focus:ring-1 focus:ring-company-primary/20 focus:ring-inset placeholder:text-text-muted";
-const LABEL = "block text-sm font-medium text-text-secondary mb-1.5";
+const IL = "w-full pl-10 pr-4 py-2.5 rounded-xl border border-input-border bg-input-bg text-text-primary text-sm transition-all duration-200 focus:border-company-primary focus:outline-none focus:ring-1 focus:ring-company-primary/20 placeholder:text-text-muted";
+const INPUT = "w-full px-4 py-2.5 rounded-xl border border-input-border bg-input-bg text-text-primary text-sm transition-all duration-200 focus:border-company-primary focus:outline-none focus:ring-1 focus:ring-company-primary/20 placeholder:text-text-muted";
+const LABEL = "block text-sm font-medium text-text-primary mb-1.5";
 
 const PARKING_TYPES = ["OPEN", "COVERED", "TOWER", "UNDERGROUND", "ELEVATOR"] as const;
 const SLOT_TYPES = ["REGULAR", "PREMIUM", "ELECTRIC", "HANDICAPPED"] as const;
@@ -28,9 +27,6 @@ const defaultForm = {
   latitude: "",
   longitude: "",
   geofenceRadius: "50",
-  freeBenefitHours: "0",
-  freeBenefitMinutes: "0",
-  pricePerExtraHour: "",
 };
 
 const defaultSlot = (): SlotRow => ({
@@ -39,72 +35,108 @@ const defaultSlot = (): SlotRow => ({
   slotType: "REGULAR",
 });
 
+// Helper functions
+const formatTime = (minutes: number): string => {
+  const hours = Math.floor(minutes / 60);
+  const mins = minutes % 60;
+  return `${hours}:${mins.toString().padStart(2, "0")}`;
+};
+
+const getTimeUnit = (minutes: number): string => {
+  return minutes < 60 ? "min" : "h";
+};
+
+const parseTime = (hhmm: string): number => {
+  const parts = hhmm.split(":");
+  if (parts.length !== 2) return 0;
+  const hours = parseInt(parts[0] || "0", 10) || 0;
+  const mins = parseInt(parts[1] || "0", 10) || 0;
+  return hours * 60 + mins;
+};
+
 export default function NewParkingPage() {
   const { t, tEnum } = useTranslation();
   const { showSuccess, showError } = useToast();
   const router = useRouter();
-  const user = useAuthStore((s) => s.user);
-  const selectedCompanyId = useDashboardStore((s) => s.selectedCompanyId);
-  const bumpParkings = useDashboardStore((s) => s.bumpParkings);
+  const selectedCompanyId = useDashboardStore((s: { selectedCompanyId: string | null }) => s.selectedCompanyId);
+  const bumpParkings = useDashboardStore((s: { bumpParkings: () => void }) => s.bumpParkings);
   const [form, setForm] = useState(defaultForm);
   const [slots, setSlots] = useState<SlotRow[]>([]);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [addressPickerOpen, setAddressPickerOpen] = useState(false);
-  const [companyCurrency, setCompanyCurrency] = useState<string | null>(null);
-  const [chargesParking, setChargesParking] = useState(false);
+  const [chargesParking, setChargesParking] = useState(true);
+  const [quickApplyMinutes, setQuickApplyMinutes] = useState(240);
+  const [quickApplyPrice, setQuickApplyPrice] = useState(1000);
+  const [quickApplyTimeInput, setQuickApplyTimeInput] = useState(formatTime(240));
+  const [companyCurrency, setCompanyCurrency] = useState<string>("CRC");
+
+  // Fetch company currency and adjust default price
+  useEffect(() => {
+    (async () => {
+      try {
+        const company = await apiClient.get<{ currency?: string }>("/companies/me");
+        if (company?.currency) {
+          setCompanyCurrency(company.currency);
+          // If not CRC, set default price to 0 to avoid conversion issues
+          if (company.currency !== "CRC") {
+            setQuickApplyPrice(0);
+            setDailyPricingConfig({
+              monday: { freeBenefitMinutes: 240, pricePerHour: 0 },
+              tuesday: { freeBenefitMinutes: 240, pricePerHour: 0 },
+              wednesday: { freeBenefitMinutes: 240, pricePerHour: 0 },
+              thursday: { freeBenefitMinutes: 240, pricePerHour: 0 },
+              friday: { freeBenefitMinutes: 240, pricePerHour: 0 },
+              saturday: { freeBenefitMinutes: 240, pricePerHour: 0 },
+              sunday: { freeBenefitMinutes: 240, pricePerHour: 0 },
+            });
+          }
+        }
+      } catch (error) {
+        // Silently ignore currency fetch errors
+      }
+    })();
+  }, []);
+  const [dailyTimeInputs, setDailyTimeInputs] = useState({
+    monday: "4:00",
+    tuesday: "4:00",
+    wednesday: "4:00",
+    thursday: "4:00",
+    friday: "4:00",
+    saturday: "4:00",
+    sunday: "4:00",
+  });
+  const [dailyPricingConfig, setDailyPricingConfig] = useState<{
+    monday: { freeBenefitMinutes: number; pricePerHour: number };
+    tuesday: { freeBenefitMinutes: number; pricePerHour: number };
+    wednesday: { freeBenefitMinutes: number; pricePerHour: number };
+    thursday: { freeBenefitMinutes: number; pricePerHour: number };
+    friday: { freeBenefitMinutes: number; pricePerHour: number };
+    saturday: { freeBenefitMinutes: number; pricePerHour: number };
+    sunday: { freeBenefitMinutes: number; pricePerHour: number };
+  }>({
+    monday: { freeBenefitMinutes: 240, pricePerHour: 1000 },
+    tuesday: { freeBenefitMinutes: 240, pricePerHour: 1000 },
+    wednesday: { freeBenefitMinutes: 240, pricePerHour: 1000 },
+    thursday: { freeBenefitMinutes: 240, pricePerHour: 1000 },
+    friday: { freeBenefitMinutes: 240, pricePerHour: 1000 },
+    saturday: { freeBenefitMinutes: 240, pricePerHour: 1000 },
+    sunday: { freeBenefitMinutes: 240, pricePerHour: 1000 },
+  });
   const [fieldErrors, setFieldErrors] = useState<{
     name?: string;
     address?: string;
-    freeBenefitTime?: string;
-    pricePerExtraHour?: string;
+    latitude?: string;
+    longitude?: string;
+    geofenceRadius?: string;
+    slots?: string;
+    dailyPricingConfig?: string;
   }>({});
 
-  useEffect(() => {
-    let cancelled = false;
-    (async () => {
-      try {
-        const url =
-          user?.systemRole === "SUPER_ADMIN" && selectedCompanyId
-            ? `/companies/${selectedCompanyId}`
-            : "/companies/me";
-        const data = await apiClient.get<{ currency?: string | null }>(url);
-        if (!cancelled && data?.currency != null) setCompanyCurrency(data.currency);
-      } catch {
-        if (!cancelled) setCompanyCurrency(null);
-      }
-    })();
-    return () => { cancelled = true; };
-  }, [user?.systemRole, selectedCompanyId]);
 
   const set = (k: keyof typeof defaultForm) =>
     (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) =>
       setForm((p) => ({ ...p, [k]: e.target.value }));
-
-  const setNumberField = (k: keyof typeof defaultForm, max?: number) =>
-    (e: React.ChangeEvent<HTMLInputElement>) => {
-      const raw = e.target.value.replace(/[^\d]/g, "");
-      if (raw === "") {
-        setForm((p) => ({ ...p, [k]: "" }));
-        return;
-      }
-      const parsed = Math.max(0, parseInt(raw, 10) || 0);
-      const capped = max != null ? Math.min(max, parsed) : parsed;
-      setForm((p) => ({ ...p, [k]: String(capped) }));
-    };
-
-  const setDecimalField = (k: keyof typeof defaultForm) =>
-    (e: React.ChangeEvent<HTMLInputElement>) => {
-      const normalized = e.target.value.replace(",", ".");
-      let cleaned = normalized.replace(/[^\d.]/g, "");
-      const firstDot = cleaned.indexOf(".");
-      if (firstDot !== -1) {
-        cleaned =
-          cleaned.slice(0, firstDot + 1) +
-          cleaned.slice(firstDot + 1).replace(/\./g, "");
-      }
-      setForm((p) => ({ ...p, [k]: cleaned }));
-    };
 
   const setIntegerValue = (setter: (value: number) => void, min = 0, max?: number) =>
     (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -116,6 +148,79 @@ export default function NewParkingPage() {
       const parsed = Math.max(min, parseInt(raw, 10) || min);
       const capped = max != null ? Math.min(max, parsed) : parsed;
       setter(capped);
+    };
+
+  const formatMoney = (value: number): string => {
+    return value.toLocaleString("en-US");
+  };
+
+  const parseMoney = (formatted: string): number => {
+    const cleaned = formatted.replace(/[^\d]/g, "");
+    return cleaned ? parseInt(cleaned, 10) || 0 : 0;
+  };
+
+  const setTimeValue = (inputSetter: (value: string) => void, valueSetter: (value: number) => void) =>
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      const value = e.target.value;
+      // Allow typing numbers and colons freely
+      const cleaned = value.replace(/[^\d:]/g, "");
+      
+      // Remove colon and re-format based on digit count
+      const digitsOnly = cleaned.replace(/:/g, "");
+      
+      // Limit to max 4 digits
+      if (digitsOnly.length > 4) {
+        return; // Don't allow more than 4 digits
+      }
+      
+      // Auto-insert colon based on digit count
+      let displayValue = digitsOnly;
+      if (digitsOnly.length === 3) {
+        displayValue = digitsOnly.slice(0, 1) + ":" + digitsOnly.slice(1, 3);
+      } else if (digitsOnly.length === 4) {
+        displayValue = digitsOnly.slice(0, 2) + ":" + digitsOnly.slice(2, 4);
+      }
+      
+      inputSetter(displayValue);
+      
+      // Parse and update actual value when valid
+      const displayParts = displayValue.split(":");
+      if (displayParts.length === 2 && displayParts[0] && displayParts[1]) {
+        const minutes = parseTime(displayValue);
+        if (minutes <= 1440) {
+          valueSetter(minutes);
+        }
+      } else if (displayParts.length === 1 && displayParts[0]) {
+        const numStr = displayParts[0];
+        // If 3-4 digits, treat as HH:MM (e.g., "435" = "4:35")
+        if (numStr.length === 3) {
+          const hours = parseInt(numStr.slice(0, 1), 10);
+          const mins = parseInt(numStr.slice(1, 3), 10);
+          if (!isNaN(hours) && !isNaN(mins)) {
+            valueSetter(hours * 60 + mins);
+          }
+        } else if (numStr.length >= 4) {
+          const hours = parseInt(numStr.slice(0, 2), 10);
+          const mins = parseInt(numStr.slice(2, 4), 10);
+          if (!isNaN(hours) && !isNaN(mins)) {
+            valueSetter(hours * 60 + mins);
+          }
+        } else {
+          // 1-2 digits, treat as hours with 0 minutes
+          const num = parseInt(numStr, 10);
+          if (!isNaN(num)) {
+            valueSetter(num * 60);
+          }
+        }
+      } else if (!digitsOnly) {
+        valueSetter(0);
+      }
+    };
+
+  const handleTimeBlur = (inputSetter: (value: string) => void, currentValue: number) =>
+    () => {
+      // Format the value on blur
+      inputSetter(formatTime(currentValue));
     };
 
   const setSlot = (id: string, updates: Partial<SlotRow>) => {
@@ -137,8 +242,8 @@ export default function NewParkingPage() {
     let labels: string[];
     if (match) {
       const prefixPart = match[1];
-      const base = parseInt(match[2], 10);
-      const numDigits = match[2].length;
+      const base = parseInt(match[2] || "0", 10);
+      const numDigits = (match[2] || "0").length;
       labels = Array.from({ length: count }, (_, i) =>
         `${prefixPart}${String(base + i).padStart(numDigits, "0")}`
       );
@@ -166,47 +271,30 @@ export default function NewParkingPage() {
     const nextErrors: typeof fieldErrors = {};
     if (!form.name.trim()) nextErrors.name = t("validation.required");
     if (!form.address.trim()) nextErrors.address = t("validation.required");
-    if (chargesParking) {
-      if (!form.freeBenefitHours.trim() || !form.freeBenefitMinutes.trim()) {
-        nextErrors.freeBenefitTime = t("validation.required");
-      }
-      if (!form.pricePerExtraHour.trim()) nextErrors.pricePerExtraHour = t("validation.required");
-    }
-    if (!step2Valid) {
+    if (!form.latitude) nextErrors.latitude = t("validation.required");
+    if (!form.longitude) nextErrors.longitude = t("validation.required");
+    if (!form.geofenceRadius) nextErrors.geofenceRadius = t("validation.required");
+    if (slots.length === 0) nextErrors.slots = t("validation.required");
+    if (chargesParking && !dailyPricingConfig) nextErrors.dailyPricingConfig = t("validation.required");
+    if (!step3Valid) {
       // Keep slot errors at global level (wizard already shows error), no per-field detail here.
     }
     setFieldErrors(nextErrors);
     if (Object.keys(nextErrors).length > 0 || !step2Valid) return;
 
-    const requiresBilling = chargesParking;
-    const hasBillingData =
-      form.freeBenefitHours.trim() !== "" &&
-      form.freeBenefitMinutes.trim() !== "" &&
-      form.pricePerExtraHour.trim() !== "";
     if (!form.name.trim() || !form.address.trim() || !form.type) return;
-    if (requiresBilling && !hasBillingData) return;
-    const slotList = slots.map((s) => ({ label: s.label.trim(), slotType: s.slotType }));
-    setSubmitting(true);
-    setError(null);
-    try {
-      const hours = Math.max(0, parseInt(form.freeBenefitHours, 10) || 0);
-      const minutes = Math.min(59, Math.max(0, parseInt(form.freeBenefitMinutes, 10) || 0));
-      const freeBenefitMinutes =
-        requiresBilling ? (hours * 60 + minutes) : 0;
-      const priceExtra =
-        requiresBilling && form.pricePerExtraHour !== ""
-          ? Number(form.pricePerExtraHour)
-          : undefined;
 
+    try {
+      const slotList = slots.map((s) => ({ label: s.label, slotType: s.slotType }));
       await apiClient.post("/parkings", {
-        name: form.name.trim(),
-        address: form.address.trim(),
+        companyId: selectedCompanyId,
+        name: form.name,
+        address: form.address,
         type: form.type,
-        latitude: form.latitude !== "" ? Number(form.latitude) : undefined,
-        longitude: form.longitude !== "" ? Number(form.longitude) : undefined,
-        geofenceRadius: form.geofenceRadius !== "" ? Number(form.geofenceRadius) : undefined,
-        freeBenefitMinutes,
-        pricePerExtraHour: priceExtra,
+        latitude: Number(form.latitude),
+        longitude: Number(form.longitude),
+        geofenceRadius: Number(form.geofenceRadius),
+        dailyPricingConfig: chargesParking ? dailyPricingConfig : null,
         slots: slotList,
       });
       showSuccess(t("common.createSuccessShort"));
@@ -220,40 +308,31 @@ export default function NewParkingPage() {
     }
   };
 
-  const step1Valid = (() => {
-    if (!form.name.trim() || !form.address.trim() || !form.type) return false;
-    if (!chargesParking) return true;
-    return (
-      form.freeBenefitHours.trim() !== "" &&
-      form.freeBenefitMinutes.trim() !== "" &&
-      form.pricePerExtraHour.trim() !== ""
-    );
-  })();
-  const step2Valid = slots.length > 0 && slots.every((s) => s.label.trim().length > 0);
+  const step1Valid = form.name.trim() !== "" && form.address.trim() !== "" && form.type !== "";
+  const step2Valid = chargesParking 
+    ? Object.values(dailyPricingConfig).some(config => config.pricePerHour > 0)
+    : true;
+  const step3Valid = slots.length > 0 && slots.every((s) => s.label.trim().length > 0);
 
   const validateStep = (stepIndex: number): boolean => {
     if (stepIndex === 0) {
       const nextErrors: typeof fieldErrors = {};
       if (!form.name.trim()) nextErrors.name = t("validation.required");
       if (!form.address.trim()) nextErrors.address = t("validation.required");
-      if (chargesParking) {
-        if (!form.freeBenefitHours.trim() || !form.freeBenefitMinutes.trim()) {
-          nextErrors.freeBenefitTime = t("validation.required");
-        }
-        if (!form.pricePerExtraHour.trim()) nextErrors.pricePerExtraHour = t("validation.required");
-      }
       setFieldErrors(nextErrors);
       return Object.keys(nextErrors).length === 0;
     }
-    if (stepIndex === 1) return step2Valid;
+    if (stepIndex === 1) {
+      return true;
+    }
+    if (stepIndex === 2) return step3Valid;
     return true;
   };
 
-  const steps = [
+  const steps: WizardStep[] = [
     {
       title: t("parkings.sectionMain"),
       description: t("parkings.sectionMainDesc"),
-      badge: "required" as const,
       accentColor: "orange",
       isValid: () => step1Valid,
       content: (
@@ -288,113 +367,341 @@ export default function NewParkingPage() {
               {fieldErrors.address && <p className="text-sm text-red-500" role="alert">{fieldErrors.address}</p>}
             </div>
           </div>
-          <div className="sm:col-span-2 lg:col-span-3 flex flex-col gap-3">
-            <div className="flex flex-col sm:flex-row sm:items-center sm:gap-4">
+          <div className="sm:col-span-2 lg:col-span-3">
+            <label className={LABEL}>{t("parkings.type")} <span className="text-company-primary">*</span></label>
+            <SelectField value={form.type} onChange={set("type")} icon={Tag}>
+              {PARKING_TYPES.map((pt) => (
+                <option key={pt} value={pt}>{tEnum("parkingType", pt)}</option>
+              ))}
+            </SelectField>
+          </div>
+        </div>
+      ),
+    },
+    {
+      title: t("parkings.sectionBilling"),
+      description: t("parkings.sectionBillingDesc"),
+      accentColor: "blue",
+      isValid: () => step2Valid,
+      content: (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+          <div className="sm:col-span-2 lg:col-span-3">
+            <div className="flex items-center gap-4 p-5 rounded-xl bg-company-primary/5 border border-company-primary/20">
               <div className="flex-1">
-                <label className={LABEL}>{t("parkings.type")} <span className="text-company-primary">*</span></label>
-                <SelectField value={form.type} onChange={set("type")} icon={Tag}>
-                  {PARKING_TYPES.map((pt) => (
-                    <option key={pt} value={pt}>{tEnum("parkingType", pt)}</option>
-                  ))}
-                </SelectField>
+                <h3 className="text-base font-semibold text-text-primary mb-0.5">
+                  {t("parkings.chargesSwitchLabel")}
+                </h3>
+                <p className="text-sm text-text-muted">
+                  {t("parkings.chargesSwitchHint")}
+                </p>
               </div>
-              <div className="flex items-center gap-3 mt-3 sm:mt-6 pr-1">
-                <div className="flex-1">
-                  <p className="text-sm font-medium text-text-secondary">
-                    {t("parkings.chargesSwitchLabel")}
-                  </p>
-                  <p className="text-xs text-text-muted mt-0.5">
-                    {t("parkings.chargesSwitchHint")}
-                  </p>
-                </div>
-                <button
-                  type="button"
-                  role="switch"
-                  aria-checked={chargesParking}
-                  onClick={() => setChargesParking((v) => !v)}
-                  className={`relative w-10 h-6 rounded-full shrink-0 transition-colors focus:outline-none focus:ring-1 focus:ring-company-primary focus:ring-offset-2 focus:ring-offset-page ${
-                    chargesParking ? "bg-company-primary" : "bg-input-border"
+              <button
+                type="button"
+                role="switch"
+                aria-checked={chargesParking}
+                onClick={() => setChargesParking((v) => !v)}
+                className={`relative w-10 h-6 rounded-full shrink-0 transition-colors focus:outline-none focus:ring-1 focus:ring-company-primary focus:ring-offset-2 focus:ring-offset-page ${
+                  chargesParking ? "bg-company-primary" : "bg-input-border"
+                }`}
+              >
+                <span
+                  className={`absolute top-1 left-1 w-4 h-4 rounded-full bg-white shadow-sm transition-transform duration-200 ${
+                    chargesParking ? "translate-x-4" : "translate-x-0"
                   }`}
-                >
-                  <span
-                    className={`absolute top-1 left-1 w-4 h-4 rounded-full bg-white shadow-sm transition-transform duration-200 ${
-                      chargesParking ? "translate-x-5" : "translate-x-0"
-                    }`}
-                  />
-                </button>
-              </div>
+                />
+              </button>
             </div>
           </div>
 
           {chargesParking && (
-          <div>
-            <label className={LABEL}>{t("parkings.freeBenefitTime")}</label>
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <div className="relative group">
-                  <Clock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-text-muted group-focus-within:text-company-primary transition-colors pointer-events-none" />
-                  <input
-                    type="number"
-                    min={0}
-                    inputMode="numeric"
-                    value={form.freeBenefitHours}
-                    onChange={setNumberField("freeBenefitHours")}
-                    placeholder="0"
-                    className={IL}
-                    aria-invalid={!!fieldErrors.freeBenefitTime}
-                  />
+            <div className="sm:col-span-2 lg:col-span-3">
+              {fieldErrors.dailyPricingConfig && <p className="text-sm text-red-500 mb-4" role="alert">{fieldErrors.dailyPricingConfig}</p>}
+              <div className="flex flex-wrap gap-3 mb-4">
+                <div className="flex-1 min-w-[140px]">
+                  <label className="text-xs font-medium text-text-muted/80 mb-1 block">{t("parkings.quickApplyMinutes")}</label>
+                  <div className="relative group">
+                    <Clock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-text-muted group-focus-within:text-company-primary transition-colors pointer-events-none" />
+                    <input
+                      type="text"
+                      inputMode="numeric"
+                      value={quickApplyTimeInput}
+                      onChange={(e) => setTimeValue(setQuickApplyTimeInput, setQuickApplyMinutes)(e)}
+                      onBlur={handleTimeBlur(setQuickApplyTimeInput, quickApplyMinutes)}
+                      placeholder="4:00"
+                      className={IL}
+                    />
+                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-text-muted/60 pointer-events-none group-focus-within:text-company-primary/40 transition-colors">{getTimeUnit(quickApplyMinutes)}</span>
+                  </div>
                 </div>
-                <p className="mt-1 text-xs text-text-muted">{t("parkings.freeBenefitHoursLabel")}</p>
-              </div>
-              <div>
-                <div className="relative group">
-                  <input
-                    type="number"
-                    min={0}
-                    max={59}
-                    inputMode="numeric"
-                    value={form.freeBenefitMinutes}
-                    onChange={setNumberField("freeBenefitMinutes", 59)}
-                    placeholder="0"
-                    className={INPUT}
-                    aria-invalid={!!fieldErrors.freeBenefitTime}
-                  />
+                <div className="flex-1 min-w-[140px]">
+                  <label className="text-xs font-medium text-text-muted/80 mb-1 block">{t("parkings.quickApplyPrice")}</label>
+                  <div className="relative group">
+                    <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-xs text-text-muted/60 pointer-events-none group-focus-within:text-company-primary/40 transition-colors">{companyCurrency === "CRC" ? "₡" : companyCurrency === "USD" ? "$" : companyCurrency === "EUR" ? "€" : companyCurrency}</span>
+                    <input
+                      type="text"
+                      inputMode="numeric"
+                      value={formatMoney(quickApplyPrice)}
+                      onChange={(e) => setQuickApplyPrice(parseMoney(e.target.value))}
+                      placeholder="1,000"
+                      className={IL}
+                    />
+                  </div>
                 </div>
-                <p className="mt-1 text-xs text-text-muted">{t("parkings.freeBenefitMinutesLabel")}</p>
+              </div>
+
+              <div className="flex flex-wrap gap-2 mb-4">
+                <button
+                  type="button"
+                  onClick={() => {
+                    const config = {
+                      freeBenefitMinutes: quickApplyMinutes,
+                      pricePerHour: quickApplyPrice
+                    };
+                    setDailyPricingConfig({
+                      monday: config,
+                      tuesday: config,
+                      wednesday: config,
+                      thursday: config,
+                      friday: config,
+                      saturday: config,
+                      sunday: config,
+                    });
+                    // Also update the raw input states
+                    const formattedTime = formatTime(quickApplyMinutes);
+                    setDailyTimeInputs({
+                      monday: formattedTime,
+                      tuesday: formattedTime,
+                      wednesday: formattedTime,
+                      thursday: formattedTime,
+                      friday: formattedTime,
+                      saturday: formattedTime,
+                      sunday: formattedTime,
+                    });
+                  }}
+                  className="shrink-0 px-4 py-3 rounded-lg border border-input-border bg-input-bg text-text-secondary text-sm font-medium hover:bg-company-primary-subtle hover:border-company-primary-muted hover:text-company-primary transition-colors"
+                >
+                  {t("parkings.applyToAll")}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    const config = {
+                      freeBenefitMinutes: quickApplyMinutes,
+                      pricePerHour: quickApplyPrice
+                    };
+                    setDailyPricingConfig({
+                      monday: config,
+                      tuesday: config,
+                      wednesday: config,
+                      thursday: config,
+                      friday: config,
+                      saturday: dailyPricingConfig.saturday,
+                      sunday: dailyPricingConfig.sunday,
+                    });
+                    // Also update the raw input states for weekdays
+                    const formattedTime = formatTime(quickApplyMinutes);
+                    setDailyTimeInputs((prev) => ({
+                      ...prev,
+                      monday: formattedTime,
+                      tuesday: formattedTime,
+                      wednesday: formattedTime,
+                      thursday: formattedTime,
+                      friday: formattedTime,
+                    }));
+                  }}
+                  className="shrink-0 px-4 py-3 rounded-lg border border-input-border bg-input-bg text-text-secondary text-sm font-medium hover:bg-company-primary-subtle hover:border-company-primary-muted hover:text-company-primary transition-colors"
+                >
+                  {t("parkings.applyToWeekdays")}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    const config = {
+                      freeBenefitMinutes: quickApplyMinutes,
+                      pricePerHour: quickApplyPrice
+                    };
+                    setDailyPricingConfig({
+                      monday: dailyPricingConfig.monday,
+                      tuesday: dailyPricingConfig.tuesday,
+                      wednesday: dailyPricingConfig.wednesday,
+                      thursday: dailyPricingConfig.thursday,
+                      friday: dailyPricingConfig.friday,
+                      saturday: config,
+                      sunday: config,
+                    });
+                    // Also update the raw input states for weekend
+                    const formattedTime = formatTime(quickApplyMinutes);
+                    setDailyTimeInputs((prev) => ({
+                      ...prev,
+                      saturday: formattedTime,
+                      sunday: formattedTime,
+                    }));
+                  }}
+                  className="shrink-0 px-4 py-3 rounded-lg border border-input-border bg-input-bg text-text-secondary text-sm font-medium hover:bg-company-primary-subtle hover:border-company-primary-muted hover:text-company-primary transition-colors"
+                >
+                  {t("parkings.applyToWeekend")}
+                </button>
+              </div>
+
+              <div className="rounded-lg border border-input-border bg-input-bg/50 p-4">
+                <div className="grid grid-cols-7 gap-2">
+                  {[
+                    { key: 'monday', label: t("parkings.monday") },
+                    { key: 'tuesday', label: t("parkings.tuesday") },
+                    { key: 'wednesday', label: t("parkings.wednesday") },
+                    { key: 'thursday', label: t("parkings.thursday") },
+                    { key: 'friday', label: t("parkings.friday") },
+                    { key: 'saturday', label: t("parkings.saturday") },
+                    { key: 'sunday', label: t("parkings.sunday") },
+                  ].map((day) => (
+                    <div key={day.key} className="flex flex-col gap-2">
+                      <div className="text-xs font-medium text-text-primary text-center">{day.label}</div>
+                      <div className="relative group">
+                        <Clock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-text-muted group-focus-within:text-company-primary transition-colors pointer-events-none" />
+                        <input
+                          type="text"
+                          inputMode="numeric"
+                          value={dailyTimeInputs[day.key as keyof typeof dailyTimeInputs]}
+                          onChange={(e) => {
+                            const value = e.target.value;
+                            // Allow typing numbers and colons freely
+                            const cleaned = value.replace(/[^\d:]/g, "");
+                            
+                            // Remove colon and re-format based on digit count
+                            const digitsOnly = cleaned.replace(/:/g, "");
+                            
+                            // Limit to max 4 digits
+                            if (digitsOnly.length > 4) {
+                              return; // Don't allow more than 4 digits
+                            }
+                            
+                            // Auto-insert colon based on digit count
+                            let displayValue = digitsOnly;
+                            if (digitsOnly.length === 3) {
+                              displayValue = digitsOnly.slice(0, 1) + ":" + digitsOnly.slice(1, 3);
+                            } else if (digitsOnly.length === 4) {
+                              displayValue = digitsOnly.slice(0, 2) + ":" + digitsOnly.slice(2, 4);
+                            }
+                            
+                            setDailyTimeInputs((prev) => ({ ...prev, [day.key]: displayValue }));
+                            
+                            const displayParts = displayValue.split(":");
+                            if (displayParts.length === 2 && displayParts[0] && displayParts[1]) {
+                              const minutes = parseTime(displayValue);
+                              if (minutes <= 1440) {
+                                setDailyPricingConfig((prev) => ({
+                                  ...prev,
+                                  [day.key]: {
+                                    ...prev[day.key as keyof typeof prev],
+                                    freeBenefitMinutes: minutes,
+                                  },
+                                }));
+                              }
+                            } else if (displayParts.length === 1 && displayParts[0]) {
+                              const numStr = displayParts[0];
+                              // If 3-4 digits, treat as HH:MM (e.g., "435" = "4:35")
+                              if (numStr.length === 3) {
+                                const hours = parseInt(numStr.slice(0, 1), 10);
+                                const mins = parseInt(numStr.slice(1, 3), 10);
+                                if (!isNaN(hours) && !isNaN(mins)) {
+                                  setDailyPricingConfig((prev) => ({
+                                    ...prev,
+                                    [day.key]: {
+                                      ...prev[day.key as keyof typeof prev],
+                                      freeBenefitMinutes: hours * 60 + mins,
+                                    },
+                                  }));
+                                }
+                              } else if (numStr.length >= 4) {
+                                const hours = parseInt(numStr.slice(0, 2), 10);
+                                const mins = parseInt(numStr.slice(2, 4), 10);
+                                if (!isNaN(hours) && !isNaN(mins)) {
+                                  setDailyPricingConfig((prev) => ({
+                                    ...prev,
+                                    [day.key]: {
+                                      ...prev[day.key as keyof typeof prev],
+                                      freeBenefitMinutes: hours * 60 + mins,
+                                    },
+                                  }));
+                                }
+                              } else {
+                                // 1-2 digits, treat as hours with 0 minutes
+                                const num = parseInt(numStr, 10);
+                                if (!isNaN(num)) {
+                                  setDailyPricingConfig((prev) => ({
+                                    ...prev,
+                                    [day.key]: {
+                                      ...prev[day.key as keyof typeof prev],
+                                      freeBenefitMinutes: num * 60,
+                                    },
+                                  }));
+                                }
+                              }
+                            } else if (!digitsOnly) {
+                              setDailyPricingConfig((prev) => ({
+                                ...prev,
+                                [day.key]: {
+                                  ...prev[day.key as keyof typeof prev],
+                                  freeBenefitMinutes: 0,
+                                },
+                              }));
+                            }
+                          }}
+                          onBlur={() => {
+                            setDailyTimeInputs((prev) => ({
+                              ...prev,
+                              [day.key]: formatTime(dailyPricingConfig[day.key as keyof typeof dailyPricingConfig].freeBenefitMinutes),
+                            }));
+                          }}
+                          onFocus={(e) => e.target.select()}
+                          placeholder="0:00"
+                          className={IL}
+                        />
+                        <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-text-muted/60 pointer-events-none group-focus-within:text-company-primary/40 transition-colors">{getTimeUnit(dailyPricingConfig[day.key as keyof typeof dailyPricingConfig].freeBenefitMinutes)}</span>
+                      </div>
+                      <div className="relative group">
+                        <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-xs text-text-muted/60 pointer-events-none group-focus-within:text-company-primary/40 transition-colors">{companyCurrency === "CRC" ? "₡" : companyCurrency === "USD" ? "$" : companyCurrency === "EUR" ? "€" : companyCurrency}</span>
+                        <input
+                          type="text"
+                          inputMode="numeric"
+                          value={formatMoney(dailyPricingConfig[day.key as keyof typeof dailyPricingConfig].pricePerHour)}
+                          onChange={(e) => setDailyPricingConfig({
+                            ...dailyPricingConfig,
+                            [day.key]: {
+                              ...dailyPricingConfig[day.key as keyof typeof dailyPricingConfig],
+                              pricePerHour: parseMoney(e.target.value),
+                            },
+                          })}
+                          onFocus={(e) => e.target.select()}
+                          placeholder="1,000"
+                          className={IL}
+                        />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                <div className="flex flex-wrap gap-2 mt-4">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const config = { freeBenefitMinutes: 0, pricePerHour: 0 };
+                      setDailyPricingConfig({
+                        monday: config,
+                        tuesday: config,
+                        wednesday: config,
+                        thursday: config,
+                        friday: config,
+                        saturday: config,
+                        sunday: config,
+                      });
+                    }}
+                    className="shrink-0 px-4 py-3 rounded-lg border border-input-border bg-input-bg text-text-secondary text-sm font-medium hover:bg-company-primary-subtle hover:border-company-primary-muted hover:text-company-primary transition-colors"
+                  >
+                    {t("parkings.clearAll")}
+                  </button>
+                </div>
               </div>
             </div>
-            <p className="mt-2 text-xs text-text-muted">{t("parkings.freeBenefitTimeHint")}</p>
-            <div className="min-h-[1.25rem] mt-1">
-              {fieldErrors.freeBenefitTime && <p className="text-sm text-red-500" role="alert">{fieldErrors.freeBenefitTime}</p>}
-            </div>
-          </div>
-          )}
-          {chargesParking && (
-          <div>
-            <label className={LABEL}>{t("parkings.pricePerExtraHour")}</label>
-            <div className="relative group flex items-center gap-2">
-              <div className="flex-1 relative">
-                <Coins className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-text-muted group-focus-within:text-company-primary transition-colors pointer-events-none" />
-                <input
-                  type="number"
-                  min={0}
-                  step="any"
-                  value={form.pricePerExtraHour}
-                  onChange={setDecimalField("pricePerExtraHour")}
-                  placeholder="0"
-                  className={IL}
-                  aria-invalid={!!fieldErrors.pricePerExtraHour}
-                />
-              </div>
-              {companyCurrency != null && companyCurrency !== "" && (
-                <span className="shrink-0 text-sm font-medium text-text-secondary tabular-nums">{companyCurrency}</span>
-              )}
-            </div>
-            <p className="mt-1 text-xs text-text-muted">{t("parkings.pricePerExtraHourHint")}</p>
-            <div className="min-h-[1.25rem] mt-1">
-              {fieldErrors.pricePerExtraHour && <p className="text-sm text-red-500" role="alert">{fieldErrors.pricePerExtraHour}</p>}
-            </div>
-          </div>
           )}
         </div>
       ),
@@ -402,13 +709,13 @@ export default function NewParkingPage() {
     {
       title: t("parkings.sectionSlots"),
       description: t("parkings.sectionSlotsDesc"),
-      badge: "required" as const,
       accentColor: "blue",
-      isValid: () => step2Valid,
+      isValid: () => step3Valid,
       content: (
         <div className="space-y-5">
+          {fieldErrors.slots && <p className="text-sm text-red-500" role="alert">{fieldErrors.slots}</p>}
           {/* Agregar varios a la vez */}
-          <div className="flex flex-wrap items-end gap-3 p-4 rounded-xl bg-input-bg/60 border border-input-border">
+          <div className="flex flex-wrap items-end gap-3">
             <div className="flex-1 min-w-[120px]">
               <label className={LABEL}>{t("parkings.slotPrefixPlaceholder")}</label>
               <input
@@ -425,8 +732,11 @@ export default function NewParkingPage() {
                 type="number"
                 min={1}
                 max={100}
+                inputMode="numeric"
+                step={1}
                 value={batchCount}
                 onChange={setIntegerValue(setBatchCount, 1, 100)}
+                onFocus={(e) => e.target.select()}
                 className={INPUT}
               />
             </div>
@@ -515,24 +825,33 @@ export default function NewParkingPage() {
       content: (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
           <div>
-            <label className={LABEL}>{t("parkings.latitude")}</label>
+            <label className={LABEL}>{t("parkings.latitude")} <span className="text-company-primary">*</span></label>
             <div className="relative group">
               <Navigation className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-text-muted group-focus-within:text-company-primary transition-colors pointer-events-none" />
-              <input type="number" step="any" value={form.latitude} readOnly placeholder={t("common.placeholderLatitude")} className={IL + " cursor-pointer"} onClick={() => setAddressPickerOpen(true)} />
+              <input type="number" step="any" inputMode="decimal" min={-90} max={90} value={form.latitude} readOnly placeholder={t("common.placeholderLatitude")} className={IL + " cursor-pointer"} onClick={() => setAddressPickerOpen(true)} aria-invalid={!!fieldErrors.latitude} />
+            </div>
+            <div className="min-h-[1.25rem] mt-1">
+              {fieldErrors.latitude && <p className="text-sm text-red-500" role="alert">{fieldErrors.latitude}</p>}
             </div>
           </div>
           <div>
-            <label className={LABEL}>{t("parkings.longitude")}</label>
+            <label className={LABEL}>{t("parkings.longitude")} <span className="text-company-primary">*</span></label>
             <div className="relative group">
               <Navigation className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-text-muted group-focus-within:text-company-primary transition-colors pointer-events-none" />
-              <input type="number" step="any" value={form.longitude} readOnly placeholder={t("common.placeholderLongitude")} className={IL + " cursor-pointer"} onClick={() => setAddressPickerOpen(true)} />
+              <input type="number" step="any" inputMode="decimal" min={-180} max={180} value={form.longitude} readOnly placeholder={t("common.placeholderLongitude")} className={IL + " cursor-pointer"} onClick={() => setAddressPickerOpen(true)} aria-invalid={!!fieldErrors.longitude} />
+            </div>
+            <div className="min-h-[1.25rem] mt-1">
+              {fieldErrors.longitude && <p className="text-sm text-red-500" role="alert">{fieldErrors.longitude}</p>}
             </div>
           </div>
           <div>
-            <label className={LABEL}>{t("parkings.geofenceRadius")}</label>
+            <label className={LABEL}>{t("parkings.geofenceRadius")} <span className="text-company-primary">*</span></label>
             <div className="relative group">
-              <Radius className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-text-muted group-focus-within:text-company-primary transition-colors pointer-events-none" />
-              <input type="number" min={1} value={form.geofenceRadius} readOnly placeholder={t("common.placeholderRadius")} className={IL + " cursor-pointer"} onClick={() => setAddressPickerOpen(true)} />
+              <CircleDashed className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-text-muted group-focus-within:text-company-primary transition-colors pointer-events-none" />
+              <input type="number" min={1} max={10000} inputMode="numeric" step={1} value={form.geofenceRadius} readOnly onFocus={(e) => e.target.select()} placeholder={t("common.placeholderRadius")} className={IL + " cursor-pointer"} onClick={() => setAddressPickerOpen(true)} aria-invalid={!!fieldErrors.geofenceRadius} />
+            </div>
+            <div className="min-h-[1.25rem] mt-1">
+              {fieldErrors.geofenceRadius && <p className="text-sm text-red-500" role="alert">{fieldErrors.geofenceRadius}</p>}
             </div>
           </div>
         </div>
@@ -549,6 +868,7 @@ export default function NewParkingPage() {
         submitLabel={t("parkings.createParking")}
         cancelHref="/dashboard/parkings"
         error={error}
+        footerNote={t("common.requiredNote")}
         onValidateBeforeAction={validateStep}
       />
       <AddressPickerModal

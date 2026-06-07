@@ -1,0 +1,336 @@
+"use client";
+
+import { useState, useEffect, useLayoutEffect } from "react";
+import { createPortal } from "react-dom";
+import { useTheme } from "next-themes";
+import { motion, AnimatePresence } from "framer-motion";
+import { X } from "lucide-react";
+import { apiClient, getApiErrorMessage, getTranslatedApiErrorMessage } from "@/lib/api";
+import { useAuthStore, useLocaleStore, useDashboardStore } from "@/lib/store";
+import { isSuperAdmin } from "@/lib/auth";
+import { useTranslation } from "@/hooks/useTranslation";
+import { ArrowRight, Eye, EyeOff, GoogleIcon, FacebookIcon, MicrosoftIcon, ArrowLeft } from "@/lib/premiumIcons";
+import { LoadingSpinner } from "@/components/LoadingSpinner";
+import { INPUT_CLASSES, BUTTON_CLASSES, LABEL_CLASSES } from "@/lib/utils";
+
+type AuthView = "login" | "forgot-password";
+type AuthAnchorRef = React.RefObject<HTMLElement | null>;
+
+export function AuthModal({ open, onClose, buttonRef, initialView }: { open: boolean; onClose: () => void; buttonRef?: AuthAnchorRef; initialView?: AuthView }) {
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  if (!mounted) return null;
+
+  return createPortal(
+    <AuthModalInner open={open} onClose={onClose} buttonRef={buttonRef} initialView={initialView} />,
+    document.body,
+  );
+}
+
+function AuthModalInner({ open, onClose, buttonRef, initialView }: { open: boolean; onClose: () => void; buttonRef?: AuthAnchorRef; initialView?: AuthView }) {
+  const [view, setView] = useState<AuthView>(initialView ?? "login");
+  const [pos, setPos] = useState<{ top: number; left: number; width: number; anchorLeft: number } | null>(null);
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    if (open) {
+      setView(initialView ?? "login");
+    }
+  }, [open, initialView]);
+
+  useEffect(() => {
+    if (open) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+    return () => { document.body.style.overflow = ""; };
+  }, [open]);
+
+  useLayoutEffect(() => {
+    const updatePos = () => {
+      if (!open) return;
+      const viewportWidth = window.innerWidth;
+      const mobile = viewportWidth < 768;
+      setIsMobile(mobile);
+
+      if (!mobile && buttonRef?.current) {
+        const rect = buttonRef.current.getBoundingClientRect();
+        const gutter = 16;
+        const preferredWidth = 420;
+        const width = Math.min(preferredWidth, viewportWidth - gutter * 2);
+        const anchorCenter = rect.left + rect.width / 2;
+        const left = Math.min(
+          Math.max(anchorCenter - width / 2, gutter),
+          viewportWidth - width - gutter,
+        );
+        setPos({
+          top: rect.bottom + 12,
+          left,
+          width,
+          anchorLeft: anchorCenter - left,
+        });
+      } else {
+        setPos(null);
+      }
+    };
+    if (open) updatePos();
+    window.addEventListener("scroll", updatePos, true);
+    window.addEventListener("resize", updatePos);
+    return () => {
+      window.removeEventListener("scroll", updatePos, true);
+      window.removeEventListener("resize", updatePos);
+    };
+  }, [buttonRef, view, open]);
+
+  const anchored = !isMobile && Boolean(pos);
+
+  return (
+    <div className={`fixed inset-0 z-[99999] transition-opacity duration-200 ${open ? 'opacity-100' : 'opacity-0 pointer-events-none'}`} role="dialog" aria-modal="true">
+      <button type="button" className={`absolute inset-0 transition-opacity duration-200 ${open ? 'bg-slate-950/30 backdrop-blur-[2px]' : 'bg-transparent'}`} onClick={onClose} />
+      <div
+        className={anchored ? "absolute" : "absolute inset-0 flex items-center justify-center p-4"}
+        style={anchored && pos ? { top: pos.top, left: pos.left, width: pos.width } : undefined}
+        onClick={(e) => e.stopPropagation()}
+      >
+        {anchored && pos && (
+          <span
+            className="absolute -top-2 h-4 w-4 rotate-45 rounded-[3px] border-l border-t border-white/70 bg-white dark:border-slate-700 dark:bg-slate-900"
+            style={{ left: pos.anchorLeft - 8 }}
+            aria-hidden
+          />
+        )}
+        <div className="relative bg-white dark:bg-slate-900 rounded-2xl border border-white/70 dark:border-slate-700 shadow-[0_24px_80px_rgba(15,23,42,0.24),0_8px_24px_rgba(15,23,42,0.12)] dark:shadow-[0_24px_80px_rgba(0,0,0,0.55)] w-full max-w-[calc(100vw-2rem)] max-h-[min(82vh,720px)] overflow-y-auto">
+          <div className="relative p-6 md:p-8">
+            <button type="button" onClick={onClose} className="absolute top-3 right-3 p-1 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 transition-colors">
+              <X className="w-5 h-5" />
+            </button>
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={view}
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -8 }}
+                transition={{ duration: 0.15 }}
+              >
+                {view === "login" && <LoginView onSwitch={setView} />}
+                {view === "forgot-password" && <ForgotPasswordView onSwitch={setView} />}
+              </motion.div>
+            </AnimatePresence>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function LoginView({ onSwitch }: { onSwitch: (v: AuthView) => void }) {
+  const { setTheme } = useTheme();
+  const { t } = useTranslation();
+  const { login, setError, error } = useAuthStore();
+  const setLocale = useLocaleStore((s) => s.setLocale);
+  const setCompanyBranding = useDashboardStore((s) => s.setCompanyBranding);
+  const setBrandingInCache = useDashboardStore((s) => s.setBrandingInCache);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [formData, setFormData] = useState({ email: "", password: "" });
+
+  const handleOAuthLogin = (provider: string) => {
+    window.location.href = `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"}/api/auth/${provider}`;
+  };
+
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+    setError(null);
+    try {
+      const response = await apiClient.post<{
+        user: {
+          id: string;
+          email: string;
+          firstName: string;
+          lastName: string;
+          systemRole: "SUPER_ADMIN" | "ADMIN" | "STAFF" | "CUSTOMER";
+          companyId?: string;
+          appPreferences?: { theme?: "light" | "dark"; locale?: "es" | "en" };
+        };
+        token: string;
+      }>("/auth/login", formData);
+      if (response) {
+        login(response.user, response.token);
+        apiClient.setToken(response.token);
+        const prefs = response.user.appPreferences;
+        const detectDeviceTheme = (): "light" | "dark" => {
+          if (typeof window !== "undefined" && "matchMedia" in window) {
+            try { return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light"; } catch { /* ignore */ }
+          }
+          const rt = undefined;
+          return rt === "dark" ? "dark" : "light";
+        };
+        const detectDeviceLocale = (): "es" | "en" => {
+          if (typeof navigator !== "undefined") {
+            const lang = (navigator.language || navigator.languages?.[0] || "es").toLowerCase();
+            if (lang.startsWith("en")) return "en";
+          }
+          return "es";
+        };
+        const finalTheme: "light" | "dark" = prefs?.theme ?? detectDeviceTheme();
+        const finalLocale: "es" | "en" = prefs?.locale ?? detectDeviceLocale();
+        setTheme(finalTheme);
+        setLocale(finalLocale);
+        apiClient.patch("/users/me", { appPreferences: { theme: finalTheme, locale: finalLocale } }).catch(() => {});
+        const superAdminUser = isSuperAdmin(response.user);
+        const selectedId = typeof window !== "undefined" ? localStorage.getItem("parkit_selected_company_id") : null;
+        let hasCompanies = true;
+        if (superAdminUser && !selectedId) {
+          try { const companiesData = await apiClient.get<{ id: string }[]>("/companies"); hasCompanies = Array.isArray(companiesData) && companiesData.length > 0; } catch { hasCompanies = true; }
+        }
+        try {
+          if (superAdminUser && selectedId) {
+            const data = await apiClient.get<{ brandingConfig?: Record<string, string | null | undefined> | null }>(`/companies/${selectedId}/branding`);
+            const bc = data?.brandingConfig && typeof data.brandingConfig === "object" ? data.brandingConfig : null;
+            const branding = bc ? {
+              bannerImageUrl: bc.bannerImageUrl ?? null, logoImageUrl: bc.logoImageUrl ?? null,
+              primaryColor: bc.primaryColor ?? null, primaryColorDark: bc.primaryColorDark ?? null,
+              secondaryColor: bc.secondaryColor ?? null, secondaryColorDark: bc.secondaryColorDark ?? null,
+              tertiaryColor: bc.tertiaryColor ?? null, tertiaryColorDark: bc.tertiaryColorDark ?? null,
+              businessActivity: bc.businessActivity ?? null,
+            } : null;
+            setCompanyBranding(branding);
+            if (branding) setBrandingInCache(selectedId, branding);
+          } else if (!superAdminUser) {
+            const data = await apiClient.get<{ brandingConfig?: Record<string, string | null | undefined> | null }>("/companies/me/branding");
+            const bc = data?.brandingConfig && typeof data.brandingConfig === "object" ? data.brandingConfig : null;
+            const branding = bc ? {
+              bannerImageUrl: bc.bannerImageUrl ?? null, logoImageUrl: bc.logoImageUrl ?? null,
+              primaryColor: bc.primaryColor ?? null, primaryColorDark: bc.primaryColorDark ?? null,
+              secondaryColor: bc.secondaryColor ?? null, secondaryColorDark: bc.secondaryColorDark ?? null,
+              tertiaryColor: bc.tertiaryColor ?? null, tertiaryColorDark: bc.tertiaryColorDark ?? null,
+              businessActivity: bc.businessActivity ?? null,
+            } : null;
+            setCompanyBranding(branding);
+          } else { setCompanyBranding(null); }
+        } catch { setCompanyBranding(null); }
+        if (superAdminUser && !selectedId && !hasCompanies) {
+          window.location.href = "/no-companies";
+        } else {
+          window.location.href = "/dashboard";
+        }
+        return;
+      }
+    } catch (err: unknown) {
+      const raw = getApiErrorMessage(err);
+      if (raw === "USER_INACTIVE") { setError(t("auth.errorUserInactive")); }
+      else if (raw === "COMPANY_INACTIVE") { setError(t("auth.errorCompanyInactive")); }
+      else { setError(getTranslatedApiErrorMessage(err, t)); }
+    }
+    setIsSubmitting(false);
+  };
+
+  return (
+    <div>
+      <div className="flex flex-col items-center mb-6">
+        <p className="text-sm text-text-muted">{t("auth.signInToContinue")}</p>
+      </div>
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <div>
+          <label htmlFor="modal-email" className={LABEL_CLASSES}>{t("auth.email")}</label>
+          <input id="modal-email" name="email" type="email" value={formData.email} onChange={(e) => setFormData((p) => ({ ...p, email: e.target.value }))} required autoComplete="email" className={INPUT_CLASSES} />
+        </div>
+        <div>
+          <div className="flex items-center justify-between mb-1.5">
+            <label htmlFor="modal-password" className="text-sm font-medium text-text-primary">{t("auth.password")}</label>
+            <button type="button" onClick={() => onSwitch("forgot-password")} className="text-xs text-company-primary hover:brightness-110">{t("auth.forgotPassword")}</button>
+          </div>
+          <div className="relative">
+            <input id="modal-password" name="password" type={showPassword ? "text" : "password"} value={formData.password} onChange={(e) => setFormData((p) => ({ ...p, password: e.target.value }))} required autoComplete="current-password" className={`${INPUT_CLASSES} pr-10`} />
+            <button type="button" onClick={() => setShowPassword((v) => !v)} className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-slate-400 hover:text-slate-600 dark:text-slate-500 dark:hover:text-slate-300">
+              {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+            </button>
+          </div>
+        </div>
+        <button type="submit" disabled={isSubmitting} className="group w-full flex items-center justify-center gap-2 rounded-full bg-blue-600 py-2.5 text-sm font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-white dark:focus:ring-offset-slate-900 disabled:opacity-50 disabled:pointer-events-none transition-all">
+          {isSubmitting ? <LoadingSpinner size="sm" variant="white" /> : <>{t("auth.signIn")}<ArrowRight className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-1" /></>}
+        </button>
+        {error && <p className="text-xs text-red-600 dark:text-red-400 text-center">{error}</p>}
+      </form>
+      <div className="relative my-5">
+        <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-border-color/50" /></div>
+        <div className="relative flex justify-center text-xs"><span className="bg-white/60 dark:bg-slate-900/60 px-2 text-text-muted">{t("auth.orContinueWith")}</span></div>
+      </div>
+      <div className="flex flex-col gap-3">
+        <button type="button" onClick={() => handleOAuthLogin("google")} className="flex items-center justify-center gap-2.5 w-full rounded-xl border border-border-color/60 bg-white/80 dark:bg-white/5 px-4 py-2.5 text-sm font-medium text-text-primary transition-all duration-200 hover:bg-slate-50 dark:hover:bg-slate-700/80 backdrop-blur-sm">
+          <GoogleIcon className="w-5 h-5" />
+          {t("auth.continueWithGoogle")}
+        </button>
+        <button type="button" onClick={() => handleOAuthLogin("microsoft")} className="flex items-center justify-center gap-2.5 w-full rounded-xl border border-border-color/60 bg-white/80 dark:bg-white/5 px-4 py-2.5 text-sm font-medium text-text-primary transition-all duration-200 hover:bg-slate-50 dark:hover:bg-slate-700/80 backdrop-blur-sm">
+          <MicrosoftIcon className="w-5 h-5" />
+          {t("auth.continueWithMicrosoft")}
+        </button>
+        <button type="button" onClick={() => handleOAuthLogin("facebook")} className="flex items-center justify-center gap-2.5 w-full rounded-xl border border-border-color/60 bg-white/80 dark:bg-white/5 px-4 py-2.5 text-sm font-medium text-text-primary transition-all duration-200 hover:bg-slate-50 dark:hover:bg-slate-700/80 backdrop-blur-sm">
+          <FacebookIcon className="w-5 h-5" />
+          {t("auth.continueWithFacebook")}
+        </button>
+      </div>
+      <div className="mt-6 pt-5 border-t border-border-color/50 text-center">
+        <p className="text-sm text-text-muted">{t("auth.dontHaveAccount")} <a href="/signup" className="font-medium text-company-primary hover:brightness-110 underline-offset-2 hover:underline transition-colors">{t("auth.signUp")}</a></p>
+      </div>
+    </div>
+  );
+}
+
+function ForgotPasswordView({ onSwitch }: { onSwitch: (v: AuthView) => void }) {
+  const { t } = useTranslation();
+  const [email, setEmail] = useState("");
+  const [submitted, setSubmitted] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError(null);
+    if (!email.trim()) return;
+    setIsSubmitting(true);
+    try { await apiClient.post("/auth/forgot-password", { email: email.trim() }); setSubmitted(true); }
+    catch (err: unknown) { setError(getTranslatedApiErrorMessage(err, t) || t("apiErrors.requestFailed")); }
+    setIsSubmitting(false);
+  };
+
+  return (
+    <div>
+      <div className="flex flex-col items-center mb-6">
+        <h1 className="text-xl font-semibold text-text-primary">{t("auth.resetPasswordTitle")}</h1>
+        <p className="text-sm text-text-muted mt-1 text-center">{submitted ? t("auth.resetSubmittedMessage").replace("{{email}}", email) : t("auth.resetPasswordDescription")}</p>
+      </div>
+      {submitted ? (
+        <div className="flex justify-center">
+          <button type="button" onClick={() => onSwitch("login")} className="inline-flex items-center gap-2 text-sm font-medium text-company-primary hover:brightness-110 transition-colors">
+            <ArrowLeft className="h-4 w-4" />{t("auth.backToSignIn")}
+          </button>
+        </div>
+      ) : (
+        <>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div>
+              <label htmlFor="modal-fp-email" className={LABEL_CLASSES}>{t("auth.email")}</label>
+              <input id="modal-fp-email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required autoComplete="email" className={INPUT_CLASSES} />
+            </div>
+            <button type="submit" disabled={isSubmitting} className={`${BUTTON_CLASSES} flex items-center justify-center gap-2 disabled:opacity-50 disabled:pointer-events-none`}>
+              {isSubmitting ? <LoadingSpinner size="sm" variant="white" /> : t("auth.sendResetLink")}
+            </button>
+            {error && <div className="rounded-lg border border-red-500/20 bg-red-500/10 px-4 py-3 text-sm text-red-600 dark:text-red-400" role="alert">{error}</div>}
+          </form>
+          <button type="button" onClick={() => onSwitch("login")} className="mt-5 flex items-center justify-center gap-2 text-sm text-text-muted hover:text-text-secondary transition-colors mx-auto">
+            <ArrowLeft className="h-4 w-4" />{t("auth.backToSignIn")}
+          </button>
+        </>
+      )}
+    </div>
+  );
+}
+
+

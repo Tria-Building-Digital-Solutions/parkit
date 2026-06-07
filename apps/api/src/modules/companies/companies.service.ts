@@ -16,11 +16,12 @@ export class CompaniesService {
     const createInput: Prisma.CompanyCreateInput = {
       legalName: data.legalName,
       taxId: data.taxId,
+      industry: data.industry || "Other",
       ...(data.commercialName && { commercialName: data.commercialName }),
-      ...(data.industry && { industry: data.industry }),
       ...(data.countryCode && { countryCode: data.countryCode }),
-      ...(data.currency && { currency: data.currency }),
-      ...(data.timezone && { timezone: data.timezone }),
+      currency: data.currency || "USD",
+      countryCode: data.countryCode || "US",
+      timezone: data.timezone || "UTC",
       ...(data.email && { email: data.email }),
       ...(data.contactPhone && { contactPhone: data.contactPhone }),
       ...(data.legalAddress && { legalAddress: data.legalAddress }),
@@ -43,7 +44,7 @@ export class CompaniesService {
     return company ? withNormalizedBranding(company) : null;
   }
 
-  /** Solo branding (respuesta ligera para cargar rápido en login/cambio de empresa). */
+  /** Branding only (light response to load quickly on login/company change). */
   static async getBrandingById(id: string) {
     const row = await prisma.company.findUnique({
       where: { id },
@@ -69,7 +70,7 @@ export class CompaniesService {
     if (data.email !== undefined) updateInput.email = data.email;
     if (data.contactPhone !== undefined) updateInput.contactPhone = data.contactPhone;
     if (data.legalAddress !== undefined) updateInput.legalAddress = data.legalAddress;
-    // brandingConfig se persiste completo (incl. logoImageUrl y bannerImageUrl en base64)
+    // brandingConfig is persisted completely (including logoImageUrl and bannerImageUrl in base64)
     if (data.brandingConfig !== undefined) {
       updateInput.brandingConfig = data.brandingConfig as Prisma.InputJsonValue;
     }
@@ -115,12 +116,12 @@ export class CompaniesService {
   static async delete(id: string) {
     const company = await prisma.company.findUnique({ where: { id } });
     if (!company) return null;
-    const [userCount, parkingCount, clientCount] = await Promise.all([
+    const [userCount, parkingCount, customerCount] = await Promise.all([
       prisma.user.count({ where: { companyId: id } }),
       prisma.parking.count({ where: { companyId: id } }),
-      prisma.client.count({ where: { companyId: id } }),
+      prisma.customer.count({ where: { companyId: id } }),
     ]);
-    if (userCount > 0 || parkingCount > 0 || clientCount > 0) {
+    if (userCount > 0 || parkingCount > 0 || customerCount > 0) {
       throw new Error("No se puede eliminar una empresa con usuarios, estacionamientos o clientes asociados.");
     }
     await prisma.company.delete({ where: { id } });

@@ -108,27 +108,30 @@ interface DashboardStore {
   selectedCompanyName: string | null;
   requiresCustomerApp: boolean | null;
   setSelectedCompany: (id: string | null, name: string | null, requiresCustomerApp?: boolean | null) => void;
-  /** Incrementar para forzar recarga de la lista de companies en el sidebar */
+  /** Increment to force reload of the companies list in the sidebar */
   companiesVersion: number;
   bumpCompanies: () => void;
-  /** Incrementar cuando cambian parkings (ej. requiere reserva) para que el sidebar actualice "Reservas" */
+  /** Increment when parkings change (e.g. require reservation) to update "Reservations" in the sidebar */
   parkingsVersion: number;
   bumpParkings: () => void;
   companyBranding: CompanyBranding;
   setCompanyBranding: (b: CompanyBranding) => void;
-  /** Caché de branding por companyId para mostrar al instante al cambiar de empresa (super admin). */
+  /** Branding cache per company (logo, colors, etc.) */
   brandingCache: Record<string, CompanyBranding>;
   setBrandingInCache: (companyId: string, b: CompanyBranding) => void;
-  getBrandingFromCache: (companyId: string) => CompanyBranding | undefined;
 }
 
 const SELECTED_COMPANY_KEY = "parkit_selected_company_id";
 const SELECTED_COMPANY_NAME_KEY = "parkit_selected_company_name";
+const COMPANY_BRANDING_KEY = "parkit_company_branding";
 
 export const useDashboardStore = create<DashboardStore>((set) => ({
   sidebarOpen: false,
   toggleSidebar: () => set((state) => ({ sidebarOpen: !state.sidebarOpen })),
-  sidebarCollapsed: true,
+  sidebarCollapsed:
+    typeof window !== "undefined"
+      ? localStorage.getItem(SIDEBAR_COLLAPSED_KEY) === "true"
+      : false,
   setSidebarCollapsed: (collapsed) => {
     if (typeof window !== "undefined") {
       localStorage.setItem(SIDEBAR_COLLAPSED_KEY, String(collapsed));
@@ -156,12 +159,35 @@ export const useDashboardStore = create<DashboardStore>((set) => ({
   bumpCompanies: () => set((s) => ({ companiesVersion: s.companiesVersion + 1 })),
   parkingsVersion: 0,
   bumpParkings: () => set((s) => ({ parkingsVersion: s.parkingsVersion + 1 })),
-  companyBranding: null,
-  setCompanyBranding: (b) => set({ companyBranding: b }),
+  companyBranding:
+    typeof window !== "undefined"
+      ? (() => {
+          try {
+            const stored = localStorage.getItem(COMPANY_BRANDING_KEY);
+            return stored ? (JSON.parse(stored) as CompanyBranding) : null;
+          } catch {
+            return null;
+          }
+        })()
+      : null,
+  setCompanyBranding: (b) => {
+    if (typeof window !== "undefined") {
+      if (b) {
+        localStorage.setItem(COMPANY_BRANDING_KEY, JSON.stringify(b));
+      } else {
+        localStorage.removeItem(COMPANY_BRANDING_KEY);
+      }
+    }
+    set({ companyBranding: b });
+  },
   brandingCache: {},
   setBrandingInCache: (companyId, b) =>
     set((s) => ({
       brandingCache: { ...s.brandingCache, [companyId]: b ?? null },
     })),
-  getBrandingFromCache: (companyId) => useDashboardStore.getState().brandingCache[companyId],
 }));
+
+// Helper function to get branding from cache (outside store to avoid circular dependency)
+export const getBrandingFromCache = (companyId: string): CompanyBranding | undefined => {
+  return useDashboardStore.getState().brandingCache[companyId];
+};

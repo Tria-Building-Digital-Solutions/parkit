@@ -10,212 +10,21 @@ import {
 } from "react-native";
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
-import { Ionicons } from "@expo/vector-icons";
-import { useLocaleStore, useThemeStore, useAccessibilityStore } from "@/lib/store";
+import { useLocaleStore, useThemeStore } from "@/lib/store";
 import { t } from "@/lib/i18n";
+import { IconCircleCheck, IconHome2 } from "@/components/Icons";
 import type { Locale } from "@parkit/shared";
 import { useMemo } from "react";
-import { useValetTheme, useResponsiveLayout } from "@/theme/valetTheme";
+import { useValetTheme } from "@/theme/valetTheme";
 import type { ThemePreference } from "@/lib/themeStore";
-import { ValetBackButton } from "@/components/ValetBackButton";
 
 const MIN_ROW = 58;
 
 type Theme = ReturnType<typeof useValetTheme>;
 
-/** Sección de accesibilidad con slider para escala de texto */
-function AccessibilitySection() {
-  const { textScale, setTextScale, reduceMotion, setReduceMotion } = useAccessibilityStore();
-  const theme = useValetTheme();
-  const locale = useLocaleStore((s) => s.locale);
-  const responsive = useResponsiveLayout();
-
-  const styles = useMemo(() => {
-    const C = theme.colors;
-    const S = theme.space;
-    const F = theme.font;
-    const Fonts = theme.fontFamily;
-
-    return StyleSheet.create({
-      sliderRow: {
-        paddingVertical: S.md,
-        paddingHorizontal: S.lg,
-        borderBottomWidth: StyleSheet.hairlineWidth,
-        borderBottomColor: C.border,
-      },
-      sliderRowLast: {
-        borderBottomWidth: 0,
-      },
-      row: {
-        flexDirection: "row",
-        alignItems: "center",
-        justifyContent: "space-between",
-        minHeight: MIN_ROW,
-        paddingVertical: S.md,
-        paddingHorizontal: S.lg,
-        borderBottomWidth: StyleSheet.hairlineWidth,
-        borderBottomColor: C.border,
-      },
-      rowLast: {
-        borderBottomWidth: 0,
-      },
-      rowActive: {
-        backgroundColor: theme.isDark ? "rgba(59, 130, 246, 0.15)" : "#EFF6FF",
-      },
-      rowPressed: {
-        opacity: 0.85,
-        backgroundColor: theme.isDark ? "rgba(148, 163, 184, 0.12)" : "#E2E8F0",
-      },
-      label: {
-        fontSize: Math.round(F.status * 0.65),
-        fontWeight: "700",
-        fontFamily: Fonts.primary,
-        color: C.text,
-      },
-      hint: {
-        fontSize: Math.round(F.status * 0.65),
-        fontFamily: Fonts.primary,
-        color: C.textSubtle,
-        marginTop: 2,
-        maxWidth: responsive.contentMaxWidth - 120,
-      },
-      sliderLabelRow: {
-        flexDirection: "row",
-        justifyContent: "space-between",
-        alignItems: "center",
-        marginBottom: S.sm,
-      },
-      sliderValue: {
-        fontSize: Math.round(F.status * 0.65),
-        fontWeight: "800",
-        fontFamily: Fonts.primary,
-        color: C.primary,
-      },
-      sliderControls: {
-        flexDirection: "row",
-        alignItems: "center",
-        justifyContent: "space-between",
-        marginTop: S.sm,
-      },
-      sliderButton: {
-        width: 28 * textScale,
-        height: 28 * textScale,
-        borderRadius: 14 * textScale,
-        backgroundColor: C.primary,
-        alignItems: "center",
-        justifyContent: "center",
-      },
-      sliderButtonPressed: {
-        opacity: 0.8,
-        transform: [{ scale: 0.95 }],
-      },
-      sliderValueBox: {
-        alignItems: "center",
-        justifyContent: "center",
-        minWidth: 80,
-      },
-      progressBarContainer: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        gap: S.sm,
-        marginTop: S.sm,
-      },
-      progressBarTrack: {
-        flex: 1,
-        height: 8,
-        backgroundColor: theme.isDark ? 'rgba(148, 163, 184, 0.3)' : '#E2E8F0',
-        borderRadius: 4,
-        overflow: 'hidden',
-      },
-      progressBarFill: {
-        height: '100%',
-        backgroundColor: C.primary,
-        borderRadius: 4,
-      },
-      progressLabel: {
-        fontSize: Math.round(F.status * 0.65),
-        fontWeight: '700',
-        fontFamily: Fonts.primary,
-        color: C.primary,
-        minWidth: 40,
-        textAlign: 'right',
-      },
-    });
-  }, [theme, responsive.contentMaxWidth, textScale]);
-
-  const progressPercent = Math.round(((textScale - 1) / 0.25) * 100);
-
-  return (
-    <>
-      <View style={styles.sliderRow}>
-        <View>
-          <Text style={styles.label}>{t(locale, "settings.textScale")}</Text>
-          <Text style={styles.hint}>{t(locale, "settings.textScaleDesc")}</Text>
-        </View>
-        <View style={styles.progressBarContainer}>
-          <Pressable
-            style={({ pressed }) => [
-              styles.sliderButton,
-              pressed && styles.sliderButtonPressed,
-              textScale <= 1 && { opacity: 0.4 },
-            ]}
-            onPress={() => textScale > 1 && setTextScale(textScale - 0.05)}
-            disabled={textScale <= 1}
-          >
-            <Ionicons name="remove" size={28 * textScale} color="#fff" />
-          </Pressable>
-          <View style={styles.progressBarTrack}>
-            <View
-              style={[
-                styles.progressBarFill,
-                { width: `${progressPercent}%` },
-              ]}
-            />
-          </View>
-          <Text style={styles.progressLabel}>{Math.round((textScale - 1) * 100)}%</Text>
-          <Pressable
-            style={({ pressed }) => [
-              styles.sliderButton,
-              pressed && styles.sliderButtonPressed,
-              textScale >= 1.25 && { opacity: 0.4 },
-            ]}
-            onPress={() => textScale < 1.25 && setTextScale(textScale + 0.05)}
-            disabled={textScale >= 1.25}
-          >
-            <Ionicons name="add" size={28 * textScale} color="#fff" />
-          </Pressable>
-        </View>
-      </View>
-
-      <Pressable
-        style={({ pressed }) => [
-          styles.row,
-          styles.rowLast,
-          reduceMotion && styles.rowActive,
-          pressed && styles.rowPressed,
-        ]}
-        onPress={() => setReduceMotion(!reduceMotion)}
-        accessibilityRole="button"
-        accessibilityState={{ selected: reduceMotion }}
-        accessibilityLabel={t(locale, "settings.reduceMotion")}
-        accessibilityHint={t(locale, "settings.reduceMotionHint")}
-      >
-        <View>
-          <Text style={styles.label}>{t(locale, "settings.reduceMotion")}</Text>
-          <Text style={styles.hint}>{t(locale, "settings.reduceMotionDesc")}</Text>
-        </View>
-        {reduceMotion && (
-          <Ionicons name="checkmark-circle" size={28 * textScale} color={theme.colors.primary} />
-        )}
-      </Pressable>
-    </>
-  );
-}
-
 function createSettingsStyles(theme: Theme, contentMaxWidth: number, sectionPadding: number) {
   const C = theme.colors;
   const S = theme.space;
-  const F = theme.font;
   const R = theme.radius;
   const Fonts = theme.fontFamily;
 
@@ -239,7 +48,7 @@ function createSettingsStyles(theme: Theme, contentMaxWidth: number, sectionPadd
       alignItems: "center",
       justifyContent: "space-between",
       paddingHorizontal: sectionPadding,
-      paddingVertical: S.md,
+      paddingVertical: S.xs,
       borderBottomWidth: StyleSheet.hairlineWidth,
       borderBottomColor: C.border,
       backgroundColor: C.card,
@@ -248,7 +57,6 @@ function createSettingsStyles(theme: Theme, contentMaxWidth: number, sectionPadd
       width: 44,
     },
     title: {
-      fontSize: Math.round(F.secondary * 0.85),
       fontWeight: "800",
       fontFamily: Fonts.primary,
       color: C.text,
@@ -263,18 +71,15 @@ function createSettingsStyles(theme: Theme, contentMaxWidth: number, sectionPadd
       paddingTop: S.sm,
       paddingBottom: 40,
     },
-    /** Misma jerarquía visual que `receive` / tickets (legible en ES/EN). */
+    /** Same visual hierarchy as `receive` / tickets (readable in ES/EN). */
     sectionTitle: {
-      fontSize: Math.round(F.secondary * 0.85),
-      fontWeight: "800",
-      fontFamily: Fonts.primary,
+      fontWeight: '600',
       color: C.textMuted,
-      letterSpacing: 0.65,
-      marginBottom: S.sm,
       marginTop: S.md,
+      marginBottom: S.sm,
+      lineHeight: 22,
     },
     helpText: {
-      fontSize: Math.round(F.status * 0.65),
       fontFamily: Fonts.primary,
       lineHeight: 18,
       color: C.textMuted,
@@ -285,8 +90,8 @@ function createSettingsStyles(theme: Theme, contentMaxWidth: number, sectionPadd
       backgroundColor: C.card,
       borderRadius: R.card,
       overflow: "hidden",
-      borderWidth: 2,
-      borderColor: C.border,
+      borderWidth: 1,
+      borderColor: theme.isDark ? "rgba(148, 163, 184, 0.15)" : "rgba(226, 232, 240, 0.8)",
     },
     localeRow: {
       flexDirection: "row",
@@ -309,13 +114,11 @@ function createSettingsStyles(theme: Theme, contentMaxWidth: number, sectionPadd
       backgroundColor: theme.isDark ? "rgba(148, 163, 184, 0.12)" : "#E2E8F0",
     },
     localeLabel: {
-      fontSize: Math.round(F.status * 0.65),
       fontWeight: "700",
       fontFamily: Fonts.primary,
       color: C.text,
     },
     localeHint: {
-      fontSize: Math.round(F.status * 0.65),
       fontFamily: Fonts.primary,
       color: C.textSubtle,
       marginTop: 2,
@@ -327,14 +130,12 @@ export default function SettingsScreen() {
   const router = useRouter();
   const { locale, setLocale } = useLocaleStore();
   const { preference, setPreference } = useThemeStore();
-  const { textScale } = useAccessibilityStore();
   const theme = useValetTheme();
-  const responsive = useResponsiveLayout();
   const insets = useSafeAreaInsets();
   const systemScheme = useColorScheme();
   const styles = useMemo(
-    () => createSettingsStyles(theme, responsive.contentMaxWidth, responsive.sectionPadding),
-    [theme, responsive.contentMaxWidth, responsive.sectionPadding]
+    () => createSettingsStyles(theme, 9999, 20),
+    [theme]
   );
 
   const handleSetLocale = (newLocale: Locale) => {
@@ -363,14 +164,13 @@ export default function SettingsScreen() {
       <View style={styles.inner} key={locale}>
         <View style={styles.contentFrame}>
         <View style={[styles.header, { paddingTop: insets.top + theme.space.md }]}>
-          <ValetBackButton
-            onPress={() => router.back()}
-            accessibilityLabel={t(locale, "common.back")}
-          />
+          <View style={{ width: 44, height: 44 }} />
           <Text style={styles.title} maxFontSizeMultiplier={1.8}>
             {t(locale, "settings.title")}
           </Text>
-          <View style={styles.headerSpacer} />
+          <Pressable onPress={() => router.replace("/home")} style={{ width: 44, alignItems: "center", justifyContent: "center" }}>
+            <IconHome2 size={24} color={theme.colors.text} />
+          </Pressable>
         </View>
 
         <ScrollView
@@ -382,7 +182,7 @@ export default function SettingsScreen() {
             {t(locale, "settings.intro")}
           </Text>
 
-          <Text style={styles.sectionTitle}>{t(locale, "settings.themeSection")}</Text>
+          <Text style={styles.sectionTitle} maxFontSizeMultiplier={1.5}>{t(locale, "settings.themeSection")}</Text>
           <View style={styles.section}>
             {(["system", "light", "dark"] as const).map((pref, i, arr) => (
               <Pressable
@@ -398,9 +198,9 @@ export default function SettingsScreen() {
                 accessibilityState={{ selected: isThemeActive(pref) }}
               >
                 <View>
-                  <Text style={styles.localeLabel}>{themeLabel(pref)}</Text>
+                  <Text style={styles.localeLabel} maxFontSizeMultiplier={1.5}>{themeLabel(pref)}</Text>
                   {pref === "system" && (
-                    <Text style={styles.localeHint}>
+                    <Text style={styles.localeHint} maxFontSizeMultiplier={1.5}>
                       {systemScheme === "light"
                         ? t(locale, "settings.themeSystemHintLight")
                         : t(locale, "settings.themeSystemHintDark")}
@@ -408,13 +208,13 @@ export default function SettingsScreen() {
                   )}
                 </View>
                 {isThemeActive(pref) && (
-                  <Ionicons name="checkmark-circle" size={28 * textScale} color={theme.colors.primary} />
+                  <IconCircleCheck size={theme.icon.md} color={theme.colors.primary} />
                 )}
               </Pressable>
             ))}
           </View>
 
-          <Text style={styles.sectionTitle}>{t(locale, "settings.languageSection")}</Text>
+          <Text style={styles.sectionTitle} maxFontSizeMultiplier={1.5}>{t(locale, "settings.languageSection")}</Text>
           <View style={styles.section}>
             <Pressable
               style={({ pressed }) => [
@@ -426,9 +226,9 @@ export default function SettingsScreen() {
               accessibilityRole="button"
               accessibilityState={{ selected: locale === "es" }}
             >
-              <Text style={styles.localeLabel}>{t(locale, "settings.spanish")}</Text>
+              <Text style={styles.localeLabel} maxFontSizeMultiplier={1.5}>{t(locale, "settings.spanish")}</Text>
               {locale === "es" && (
-                <Ionicons name="checkmark-circle" size={28 * textScale} color={theme.colors.primary} />
+                <IconCircleCheck size={theme.icon.md} color={theme.colors.primary} />
               )}
             </Pressable>
             <Pressable
@@ -442,17 +242,17 @@ export default function SettingsScreen() {
               accessibilityRole="button"
               accessibilityState={{ selected: locale === "en" }}
             >
-              <Text style={styles.localeLabel}>{t(locale, "settings.english")}</Text>
+              <Text style={styles.localeLabel} maxFontSizeMultiplier={1.5}>{t(locale, "settings.english")}</Text>
               {locale === "en" && (
-                <Ionicons name="checkmark-circle" size={28 * textScale} color={theme.colors.primary} />
+                <IconCircleCheck size={theme.icon.md} color={theme.colors.primary} />
               )}
             </Pressable>
           </View>
 
-          <Text style={styles.sectionTitle}>{t(locale, "settings.accessibilitySection")}</Text>
+          {/* <Text style={styles.sectionTitle}>{t(locale, "settings.accessibilitySection")}</Text>
           <View style={styles.section}>
             <AccessibilitySection />
-          </View>
+          </View> */}
         </ScrollView>
         </View>
       </View>

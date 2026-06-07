@@ -1,11 +1,11 @@
 import { Request, Response } from "express";
 import { UsersService } from "./users.service";
-import { ClientsService } from "../clients/clients.service";
+import { CustomersService } from "../customers/customers.service";
 import { parseQueryParamArray } from "../../shared/utils/queryParser";
 import { created, fail, notFound, ok } from "../../shared/utils/response";
 import type { CreateUserInput } from "../../shared/validators";
 import { InvitationsService } from "./invitations.service";
-import { SystemRole } from "@prisma/client";
+import { SystemRole, ValetStaffRole } from "@prisma/client";
 
 export class UsersController {
   static async getProfile(req: Request, res: Response) {
@@ -47,6 +47,22 @@ export class UsersController {
 
   static async createSuperAdmin(req: Request, res: Response) {
     try {
+      const { email, firstName: _firstName, lastName: _lastName, password } = req.body;
+      
+      // If no password is provided, send invitation by email
+      const isInvitation = !password || password === "";
+      
+      if (isInvitation) {
+        const invitation = await InvitationsService.sendInvitation({
+          email: email.toLowerCase().trim(),
+          companyId: null, // SUPER_ADMIN has no company
+          role: SystemRole.SUPER_ADMIN,
+          invitedByUserId: req.user.userId,
+        });
+        return created(res, invitation);
+      }
+      
+      // If password is provided, create user directly (previous behavior)
       const user = await UsersService.createSuperAdmin(req.body);
       const {
         passwordHash: _passwordHash,
@@ -66,6 +82,21 @@ export class UsersController {
     try {
       const companyId = req.user.companyId!;
       const body = req.body as CreateUserInput;
+      
+      // If no password is provided, send invitation by email
+      const isInvitation = !body.password || body.password === "";
+      
+      if (isInvitation) {
+        const invitation = await InvitationsService.sendInvitation({
+          email: body.email.toLowerCase().trim(),
+          companyId,
+          role: (body.systemRole as SystemRole) || SystemRole.STAFF,
+          invitedByUserId: req.user.userId,
+        });
+        return created(res, invitation);
+      }
+      
+      // If password is provided, create user directly (previous behavior)
       const user = await UsersService.create(companyId, body);
 
       // Don't expose invitation token or password hash in API response
@@ -171,7 +202,7 @@ export class UsersController {
   static async invite(req: Request, res: Response) {
     try {
       const companyId = req.user.companyId!;
-      const { email, role } = req.body;
+      const { email, role, valetStaffRole, licenseNumber, licenseExpiry } = req.body;
       if (!email) throw new Error("Email is required");
 
       const invitation = await InvitationsService.sendInvitation({
@@ -179,6 +210,10 @@ export class UsersController {
         companyId,
         role: (role as SystemRole) || SystemRole.CUSTOMER,
         invitedByUserId: req.user.userId,
+        // Optional data for valets
+        valetStaffRole: valetStaffRole as ValetStaffRole | undefined,
+        licenseNumber,
+        licenseExpiry,
       });
 
       return created(res, invitation);
@@ -190,7 +225,7 @@ export class UsersController {
   static async inviteBatch(req: Request, res: Response) {
     try {
       const companyId = req.user.companyId!;
-      const { emails, role } = req.body;
+      const { emails, role, valetStaffRole, licenseNumber, licenseExpiry } = req.body;
       if (!Array.isArray(emails) || emails.length === 0) {
         throw new Error("Emails array is required and cannot be empty");
       }
@@ -200,6 +235,10 @@ export class UsersController {
         companyId,
         role: (role as SystemRole) || SystemRole.ADMIN,
         invitedByUserId: req.user.userId,
+        // Optional data for valets
+        valetStaffRole: valetStaffRole as ValetStaffRole | undefined,
+        licenseNumber,
+        licenseExpiry,
       });
 
       return created(res, results);
@@ -233,12 +272,40 @@ export class UsersController {
   static async addVehicle(req: Request, res: Response) {
     try {
       const id = String(req.params.id);
-      const clientVehicle = await ClientsService.addVehicleByUserId(
+      const customerVehicle = await CustomersService.addVehicleByUserId(
         req.user.companyId!,
         id,
         req.body
       );
-      return created(res, clientVehicle);
+      return created(res, customerVehicle);
+    } catch (error: unknown) {
+      return fail(
+        res,
+        400,
+        error instanceof Error ? error.message : "Unknown error"
+      );
+    }
+  }
+
+  static async validateEmail(req: Request, res: Response) {
+    try {
+      const { email } = req.body;
+      if (!email) {
+        return fail(res, 400, "Email is required");
+      }
+
+      const user = await UsersService.getByEmail(email);
+      if (!user) {
+        return ok(res, { valid: true, exists: false });
+      }
+
+      // If user exists and is staff/admin, email is not valid for walk-in customer
+      if (user.systemRole === "STAFF" || user.systemRole === "ADMIN" || user.systemRole === "SUPER_ADMIN") {
+        return ok(res, { valid: false, exists: true, reason: "staff" });
+      }
+
+      // If user is CUSTOMER, email is valid (will be reused)
+      return ok(res, { valid: true, exists: true, reason: "customer" });
     } catch (error: unknown) {
       return fail(
         res,

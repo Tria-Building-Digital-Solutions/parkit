@@ -1,6 +1,6 @@
 # Parkit
 
-parkit. is a **B2B2C parking and valet management platform** designed for companies
+parkit is a **B2B2C parking and valet management platform** designed for companies
 that operate parking facilities, valet services, or hybrid parking models.
 
 The platform connects **companies**, **customers**, and **valet staff**
@@ -16,9 +16,11 @@ over their parking infrastructure, branding, and users.
 ## Key Concepts
 
 ### Companies
+
 Organizations that operate or manage parking facilities and valet services.
 
 Each company acts as an isolated tenant and can define:
+
 - One or more parking locations
 - Parking types (open, covered, tower, underground, elevator, etc.)
 - Capacity, slot types, and operational rules
@@ -30,9 +32,11 @@ Each company acts as an isolated tenant and can define:
 ---
 
 ### Customers
+
 End users who receive parking services or benefits through a company.
 
 Customers can:
+
 - Register and manage one or multiple vehicles
 - Store vehicle characteristics and dimensions
 - Make bookings when required by a parking facility
@@ -44,9 +48,11 @@ Customers do not manage infrastructure, only their personal usage.
 ---
 
 ### Valets
+
 Operational staff responsible for handling vehicles and executing parking operations.
 
 Valets:
+
 - Are linked to a company
 - Can be assigned to parkings dynamically
 - Participate in ticket workflows (receive, park, deliver)
@@ -57,12 +63,12 @@ Valets:
 
 ### Roles and permissions
 
-| Role         | Scope        | Description |
-|-------------|--------------|-------------|
-| **SUPER_ADMIN** | Global       | Can manage all companies and all data. No company assigned; when acting on a specific company must send the `x-company-id` header. Only role that can list all companies (GET `/companies`) and create companies (POST `/companies`). |
-| **ADMIN**      | Single company | Can manage only the company they belong to (users, parkings, clients, etc.). |
-| **STAFF**      | Single company | Operational access within the company (e.g. valets). |
-| **CUSTOMER**   | Single company | End users (bookings, tickets, vehicles). |
+| Role | Scope | Description |
+| ------ | ------- | ------------- |
+| **SUPER_ADMIN** | Global | Can manage all companies and all data. No company assigned; when acting on a specific company must send the `x-company-id` header. Only role that can list all companies (GET `/companies`) and create companies (POST `/companies`). |
+| **ADMIN** | Single company | Can manage only the company they belong to (users, parkings, clients, etc.). |
+| **STAFF** | Single company | Operational access within the company (e.g. valets). |
+| **CUSTOMER** | Single company | End users (bookings, tickets, vehicles). |
 
 Super admin users are created via **seed** or internal tooling (e.g. `superadmin@parkit.cr` in seed). For API calls that require a company context (e.g. list users of a company), SUPER_ADMIN must send the header **`x-company-id: <companyId>`**.
 
@@ -93,34 +99,44 @@ Super admin users are created via **seed** or internal tooling (e.g. `superadmin
 
 ## Applications
 
-parkit. is structured as a **multi-application platform**:
+parkit is structured as a **multi-application platform**:
 
 ### Backend API
+
 The core of the system:
+
 - Business logic
 - Database access
 - Authentication and authorization
 - Validation and domain rules
 - Integrations with external services
 
+For detailed API setup and development, see [apps/api/README.md](apps/api/README.md).
+
 ---
 
 ### Web App
+
 Company-facing administration dashboard.
 
 Used to:
+
 - Manage parkings and parking slots
 - Manage customers and valet staff
 - Configure branding and company preferences
 - Define operational rules
 - Monitor activity and performance
 
+For detailed setup and development, see [apps/web/README.md](apps/web/README.md).
+
 ---
 
 ### Mobile App
+
 Mobile-first experience optimized for operational usage.
 
 Includes:
+
 - Customer-focused flows
   - Vehicle management
   - Bookings
@@ -131,6 +147,9 @@ Includes:
   - Damage reporting
   - Status changes
 
+For mobile valet app details, see [apps/mobile/mobile-valet/README.md](apps/mobile/mobile-valet/README.md).
+For mobile customer app details, see [apps/mobile/mobile-customer/README.md](apps/mobile/mobile-customer/README.md).
+
 ---
 
 ## Architecture
@@ -138,7 +157,7 @@ Includes:
 This repository follows a **monorepo architecture** to keep all applications
 and shared logic aligned.
 
-```
+```text
 parkit/
 ├── apps/
 │   ├── api/                           # Backend API (Express + TypeScript + Prisma)
@@ -151,10 +170,13 @@ parkit/
 │   │   │   │   ├── audit/            # Audit logging
 │   │   │   │   ├── auth/             # Authentication & JWT
 │   │   │   │   ├── bookings/         # Booking management
-│   │   │   │   ├── clients/          # Customer management
 │   │   │   │   ├── companies/        # Company/tenant management
+│   │   │   │   ├── customers/        # Customer management
+│   │   │   │   ├── dashboard/        # Dashboard analytics
 │   │   │   │   ├── notifications/    # Notification system
 │   │   │   │   ├── parkings/         # Parking facilities
+│   │   │   │   ├── payments/         # Payment processing
+│   │   │   │   ├── pushNotifications/ # Push notification tokens
 │   │   │   │   ├── tickets/          # Parking tickets
 │   │   │   │   ├── users/            # User management
 │   │   │   │   ├── valets/           # Valet staff
@@ -174,7 +196,7 @@ parkit/
 │   │   └── .eslintrc.cjs
 │   ├── web/                          # Web admin dashboard (Next.js)
 │   └── mobile/                       # Mobile apps (React Native)
-│       ├── mobile-client/            # Customer-facing app
+│       ├── mobile-customer/            # Customer-facing app
 │       └── mobile-valet/             # Valet/operations app
 ├── packages/
 │   └── shared/                        # Shared types, UI components & utilities
@@ -196,6 +218,7 @@ parkit/
 ```
 
 **Key files:**
+
 - `apps/api/src/app.ts` – Express app initialization
 - `apps/api/prisma/schema.prisma` – Prisma database schema
 - `apps/api/.eslintrc.cjs` – Linting configuration
@@ -207,6 +230,7 @@ parkit/
 ## Technology Stack
 
 ### Backend
+
 - **Node.js** – Runtime environment
 - **TypeScript** – Strongly typed backend development
 - **Express** – HTTP server and API foundation
@@ -215,19 +239,22 @@ parkit/
 - **Neon** – Serverless PostgreSQL hosting
 
 ### Database
+
 - **PostgreSQL (Neon)**
   - UUID-based primary keys
   - Strong relational model
   - Enum-based domain constraints
   - Designed for multi-tenant company usage
 
-### Web 
+### Web
+
 - **Next.js** – React-based web application
 - **TypeScript**
 - **Modern UI system** (TBD)
 - Company administration dashboard
 
-### Mobile 
+### Mobile
+
 - **React Native**
 - **TypeScript**
 - Separate UX flows for:
@@ -235,6 +262,7 @@ parkit/
   - Valet staff
 
 ### Tooling & Architecture
+
 - **Monorepo structure**
 - **Shared packages** for types and utilities
 - **Environment-based configuration**
@@ -244,16 +272,25 @@ parkit/
 
 ## Project Status
 
-🚧 **Early development**
+🚧 **Active Development**
 
-The project is currently focused on:
-- Database design
-- Backend foundations
-- Core system architecture
-- Developer experience and scalability
+The project currently has:
 
-Features and applications will be incrementally built following
-a backend-first approach.
+- ✅ Complete database schema with multi-tenant architecture
+- ✅ Backend API with all core modules (auth, companies, parkings, tickets, valets, vehicles, bookings, payments, notifications)
+- ✅ Web admin dashboard (Next.js)
+- ✅ Mobile valet app (React Native + Expo) with real-time operations
+- ✅ Mobile customer app (React Native + Expo) for bookings and tickets
+- ✅ Push notification system
+- ✅ OAuth integration (Google, Apple, Microsoft)
+- ✅ Role-based access control (SUPER_ADMIN, ADMIN, STAFF, CUSTOMER)
+
+Current focus:
+
+- Enhanced mobile app features
+- Payment processing integration
+- Advanced analytics and reporting
+- Performance optimizations
 
 ---
 
@@ -274,27 +311,27 @@ git clone https://github.com/Paradoxia-Labs/parkit.git
 cd parkit
 ```
 
-2. Install dependencies:
+1. Install dependencies:
 
 ```bash
 npm install
 npm --prefix apps/api install
 ```
 
-3. Configure environment variables (see `docs/env.md`):
+1. Configure environment variables (see `docs/env.md`):
 
 ```bash
 cp apps/api/.env.example apps/api/.env
 # Edit apps/api/.env with your DATABASE_URL and JWT_SECRET
 ```
 
-4. Run database migrations:
+1. Run database migrations:
 
 ```bash
 npm --prefix apps/api run prisma migrate deploy
 ```
 
-5. Start the API in development mode:
+1. Start the API in development mode:
 
 ```bash
 npm --prefix apps/api run dev
@@ -361,7 +398,7 @@ All data is scoped by `companyId` to ensure isolation and multi-tenancy.
 - Required JWT claims: `userId`, `role`, `companyId`
 - Populated by `requireAuth` middleware on protected routes
 
-### Database
+### Database Schema
 
 - PostgreSQL with Prisma ORM
 - Migrations managed in `apps/api/prisma/migrations/`
@@ -381,6 +418,7 @@ All project documentation is in the `docs/` folder:
 - `docs/env.md` – Environment variables reference
 - `docs/mobile.md` – Mobile apps quickstart (client & valet)
 - `docs/openapi.yaml` – OpenAPI spec
+- `apps/mobile/mobile-valet/docs/OAUTH_SETUP.md` – OAuth configuration guide
 
 ---
 
@@ -396,11 +434,11 @@ We welcome contributions! Please:
 
 ### Commit message conventions
 
-- `feat: ` – new feature
-- `fix: ` – bug fix
-- `refactor: ` – code refactor
-- `docs: ` – documentation only
-- `chore: ` – dependencies, tooling
+- `feat:` – new feature
+- `fix:` – bug fix
+- `refactor:` – code refactor
+- `docs:` – documentation only
+- `chore:` – dependencies, tooling
 
 ---
 
@@ -422,4 +460,3 @@ For questions, issues, or feedback:
 ## Author
 
 Luis Herrera Quesada
-

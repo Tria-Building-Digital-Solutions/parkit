@@ -22,11 +22,11 @@ interface FormWizardProps {
   submitLabel?: string;
   cancelHref: string;
   error?: string | null;
-  /** Nota breve que se muestra encima de "Los campos marcados con * son obligatorios" (ej. invitación por correo). */
+  /** Brief note shown above "Fields marked with * are required" (e.g. email invitation). */
   footerNote?: React.ReactNode;
-  /** Llamado antes de avanzar al siguiente paso. Si devuelve Promise, se espera (ej. cargar dimensiones). */
+  /** Called before advancing to the next step. If it returns a Promise, it is awaited (e.g. load dimensions). */
   onBeforeNext?: (fromStep: number, toStep: number) => void | Promise<void>;
-  /** Llamado al hacer clic en Next o Save: valida el paso actual. Si devuelve false, no se avanza ni se envía. */
+  /** Called when clicking Next or Save: validates the current step. If it returns false, it does not advance or submit. */
   onValidateBeforeAction?: (stepIndex: number) => boolean | Promise<boolean>;
 }
 
@@ -49,7 +49,7 @@ export function FormWizard({
 
   const step = steps[current];
   const isLast = current === steps.length - 1;
-  const canAdvance = step.badge === "optional" ? true : step.isValid();
+  const canAdvance = step?.badge === "optional" ? true : step?.isValid() ?? false;
 
   const goTo = (next: number, dir: "forward" | "back") => {
     if (animating) return;
@@ -114,82 +114,85 @@ export function FormWizard({
           {/* Step header */}
           <div className="mb-6">
             <div className="flex items-center gap-2 mb-1">
-              <h2 className="text-base premium-section-title">{step.title}</h2>
-              {step.badge === "required" && (
+              <h2 className="text-base premium-section-title">{step?.title}</h2>
+              {step?.badge === "required" && (
                 <span className="text-[11px] font-medium px-2 py-0.5 rounded-full bg-red-500/10 text-red-500">
                   {t("common.requiredBadge")}
                 </span>
               )}
             </div>
-            {step.description && (
+            {step?.description && (
               <p className="text-sm premium-subtitle">{step.description}</p>
             )}
           </div>
 
           {/* Content */}
-          <div>{step.content}</div>
+          <div>{step?.content}</div>
         </div>
       </div>
 
-      {/* ── Stepper (above separator line) ─ */}
-      {steps.length > 1 && (
-        <div className="select-none flex items-center justify-center gap-2 pt-2 pb-1">
-          {steps.map((s, i) => {
-            const done = i < current;
-            const active = i === current;
-            return (
-              <React.Fragment key={i}>
-                <div className="flex flex-col items-center gap-1">
-                  <span
-                    className={[
-                      "flex items-center justify-center w-6 h-6 rounded-full text-[11px] font-semibold transition-all duration-300",
-                      done
-                        ? "bg-company-primary text-white"
-                        : active
-                        ? "border border-company-primary text-company-primary bg-company-primary-subtle"
-                        : "border border-slate-200 dark:border-slate-600 text-slate-400 dark:text-slate-500",
-                    ].join(" ")}
-                  >
-                    {done ? <Check className="w-3 h-3" strokeWidth={3} /> : i + 1}
-                  </span>
-                  <span
-                    className={[
-                      "text-[11px] font-medium whitespace-nowrap transition-colors duration-200 hidden md:block",
-                      active ? "text-text-primary" : done ? "text-company-primary" : "text-text-muted/50",
-                    ].join(" ")}
-                  >
-                    {s.title}
-                  </span>
-                </div>
-                {i < steps.length - 1 && (
-                  <div className="flex-1 min-w-[32px] md:min-w-[64px] max-w-[120px] h-[1px] rounded-full overflow-hidden bg-slate-200 dark:bg-slate-600/60 shrink-0">
-                    <div
-                      className="h-full rounded-full bg-company-primary transition-all duration-500 ease-out"
-                      style={{ width: i < current ? "100%" : "0%" }}
-                    />
-                  </div>
-                )}
-              </React.Fragment>
-            );
-          })}
-        </div>
-      )}
-
       {/* ── Action bar (below separator line) ─ */}
-      <div className="mt-4 flex flex-col gap-3 pt-4 border-t border-slate-200/60 dark:border-slate-700/50">
-        <div className="flex items-center justify-between gap-4">
-          <div className="hidden sm:flex flex-col gap-1">
-            {footerNote && (
-              <p className="text-xs text-text-muted">
-                {footerNote}
-              </p>
-            )}
-            {step.badge === "required" && (
-              <p className="text-xs text-text-muted/50">
-                {t("common.requiredNote")}
-              </p>
-            )}
-          </div>
+      <div className="mt-4 flex flex-col gap-3">
+        {/* ── Notes above divider ─ */}
+        <div className="flex flex-col gap-1 pb-3 border-b border-slate-200/60 dark:border-slate-700/50">
+          {footerNote && (
+            <p className="text-xs text-text-muted">
+              {footerNote}
+            </p>
+          )}
+          {step?.badge === "required" && (
+            <p className="text-xs text-text-muted/50">
+              {t("common.requiredNote")}
+            </p>
+          )}
+        </div>
+
+        <div className="flex items-center justify-between gap-4 pt-3">
+          {/* ── Stepper (left side) ─ */}
+          {steps.length > 1 && (
+            <div className="select-none flex items-center gap-3 flex-shrink-0 pr-8">
+              {steps.map((s, i) => {
+                const done = i < current;
+                const active = i === current;
+                return (
+                  <React.Fragment key={i}>
+                    <div className="flex flex-col items-center gap-1">
+                      <span
+                        className={[
+                          "flex items-center justify-center w-6 h-6 rounded-full text-[11px] font-semibold transition-all duration-300",
+                          done
+                            ? "bg-company-primary text-white"
+                            : active
+                            ? "border border-company-primary text-company-primary bg-company-primary-subtle"
+                            : "border border-slate-200 dark:border-slate-600 text-slate-400 dark:text-slate-500",
+                        ].join(" ")}
+                      >
+                        {done ? <Check className="w-3 h-3" strokeWidth={3} /> : i + 1}
+                      </span>
+                      <span
+                        className={[
+                          "text-[11px] font-medium whitespace-nowrap transition-colors duration-200 hidden md:block",
+                          active ? "text-text-primary" : done ? "text-company-primary" : "text-text-muted/50",
+                        ].join(" ")}
+                      >
+                        {s.title}
+                      </span>
+                    </div>
+                    {i < steps.length - 1 && (
+                      <div className="flex-1 min-w-[48px] md:min-w-[96px] max-w-[180px] h-[1px] rounded-full overflow-hidden bg-slate-200 dark:bg-slate-600/60 shrink-0">
+                        <div
+                          className={[
+                            "h-full rounded-full bg-company-primary transition-all duration-500 ease-out",
+                            i < current ? "w-full" : "w-0"
+                          ].join(" ")}
+                        />
+                      </div>
+                    )}
+                  </React.Fragment>
+                );
+              })}
+            </div>
+          )}
 
           <div className="flex items-center gap-2.5 ml-auto">
           {current === 0 ? (

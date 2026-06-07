@@ -7,6 +7,8 @@ const router = Router();
 router.use(requireAuth);
 
 router.get("/user/:userId/unread-count", NotificationsController.unreadCount);
+router.get("/user/:userId/unread-count/:ticketType", NotificationsController.unreadCountByType);
+router.get("/user/:userId/unread-count-all", NotificationsController.unreadCountByAllTypes);
 router.get("/user/:userId", NotificationsController.listByUser);
 router.patch("/:id/read", NotificationsController.markAsRead);
 router.patch("/user/:userId/read-all", NotificationsController.markAllAsRead);

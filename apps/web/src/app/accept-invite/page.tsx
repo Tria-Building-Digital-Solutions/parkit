@@ -13,6 +13,7 @@ import { LoadingSpinner } from "@/components/LoadingSpinner";
 import { PageLoader } from "@/components/PageLoader";
 import { ThemeToggleSimple } from "@/components/ThemeToggleSimple";
 import { LocaleToggle } from "@/components/LocaleToggle";
+import { INPUT_CLASSES, BUTTON_CLASSES, LABEL_CLASSES } from "@/lib/utils";
 
 const REDIRECT_DELAY_SECONDS = 3;
 
@@ -23,6 +24,7 @@ function AcceptInviteForm() {
   const { resolvedTheme } = useTheme();
   const { t } = useTranslation();
   const [mounted, setMounted] = useState(false);
+  const [email, setEmail] = useState<string>("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -36,6 +38,19 @@ function AcceptInviteForm() {
   const logoVariant = mounted && resolvedTheme === "dark" ? "onDark" : "default";
 
   useEffect(() => {
+    if (!token?.trim()) return;
+    const fetchEmail = async () => {
+      try {
+        const response = await apiClient.get<{ email: string }>(`/auth/invitations/validate?token=${encodeURIComponent(token.trim())}`);
+        setEmail(response.email);
+      } catch (err) {
+        // Silently fail, user will see error when trying to submit
+      }
+    };
+    fetchEmail();
+  }, [token]);
+
+  useEffect(() => {
     if (!success) return;
     const id = setInterval(() => {
       setRedirectSeconds((s) => Math.max(0, s - 1));
@@ -46,9 +61,10 @@ function AcceptInviteForm() {
   useEffect(() => {
     if (!success) return;
     if (redirectSeconds <= 0) {
-      router.push("/login");
+      const loginUrl = email ? `/?auth=login&email=${encodeURIComponent(email)}` : "/?auth=login";
+      router.push(loginUrl);
     }
-  }, [success, redirectSeconds, router]);
+  }, [success, redirectSeconds, router, email]);
 
   const req = checkPasswordRequirements(password);
 
@@ -100,22 +116,15 @@ function AcceptInviteForm() {
 
   const TopRightToggles = () => (
     <div className="absolute top-4 right-4 z-30 hidden md:flex items-center gap-3">
-      <ThemeToggleSimple />
+            <ThemeToggleSimple />
       <LocaleToggle />
     </div>
   );
 
   const BottomSection = () => (
     <div className="fixed bottom-0 left-0 right-0 py-4 px-4 text-center z-20">
-      <div className="max-w-[480px] mx-auto space-y-2">
-        <p className="text-xs text-slate-600 dark:text-slate-400">{t("auth.supportHint")}{" "}<a href="mailto:soporte@parkitcr.com" className="font-medium text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white underline-offset-2 hover:underline transition-colors">{t("auth.supportLinkLabel")}</a></p>
-        <div className="flex items-center justify-center gap-3 text-[10px] text-slate-500 dark:text-slate-400">
-          <span>© {new Date().getFullYear()} Parkit. {t("footer.allRightsReserved")}</span>
-          <span className="w-1 h-1 rounded-full bg-slate-400 dark:bg-slate-600" />
-          <Link href="/terms" className="hover:text-slate-700 dark:hover:text-slate-200 transition-colors">{t("footer.terms")}</Link>
-          <span className="w-1 h-1 rounded-full bg-slate-400 dark:bg-slate-600" />
-          <Link href="/privacy" className="hover:text-slate-700 dark:hover:text-slate-200 transition-colors">{t("footer.privacyPolicy")}</Link>
-        </div>
+      <div className="max-w-[480px] mx-auto">
+        <p className="text-xs text-slate-600 dark:text-slate-400">{t("auth.supportHint")}{" "}<a href={`mailto:${process.env.NEXT_PUBLIC_SUPPORT_EMAIL}`} className="font-medium text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white underline-offset-2 hover:underline transition-colors">{t("auth.supportLinkLabel")}</a></p>
       </div>
     </div>
   );
@@ -129,13 +138,14 @@ function AcceptInviteForm() {
           <div className="bg-white/90 dark:bg-slate-900/70 backdrop-blur-2xl rounded-lg border border-white/50 dark:border-white/20 shadow-[0_8px_32px_rgba(0,0,0,0.12)] dark:shadow-[0_8px_32px_rgba(0,0,0,0.4)] p-8 md:p-10 text-center">
             <Logo variant={logoVariant} className="text-5xl mx-auto mb-6" />
             <p className="text-slate-600 dark:text-slate-300 mb-6">{t("auth.inviteExpiredOrInvalid")}</p>
-            <Link href="/login" className="group inline-flex items-center gap-2 text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300 text-sm font-medium">
+            <Link href="/?auth=login" className="group inline-flex items-center gap-2 text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300 text-sm font-medium">
               {t("auth.backToSignIn")}
               <ArrowRight className="w-4 h-4 transition-transform duration-300 group-hover:translate-x-0.5" />
             </Link>
           </div>
           <BottomSection />
         </main>
+
       </div>
     );
   }
@@ -153,13 +163,14 @@ function AcceptInviteForm() {
             </span>
             <h1 className="text-[1.35rem] premium-title mb-2">{t("auth.passwordSetSuccess")}</h1>
             <p className="premium-subtitle text-sm mb-6">{t("auth.redirectingToLogin", { seconds: redirectSeconds })}</p>
-            <Link href="/login" className="inline-flex items-center gap-2 text-sm font-medium text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300">
+            <Link href="/?auth=login" className="inline-flex items-center gap-2 text-sm font-medium text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300">
               {t("auth.backToSignIn")}
               <ArrowRight className="w-4 h-4" />
             </Link>
           </div>
           <BottomSection />
         </main>
+
       </div>
     );
   }
@@ -177,17 +188,26 @@ function AcceptInviteForm() {
             <p className="premium-subtitle text-sm text-center">{t("auth.acceptInviteDescription")}</p>
           </div>
 
-          {error && (
-            <div className="mb-6 rounded-lg border border-red-500/20 bg-red-500/10 px-4 py-3 text-sm text-red-600 dark:text-red-400" role="alert">
-              {error}
-            </div>
-          )}
-
-          <form onSubmit={handleSubmit} className="space-y-5">
+          <form onSubmit={handleSubmit} className="space-y-4">
+            {email && (
+              <div>
+                <label htmlFor="email" className={LABEL_CLASSES}>{t("auth.email")}</label>
+                <div className="relative">
+                  <input
+                    id="email"
+                    name="email"
+                    type="email"
+                    value={email}
+                    readOnly
+                    className="w-full rounded-xl border border-border-color/60 bg-white/50 dark:bg-white/[0.03] px-4 py-2.5 text-sm text-text-muted cursor-not-allowed"
+                  />
+                </div>
+              </div>
+            )}
             <div>
-              <label htmlFor="password" className="block text-sm font-medium text-slate-600 dark:text-slate-400 mb-1.5">{t("auth.password")}</label>
+              <label htmlFor="password" className={LABEL_CLASSES}>{t("auth.password")}</label>
               <div className="relative">
-                <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 dark:text-slate-500 pointer-events-none" />
+                <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-text-muted pointer-events-none" />
                 <input
                   id="password"
                   name="password"
@@ -197,25 +217,25 @@ function AcceptInviteForm() {
                   required
                   minLength={8}
                   autoComplete="new-password"
-                  className="w-full pl-10 pr-10 py-3 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white text-sm transition-all duration-200 ease-out focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500/20 focus:ring-inset placeholder:text-slate-400 dark:placeholder:text-slate-500"
+                  className={`${INPUT_CLASSES} pl-10 pr-10`}
                 />
-                <button type="button" onClick={() => setShowPassword((v) => !v)} className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-slate-400 hover:text-slate-600 dark:text-slate-500 dark:hover:text-slate-300">
+                <button type="button" onClick={() => setShowPassword((v) => !v)} className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-text-muted hover:text-text-secondary">
                   {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                 </button>
               </div>
-              <p className="mt-2 text-xs font-medium text-slate-600 dark:text-slate-400">{t("auth.passwordRequirements")}</p>
-              <ul className="mt-1.5 space-y-1 text-xs text-slate-500 dark:text-slate-400">
-                <li className="flex items-center gap-2">{req.minLength ? <Check className="w-3.5 h-3.5 text-emerald-500 shrink-0" /> : <Circle className="w-3.5 h-3.5 text-slate-300 dark:text-slate-600 shrink-0" />}{t("auth.passwordReqMinLength")}</li>
-                <li className="flex items-center gap-2">{req.hasUppercase ? <Check className="w-3.5 h-3.5 text-emerald-500 shrink-0" /> : <Circle className="w-3.5 h-3.5 text-slate-300 dark:text-slate-600 shrink-0" />}{t("auth.passwordReqUppercase")}</li>
-                <li className="flex items-center gap-2">{req.hasLowercase ? <Check className="w-3.5 h-3.5 text-emerald-500 shrink-0" /> : <Circle className="w-3.5 h-3.5 text-slate-300 dark:text-slate-600 shrink-0" />}{t("auth.passwordReqLowercase")}</li>
-                <li className="flex items-center gap-2">{req.hasNumber ? <Check className="w-3.5 h-3.5 text-emerald-500 shrink-0" /> : <Circle className="w-3.5 h-3.5 text-slate-300 dark:text-slate-600 shrink-0" />}{t("auth.passwordReqNumber")}</li>
+              <p className="mt-2 text-xs font-medium text-text-secondary">{t("auth.passwordRequirements")}</p>
+              <ul className="mt-1.5 space-y-1 text-xs text-text-muted">
+                <li className="flex items-center gap-2">{req.minLength ? <Check className="w-3.5 h-3.5 text-emerald-500 shrink-0" /> : <Circle className="w-3.5 h-3.5 text-text-muted/60 shrink-0" />}{t("auth.passwordReqMinLength")}</li>
+                <li className="flex items-center gap-2">{req.hasUppercase ? <Check className="w-3.5 h-3.5 text-emerald-500 shrink-0" /> : <Circle className="w-3.5 h-3.5 text-text-muted/60 shrink-0" />}{t("auth.passwordReqUppercase")}</li>
+                <li className="flex items-center gap-2">{req.hasLowercase ? <Check className="w-3.5 h-3.5 text-emerald-500 shrink-0" /> : <Circle className="w-3.5 h-3.5 text-text-muted/60 shrink-0" />}{t("auth.passwordReqLowercase")}</li>
+                <li className="flex items-center gap-2">{req.hasNumber ? <Check className="w-3.5 h-3.5 text-emerald-500 shrink-0" /> : <Circle className="w-3.5 h-3.5 text-text-muted/60 shrink-0" />}{t("auth.passwordReqNumber")}</li>
               </ul>
             </div>
 
             <div>
-              <label htmlFor="confirmPassword" className="block text-sm font-medium text-slate-600 dark:text-slate-400 mb-1.5">{t("auth.confirmPassword")}</label>
+              <label htmlFor="confirmPassword" className={LABEL_CLASSES}>{t("auth.confirmPassword")}</label>
               <div className="relative">
-                <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 dark:text-slate-500 pointer-events-none" />
+                <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-text-muted pointer-events-none" />
                 <input
                   id="confirmPassword"
                   name="confirmPassword"
@@ -225,20 +245,26 @@ function AcceptInviteForm() {
                   required
                   minLength={8}
                   autoComplete="new-password"
-                  className="w-full pl-10 pr-10 py-3 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white text-sm transition-all duration-200 ease-out focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500/20 focus:ring-inset placeholder:text-slate-400 dark:placeholder:text-slate-500"
+                  className={`${INPUT_CLASSES} pl-10 pr-10`}
                 />
-                <button type="button" onClick={() => setShowConfirmPassword((v) => !v)} className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-slate-400 hover:text-slate-600 dark:text-slate-500 dark:hover:text-slate-300">
+                <button type="button" onClick={() => setShowConfirmPassword((v) => !v)} className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-text-muted hover:text-text-secondary">
                   {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                 </button>
               </div>
             </div>
 
-            <button type="submit" disabled={isSubmitting} className="group w-full flex items-center justify-center gap-2 rounded-lg bg-indigo-600 py-3 text-sm font-medium text-white hover:bg-indigo-700 focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:ring-offset-2 focus:ring-offset-white dark:focus:ring-offset-slate-900 disabled:opacity-50 disabled:pointer-events-none transition-all">
+            <button type="submit" disabled={isSubmitting} className={`${BUTTON_CLASSES} group flex items-center justify-center gap-2 disabled:opacity-50 disabled:pointer-events-none`}>
               {isSubmitting ? <LoadingSpinner size="sm" variant="white" /> : <>{t("auth.setPassword")}<ArrowRight className="w-4 h-4 transition-transform duration-300 group-hover:translate-x-1" /></>}
             </button>
 
+            {error && (
+              <div className="rounded-lg border border-red-500/20 bg-red-500/10 px-4 py-3 text-sm text-red-600 dark:text-red-400" role="alert">
+                {error}
+              </div>
+            )}
+
             <p className="text-center">
-              <Link href="/login" className="group text-sm text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300 inline-flex items-center gap-1">
+              <Link href="/?auth=login" className="group text-sm text-company-primary hover:brightness-110 inline-flex items-center gap-1">
                 {t("auth.backToSignIn")}
                 <ArrowRight className="w-3.5 h-3.5 transition-transform duration-300 group-hover:translate-x-1" />
               </Link>
@@ -247,6 +273,7 @@ function AcceptInviteForm() {
         </div>
         <BottomSection />
       </main>
+
     </div>
   );
 }

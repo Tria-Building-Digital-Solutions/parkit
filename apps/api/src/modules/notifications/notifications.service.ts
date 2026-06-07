@@ -1,10 +1,11 @@
 import { prisma } from "../../shared/prisma";
-import { NotificationStatus, NotificationType } from "@prisma/client";
+import { NotificationStatus, NotificationType, NotificationTicketType } from "@prisma/client";
 
 interface CreateNotificationDTO {
   title: string;
   body: string;
   type: NotificationType;
+  ticketType?: NotificationTicketType;
 }
 
 export class NotificationsService {
@@ -19,6 +20,19 @@ export class NotificationsService {
     return prisma.notificationLog.count({
       where: {
         userId,
+        status: { not: NotificationStatus.READ },
+      },
+    });
+  }
+
+  static async getUnreadCountByType(
+    userId: string,
+    ticketType: NotificationTicketType
+  ): Promise<number> {
+    return prisma.notificationLog.count({
+      where: {
+        userId,
+        ticketType,
         status: { not: NotificationStatus.READ },
       },
     });

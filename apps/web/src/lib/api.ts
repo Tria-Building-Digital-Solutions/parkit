@@ -41,6 +41,7 @@ class ApiClient {
       headers: {
         "Content-Type": "application/json",
       },
+      timeout: 10000, // 10 second timeout to prevent indefinite loading
     });
 
     // Add request interceptor to include JWT token and x-company-id for SUPER_ADMIN
@@ -81,14 +82,14 @@ class ApiClient {
           }
         }
 
-        // Handle 401 - redirect to login (except on auth endpoints like /auth/login)
+        // Handle 401 - redirect to home (except on auth endpoints like /auth/login)
         if (error.response?.status === 401) {
           const url = error.config?.url ?? "";
           const isAuthEndpoint = typeof url === "string" && url.startsWith("/auth/");
           if (!isAuthEndpoint) {
             this.clearToken();
             if (typeof window !== "undefined") {
-              window.location.href = "/login";
+              window.location.href = "/";
             }
           }
         }
@@ -194,6 +195,10 @@ const API_MESSAGE_TO_I18N_KEY: Record<string, string> = {
   "Request failed": "apiErrors.requestFailed",
   "Invalid credentials": "auth.invalidCredentials",
   "Invalid or expired reset link. Request a new one from the login page.": "auth.resetLinkInvalid",
+  "Invalid invitation": "auth.inviteInvalid",
+  "Invitation expired": "auth.inviteExpired",
+  "Invitation cancelled": "auth.inviteCancelled",
+  "Invalid or expired invitation": "auth.inviteExpiredOrInvalid",
 };
 
 /**

@@ -11,6 +11,7 @@ import { useTranslation } from "@/hooks/useTranslation";
 import { Lock, Eye, EyeOff, ArrowRight, CheckCircle, Check, Circle } from "@/lib/premiumIcons";
 import { LoadingSpinner } from "@/components/LoadingSpinner";
 import { PageLoader } from "@/components/PageLoader";
+import { INPUT_CLASSES, BUTTON_CLASSES, LABEL_CLASSES } from "@/lib/utils";
 
 const REDIRECT_DELAY_SECONDS = 3;
 
@@ -39,7 +40,7 @@ function ResetPasswordForm() {
       setRedirectSeconds((s) => {
         if (s <= 1) {
           clearInterval(id);
-          router.push("/login");
+          router.push("/?auth=login");
           return 0;
         }
         return s - 1;
@@ -85,7 +86,7 @@ function ResetPasswordForm() {
           <Logo variant={logoVariant} className="text-4xl mx-auto" />
           <p className="mt-6 text-sm text-text-muted">{t("auth.resetLinkInvalid")}</p>
           <Link
-            href="/login"
+            href="/?auth=login"
             className="mt-6 inline-flex items-center gap-2 text-company-primary hover:text-company-primary text-sm font-medium"
           >
             {t("auth.backToSignIn")}
@@ -96,7 +97,7 @@ function ResetPasswordForm() {
           <p className="text-xs text-text-muted">
             {t("auth.supportHint")}{" "}
             <a
-              href="mailto:soporte@parkitcr.com"
+              href={`mailto:${process.env.NEXT_PUBLIC_SUPPORT_EMAIL}`}
               className="font-medium text-company-primary hover:text-company-primary underline-offset-2 hover:underline"
             >
               {t("auth.supportLinkLabel")}
@@ -135,7 +136,7 @@ function ResetPasswordForm() {
           <p className="text-xs text-text-muted">
             {t("auth.supportHint")}{" "}
             <a
-              href="mailto:soporte@parkitcr.com"
+              href={`mailto:${process.env.NEXT_PUBLIC_SUPPORT_EMAIL}`}
               className="font-medium text-company-primary hover:text-company-primary underline-offset-2 hover:underline"
             >
               {t("auth.supportLinkLabel")}
@@ -168,9 +169,9 @@ function ResetPasswordForm() {
           </div>
         )}
 
-        <form onSubmit={handleSubmit} className="space-y-5">
+        <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label htmlFor="password" className="block text-sm font-medium text-text-secondary mb-1.5">
+            <label htmlFor="password" className={LABEL_CLASSES}>
               {t("auth.password")}
             </label>
             <div className="relative">
@@ -184,7 +185,7 @@ function ResetPasswordForm() {
                 required
                 minLength={8}
                 autoComplete="new-password"
-                className="w-full pl-10 pr-10 py-3 rounded-lg border border-input-border bg-input-bg text-text-primary text-sm transition-all duration-200 ease-out focus:border-company-primary focus:outline-none focus:ring-1 focus:ring-company-primary/20 focus:ring-inset"
+                className={`${INPUT_CLASSES} pl-10 pr-10`}
               />
               <button
                 type="button"
@@ -217,7 +218,7 @@ function ResetPasswordForm() {
           </div>
 
           <div>
-            <label htmlFor="confirmPassword" className="block text-sm font-medium text-text-secondary mb-1.5">
+            <label htmlFor="confirmPassword" className={LABEL_CLASSES}>
               {t("auth.confirmPassword")}
             </label>
             <div className="relative">
@@ -231,7 +232,7 @@ function ResetPasswordForm() {
                 required
                 minLength={8}
                 autoComplete="new-password"
-                className="w-full pl-10 pr-10 py-3 rounded-lg border border-input-border bg-input-bg text-text-primary text-sm transition-all duration-200 ease-out focus:border-company-primary focus:outline-none focus:ring-1 focus:ring-company-primary/20 focus:ring-inset"
+                className={`${INPUT_CLASSES} pl-10 pr-10`}
               />
               <button
                 type="button"
@@ -247,7 +248,7 @@ function ResetPasswordForm() {
           <button
             type="submit"
             disabled={isSubmitting}
-            className="group w-full flex items-center justify-center gap-2 rounded-lg bg-company-primary py-3 text-sm font-medium text-white hover:bg-company-primary focus:outline-none focus:ring-1 focus:ring-company-primary focus:ring-offset-2 focus:ring-offset-page disabled:opacity-50 disabled:pointer-events-none"
+            className={`${BUTTON_CLASSES} group flex items-center justify-center gap-2 disabled:opacity-50 disabled:pointer-events-none`}
           >
             {isSubmitting ? (
               <LoadingSpinner size="sm" variant="white" />
@@ -260,7 +261,7 @@ function ResetPasswordForm() {
           </button>
 
           <p className="text-center">
-            <Link href="/login" className="group text-sm text-company-primary hover:text-company-primary inline-flex items-center gap-1">
+            <Link href="/?auth=login" className="group text-sm text-company-primary hover:text-company-primary inline-flex items-center gap-1">
               {t("auth.backToSignIn")}
               <ArrowRight className="w-3.5 h-3.5 transition-transform duration-300 group-hover:translate-x-1" />
             </Link>
@@ -272,7 +273,7 @@ function ResetPasswordForm() {
         <p className="text-xs text-text-muted">
           {t("auth.supportHint")}{" "}
           <a
-            href="mailto:soporte@parkitcr.com"
+            href={`mailto:${process.env.NEXT_PUBLIC_SUPPORT_EMAIL}`}
             className="font-medium text-company-primary hover:text-company-primary underline-offset-2 hover:underline"
           >
             {t("auth.supportLinkLabel")}

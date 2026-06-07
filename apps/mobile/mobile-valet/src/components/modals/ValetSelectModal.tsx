@@ -29,6 +29,7 @@ export function ValetSelectModal({
 }: ValetSelectModalProps) {
   const C = theme.colors;
   const S = theme.space;
+  const F = theme.font;
   const rowStyles = createValetRowStyles(theme);
 
   const valetData: ValetDispatchRowVariant[] = [
@@ -65,11 +66,6 @@ export function ValetSelectModal({
                 ? t(locale, "receive.valetStatusAvailable")
                 : t(locale, "receive.valetStatusBusy")
             }
-            statusBadgeShort={
-              item.variant === "available"
-                ? t(locale, "receive.valetStatusAvailableShort")
-                : t(locale, "receive.valetStatusBusyShort")
-            }
             badgeVariant={item.variant}
           />
         )}
@@ -78,7 +74,7 @@ export function ValetSelectModal({
             return (
               <Text
                 style={{
-                  fontSize: 16,
+                  fontSize: F.base,
                   fontWeight: "800",
                   color: C.textSubtle,
                   textTransform: "uppercase",

@@ -1,4 +1,35 @@
 {
-  "extends": "./apps/api/tsconfig.json",
-  "files": []
+  "files": [],
+  "references": [
+    {
+      "path": "./apps/api"
+    },
+    {
+      "path": "./apps/web"
+    },
+    {
+      "path": "./apps/mobile/mobile-valet"
+    },
+    {
+      "path": "./apps/mobile/mobile-customer"
+    },
+    {
+      "path": "./packages/shared"
+    }
+  ],
+  "compilerOptions": {
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "strict": true,
+    "disableSolutionSearching": true,
+    "disableSourceOfProjectReferenceRedirect": true
+  },
+  "exclude": [
+    "node_modules",
+    "node_modules/**",
+    "**/node_modules",
+    "**/node_modules/**",
+    "./node_modules/**",
+    "./**/node_modules/**"
+  ]
 }

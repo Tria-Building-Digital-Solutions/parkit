@@ -10,12 +10,11 @@ import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { DashboardSidebar } from "@/components/DashboardSidebar";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { LocaleToggle } from "@/components/LocaleToggle";
-import { Logo } from "@/components/Logo";
 import { HelpModal } from "@/components/HelpModal";
 import { useTranslation } from "@/hooks/useTranslation";
-import { useAuthStore, useDashboardStore } from "@/lib/store";
+import { useAuthStore, useDashboardStore, getBrandingFromCache } from "@/lib/store";
 import type { CompanyBranding } from "@/lib/store";
-import { getAvatarHSLColors, getFullName, getShortName, isSuperAdmin } from "@/lib/auth";
+import { getFullName, getShortName, isSuperAdmin } from "@/lib/auth";
 import { apiClient } from "@/lib/api";
 import { useTheme } from "next-themes";
 import { useLocaleStore } from "@/lib/store";
@@ -38,7 +37,6 @@ type PathHeader = {
 
 const PATH_HEADERS: Record<string, PathHeader> = {
   "/dashboard": { title: "dashboard.title", description: "dashboard.summary" },
-  "/dashboard/no-companies": { title: "companies.title", description: "companies.newCompanyDescription" },
   "/dashboard/profile": { title: "profile.title", description: "profile.description" },
   "/dashboard/super-admins/new": { title: "superAdmins.newSuperAdmin", description: "superAdmins.newSuperAdminDescription", backHref: "/dashboard/profile", backLabel: "profile.title" },
   "/dashboard/settings": { title: "settings.title", description: "settings.description" },
@@ -100,7 +98,6 @@ function DashboardLayoutInner({
     (pathname ?? "") === "/dashboard/companies/new" && searchParams?.get("first") === "1";
   const isNewPage = Boolean(header.backHref) && !isFirstCompanyFlow;
   const isCompaniesPage = (pathname ?? "") === "/dashboard/companies";
-  const isNoCompaniesPage = (pathname ?? "") === "/dashboard/no-companies";
   const useMyCompany = isCompaniesPage && !isSuperAdmin(user);
   let titleKey = useMyCompany && header.titleMyCompany ? header.titleMyCompany : header.title;
   let descriptionKey = useMyCompany && header.descriptionMyCompany ? header.descriptionMyCompany : header.description;
@@ -184,8 +181,8 @@ function DashboardLayoutInner({
   }, [userMenuOpen]);
 
   const selectedCompanyId = useDashboardStore((s: any) => s.selectedCompanyId);
+  const companyBranding = useDashboardStore((s: any) => s.companyBranding);
   const setCompanyBranding = useDashboardStore((s: any) => s.setCompanyBranding);
-  const getBrandingFromCache = useDashboardStore((s: any) => s.getBrandingFromCache);
   const setBrandingInCache = useDashboardStore((s: any) => s.setBrandingInCache);
   const { theme, setTheme } = useTheme();
 
@@ -230,7 +227,7 @@ function DashboardLayoutInner({
         const current = useDashboardStore.getState().companyBranding;
         if (!current) setCompanyBranding(null);
       });
-  }, [selectedCompanyId, user, setCompanyBranding, getBrandingFromCache, setBrandingInCache]);
+  }, [selectedCompanyId, user, setCompanyBranding, setBrandingInCache]);
 
   return (
     <ProtectedRoute>
@@ -271,19 +268,13 @@ function DashboardLayoutInner({
                       </h1>
                     </div>
                   ) : (
-                    isNoCompaniesPage ? (
-                      <Logo className="text-3xl" />
-                    ) : (
-                      <h1 className="text-xl md:text-2xl lg:text-[1.75rem] premium-title truncate">
-                        {t(titleKey)}
-                      </h1>
-                    )
+                    <h1 className="text-xl md:text-2xl lg:text-[1.75rem] premium-title truncate">
+                      {t(titleKey)}
+                    </h1>
                   )}
-                  {!isNoCompaniesPage && (
-                    <p className="premium-subtitle text-sm md:text-[0.95rem] mt-1.5 md:mt-2 max-w-2xl truncate hidden sm:block">
-                      {descriptionText}
-                    </p>
-                  )}
+                  <p className="premium-subtitle text-sm md:text-[0.95rem] mt-1.5 md:mt-2 max-w-2xl truncate hidden sm:block">
+                    {descriptionText}
+                  </p>
                 </div>
               </div>
             <div className="flex items-center gap-3 shrink-0 ml-auto">
@@ -299,7 +290,7 @@ function DashboardLayoutInner({
                   />
                 </>
               )}
-              {/* Theme and Locale toggles moved inside user menu for mobile optimization */}
+              {/* Theme and Locale toggles */}
               <div className="hidden md:flex items-center gap-3">
                 <ThemeToggle />
                 <LocaleToggle />
@@ -326,25 +317,20 @@ function DashboardLayoutInner({
                           : "bg-white/60 dark:bg-slate-900/60 hover:bg-white/90 dark:hover:bg-slate-800/90 shadow-[0_4px_20px_rgba(0,0,0,0.08),0_1px_3px_rgba(0,0,0,0.05)] dark:shadow-[0_4px_20px_rgba(0,0,0,0.3),0_1px_3px_rgba(0,0,0,0.2)] hover:shadow-[0_8px_28px_rgba(0,0,0,0.12),0_2px_6px_rgba(0,0,0,0.08)] dark:hover:shadow-[0_8px_28px_rgba(0,0,0,0.4),0_2px_6px_rgba(0,0,0,0.3)] backdrop-blur-xl border border-white/40 dark:border-white/10"
                       }`}
                       aria-haspopup="menu"
-                      aria-expanded={userMenuOpen}
+                      aria-expanded={userMenuOpen ? "true" : "false"}
                       title={getFullName(user) || user.email}
                     >
                       {(() => {
-                        const avatarColors = getAvatarHSLColors(user.id, theme === "dark");
                         const hasAvatar = (user.avatarUrl ?? user.avatar)?.trim();
                         return (
                               <div
-                            className={`relative w-9 h-9 rounded-xl overflow-hidden flex items-center justify-center shrink-0 transition-transform duration-300 ease-out ${
+                            className={`relative w-9 h-9 rounded-full overflow-hidden flex items-center justify-center shrink-0 transition-transform duration-300 ease-out ${
                               userMenuOpen ? "scale-95" : "group-hover:scale-105"
                             }`}
                             style={{
-                              backgroundColor: hasAvatar ? undefined : avatarColors.bg,
-                              border: hasAvatar
-                                ? '1px solid rgba(0,0,0,0.06)'
-                                : `2px solid ${avatarColors.border}`,
-                              boxShadow: hasAvatar
-                                ? '0 4px 12px -2px rgba(0,0,0,0.1), inset 0 1px 0 rgba(255,255,255,0.2)'
-                                : '0 2px 8px -2px rgba(0,0,0,0.08)',
+                              backgroundColor: theme === "dark" ? '#1e293b' : '#ffffff',
+                              border: '3px solid var(--card-border)',
+                              boxShadow: '0 8px 32px -8px rgba(0,0,0,0.1)',
                             }}
                           >
                             {hasAvatar ? (
@@ -359,7 +345,7 @@ function DashboardLayoutInner({
                             ) : (
                               <User
                                 className="w-[18px] h-[18px]"
-                                style={{ color: avatarColors.fg }}
+                                style={{ color: companyBranding?.primaryColor || (theme === "dark" ? '#e2e8f0' : '#475569') }}
                               />
                             )}
                           </div>
@@ -410,7 +396,8 @@ function DashboardLayoutInner({
                             </span>
                           </div>
 
-                          <div className="h-px mx-3 bg-slate-100 dark:bg-slate-800" />
+                          {/* Only show divider when My Profile is visible */}
+                          {selectedCompanyId && <div className="h-px mx-3 bg-slate-100 dark:bg-slate-800" />}
 
                           {/* Only show My Profile when a company is selected */}
                           {selectedCompanyId && (
@@ -439,6 +426,7 @@ function DashboardLayoutInner({
                                     apiClient.patch("/users/me", { appPreferences: { theme: "light" } }).catch(() => {});
                                   }}
                                   className={`p-1.5 rounded-md transition-all ${theme === "light" ? "bg-white text-amber-500 shadow-sm" : "text-slate-400 hover:text-slate-600"}`}
+                                  aria-label="Light theme"
                                 >
                                   <Sun className="w-3.5 h-3.5" />
                                 </button>
@@ -449,6 +437,7 @@ function DashboardLayoutInner({
                                     apiClient.patch("/users/me", { appPreferences: { theme: "dark" } }).catch(() => {});
                                   }}
                                   className={`p-1.5 rounded-md transition-all ${theme === "dark" ? "bg-slate-700 text-indigo-300 shadow-sm" : "text-slate-400 hover:text-slate-600"}`}
+                                  aria-label="Dark theme"
                                 >
                                   <Moon className="w-3.5 h-3.5" />
                                 </button>
@@ -459,7 +448,7 @@ function DashboardLayoutInner({
                               <div className="flex items-center gap-1 p-0.5 rounded-lg bg-slate-100 dark:bg-slate-800">
                                 <button
                                   type="button"
-                                  onClick={() => {
+                                  onClick={(_e) => {
                                     setLocale("es");
                                     apiClient.patch("/users/me", { appPreferences: { locale: "es" } }).catch(() => {});
                                   }}
@@ -469,7 +458,7 @@ function DashboardLayoutInner({
                                 </button>
                                 <button
                                   type="button"
-                                  onClick={() => {
+                                  onClick={(_e) => {
                                     setLocale("en");
                                     apiClient.patch("/users/me", { appPreferences: { locale: "en" } }).catch(() => {});
                                   }}
@@ -505,9 +494,9 @@ function DashboardLayoutInner({
                               setUserMenuOpen(false);
                               logout();
                               if (typeof window !== "undefined") {
-                                window.location.href = "/login";
+                                window.location.href = "/";
                               } else {
-                                router.replace("/login");
+                                router.replace("/");
                               }
                             }}
                             className="group w-full px-3 py-2 text-left text-[13px] rounded-lg transition-colors text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-500/10 flex items-center gap-2.5"

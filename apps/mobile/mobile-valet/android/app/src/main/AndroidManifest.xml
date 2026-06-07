@@ -29,6 +29,7 @@
         <category android:name="android.intent.category.DEFAULT"/>
         <category android:name="android.intent.category.BROWSABLE"/>
         <data android:scheme="parkit-valet"/>
+        <data android:scheme="exp+parkit-valet"/>
       </intent-filter>
     </activity>
   </application>

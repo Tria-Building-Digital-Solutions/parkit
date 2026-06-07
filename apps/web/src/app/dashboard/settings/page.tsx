@@ -8,9 +8,9 @@ import {
   Copy,
   Palette,
   ImageIcon,
-  Sparkles,
   Eye,
-  Building,
+  Building2,
+  UserCircle,
   RotateCcw,
   CheckCircle,
 } from "@/lib/premiumIcons";
@@ -28,7 +28,6 @@ import {
   THEME_DEFAULT_TERTIARY_DARK,
 } from "@/lib/themeDefaults";
 import { LoadingSpinner } from "@/components/LoadingSpinner";
-import { PageLoader } from "@/components/PageLoader";
 import { ImageCropField } from "@/components/ImageCropField";
 import { useToast } from "@/lib/toastStore";
 
@@ -133,7 +132,7 @@ function ColorInput({
   );
 }
 
-function BrandingPreview({ form, t, companyName }: { form: BrandingConfig; t: (key: string, vars?: Record<string, string | number>) => string; companyName: string | null }) {
+function DevicePreviews({ form, t, companyName: _companyName, selectedCompanyId }: { form: BrandingConfig; t: (key: string, vars?: Record<string, string | number>) => string; companyName: string | null; selectedCompanyId: string | null }) {
   const { resolvedTheme } = useTheme();
   const isDark = resolvedTheme === "dark";
 
@@ -155,93 +154,219 @@ function BrandingPreview({ form, t, companyName }: { form: BrandingConfig; t: (k
 
 
   return (
-    <div className="rounded-2xl border border-card-border bg-card shadow-lg overflow-hidden">
-      {/* Banner Preview */}
-      <div
-        className="h-28 relative"
-        style={{
-          background: form.bannerImageUrl
-            ? `url(${form.bannerImageUrl}) center/cover`
-            : `linear-gradient(135deg, ${colors.primary}25 0%, ${colors.secondary}20 50%, ${colors.tertiary}15 100%)`,
-        }}
-      >
-        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-black/5" />
+    <div className="space-y-10">
+      {/* Desktop Preview - Full Row */}
+      <div className="space-y-2">
+        <p className="text-xs font-medium text-text-muted">{t("settings.desktopView")}</p>
+        <div className="rounded-xl border border-card-border overflow-hidden shadow-sm">
+          <div className="h-32 relative">
+            {form.bannerImageUrl ? (
+              <Image
+                src={form.bannerImageUrl}
+                alt=""
+                fill
+                className="object-cover"
+                sizes="3840px"
+              />
+            ) : (
+              <div className="absolute inset-0 overflow-hidden">
+                {/* Base gradient */}
+                <div
+                  className="absolute inset-0 transition-all duration-700"
+                  style={{
+                    background: isDark
+                      ? 'linear-gradient(135deg, #0a0a1a 0%, #1a1a2e 25%, #16213e 50%, #1a1a2e 75%, #0a0a1a 100%)'
+                      : 'linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 25%, #dbeafe 50%, #e0f2fe 75%, #f0f9ff 100%)',
+                  }}
+                />
+
+                {/* Blob shapes - scaled for banner preview */}
+                <div className="absolute top-0 left-0 w-[300px] h-[300px]" style={{ background: isDark ? 'linear-gradient(135deg, #1e3a8a 0%, #312e81 50%, #1e1b4b 100%)' : 'linear-gradient(135deg, #2563eb 0%, #3b82f6 50%, #60a5fa 100%)', borderRadius: '60% 40% 30% 70% / 60% 30% 70% 40%', filter: 'blur(15px)', opacity: isDark ? 0.6 : 0.7, animation: 'lava-morph-1 60s ease-in-out infinite' }} />
+                <div className="absolute top-1/4 right-0 w-[280px] h-[280px]" style={{ background: isDark ? 'linear-gradient(225deg, #3730a3 0%, #4338ca 50%, #1e3a5f 100%)' : 'linear-gradient(225deg, #4f46e5 0%, #6366f1 50%, #818cf8 100%)', borderRadius: '30% 70% 70% 30% / 30% 30% 70% 70%', filter: 'blur(12px)', opacity: isDark ? 0.5 : 0.65, animation: 'lava-morph-2 75s ease-in-out infinite' }} />
+                <div className="absolute bottom-0 left-1/4 w-[240px] h-[240px]" style={{ background: isDark ? 'linear-gradient(45deg, #1e1b4b 0%, #312e81 50%, #1e3a8a 100%)' : 'linear-gradient(45deg, #7c3aed 0%, #8b5cf6 50%, #a78bfa 100%)', borderRadius: '70% 30% 50% 50% / 30% 50% 50% 70%', filter: 'blur(18px)', opacity: isDark ? 0.55 : 0.75, animation: 'lava-morph-3 66s ease-in-out infinite' }} />
+                <div className="absolute top-1/2 right-1/4 w-[220px] h-[220px]" style={{ background: isDark ? 'linear-gradient(315deg, #4338ca 0%, #3730a3 50%, #312e81 100%)' : 'linear-gradient(315deg, #4338ca 0%, #4f46e5 50%, #6366f1 100%)', borderRadius: '40% 60% 60% 40% / 60% 40% 60% 40%', filter: 'blur(14px)', opacity: isDark ? 0.45 : 0.6, animation: 'lava-morph-4 54s ease-in-out infinite' }} />
+                <div className="absolute bottom-1/4 left-0 w-[190px] h-[190px]" style={{ background: isDark ? 'linear-gradient(135deg, #312e81 0%, #1e1b4b 100%)' : 'linear-gradient(135deg, #3b82f6 0%, #60a5fa 100%)', borderRadius: '50% 50% 40% 60% / 50% 40% 60% 50%', filter: 'blur(11px)', opacity: isDark ? 0.4 : 0.6, animation: 'lava-morph-5 72s ease-in-out infinite' }} />
+                <div className="absolute top-1/4 right-1/5 w-[160px] h-[160px]" style={{ background: isDark ? 'linear-gradient(180deg, #4c1d95 0%, #5b21b6 50%, #312e81 100%)' : 'linear-gradient(180deg, #6d28d9 0%, #7c3aed 50%, #8b5cf6 100%)', borderRadius: '60% 40% 70% 30% / 40% 60% 30% 70%', filter: 'blur(10px)', opacity: isDark ? 0.35 : 0.65, animation: 'lava-morph-6 84s ease-in-out infinite' }} />
+                <div className="absolute bottom-0 left-1/3 w-[140px] h-[140px]" style={{ background: isDark ? 'linear-gradient(45deg, #1e3a8a 0%, #3730a3 100%)' : 'linear-gradient(45deg, #2563eb 0%, #3b82f6 100%)', borderRadius: '40% 60% 50% 50% / 50% 40% 50% 60%', filter: 'blur(9px)', opacity: isDark ? 0.3 : 0.55, animation: 'lava-morph-7 90s ease-in-out infinite' }} />
+
+                {/* Overlay */}
+                <div className="absolute inset-0 transition-all duration-700" style={{ background: isDark ? 'radial-gradient(ellipse at center, transparent 0%, rgba(10,10,26,0.4) 100%)' : 'radial-gradient(ellipse at center, transparent 0%, rgba(255,255,255,0.3) 100%)' }} />
+              </div>
+            )}
+            <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-black/5" />
+          </div>
+          <div className="p-5 pt-0">
+            <div className="flex items-center gap-4 -mt-10 mb-4">
+              <div
+                className="w-20 h-20 rounded-full border-[3px] border-card flex items-center justify-center overflow-hidden relative shadow-xl"
+                style={{ backgroundColor: isDark ? '#1e293b' : '#ffffff', boxShadow: `0 8px 32px -8px ${colors.primary}40` }}
+              >
+                {form.logoImageUrl ? (
+                  <Image src={form.logoImageUrl} alt="" fill className="object-cover" sizes="512px" />
+                ) : selectedCompanyId ? (
+                  <Building2 className="w-10 h-10" style={{ color: colors.primary }} />
+                ) : (
+                  <UserCircle className="w-10 h-10" style={{ color: colors.primary }} />
+                )}
+              </div>
+              <div className="flex-1 min-w-0 -mt-1">
+              </div>
+            </div>
+            <div className="flex gap-2">
+              <div
+                className="h-10 flex-1 rounded-lg shadow-md ring-1 ring-black/5 dark:ring-white/10"
+                style={{ backgroundColor: colors.primary }}
+              />
+              <div
+                className="h-10 flex-1 rounded-lg shadow-md ring-1 ring-black/5 dark:ring-white/10"
+                style={{ backgroundColor: colors.secondary }}
+              />
+              <div
+                className="h-10 flex-1 rounded-lg shadow-md ring-1 ring-black/5 dark:ring-white/10"
+                style={{ backgroundColor: colors.tertiary }}
+              />
+            </div>
+          </div>
+        </div>
       </div>
 
-      {/* Content Preview */}
-      <div className="p-5 pt-0">
-        <div className="flex flex-col gap-3 -mt-10 mb-5">
-          {/* Logo Preview */}
-          <div
-            className="w-20 h-20 rounded-2xl border-[3px] border-card flex items-center justify-center overflow-hidden bg-card relative shadow-xl"
-            style={{ boxShadow: `0 8px 32px -8px ${colors.primary}40` }}
-          >
-            {form.logoImageUrl ? (
-              <Image src={form.logoImageUrl} alt="" fill className="object-cover" sizes="80px" />
-            ) : (
-              <Building className="w-10 h-10" style={{ color: colors.primary }} />
-            )}
-          </div>
+      {/* Mobile & Tablet Preview - Shared Row */}
+      <div className="grid grid-cols-3 gap-4">
+        {/* Tablet Preview */}
+        <div className="col-span-2 space-y-2">
+          <p className="text-xs font-medium text-text-muted">{t("settings.tabletView")}</p>
+          <div className="rounded-xl border border-card-border bg-card overflow-hidden shadow-sm transform scale-85 origin-top">
+            <div className="h-24 relative">
+              {form.bannerImageUrl ? (
+                <Image
+                  src={form.bannerImageUrl}
+                  alt=""
+                  fill
+                  className="object-cover"
+                  sizes="3840px"
+                />
+              ) : (
+                <div className="absolute inset-0 overflow-hidden">
+                  {/* Base gradient */}
+                  <div
+                    className="absolute inset-0 transition-all duration-700"
+                    style={{
+                      background: isDark
+                        ? 'linear-gradient(135deg, #0a0a1a 0%, #1a1a2e 25%, #16213e 50%, #1a1a2e 75%, #0a0a1a 100%)'
+                        : 'linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 25%, #dbeafe 50%, #e0f2fe 75%, #f0f9ff 100%)',
+                    }}
+                  />
 
-          <div className="pt-2">
-            <p className="font-semibold text-text-primary">{companyName || t("settings.previewCompany")}</p>
-            <p className="text-xs premium-subtitle">{t("settings.previewLabel")}</p>
+                  {/* Blob shapes - scaled for banner preview */}
+                  <div className="absolute top-0 left-0 w-[250px] h-[250px]" style={{ background: isDark ? 'linear-gradient(135deg, #1e3a8a 0%, #312e81 50%, #1e1b4b 100%)' : 'linear-gradient(135deg, #2563eb 0%, #3b82f6 50%, #60a5fa 100%)', borderRadius: '60% 40% 30% 70% / 60% 30% 70% 40%', filter: 'blur(15px)', opacity: isDark ? 0.6 : 0.7, animation: 'lava-morph-1 40s ease-in-out infinite' }} />
+                  <div className="absolute top-1/4 right-0 w-[220px] h-[220px]" style={{ background: isDark ? 'linear-gradient(225deg, #3730a3 0%, #4338ca 50%, #1e3a5f 100%)' : 'linear-gradient(225deg, #4f46e5 0%, #6366f1 50%, #818cf8 100%)', borderRadius: '30% 70% 70% 30% / 30% 30% 70% 70%', filter: 'blur(12px)', opacity: isDark ? 0.5 : 0.65, animation: 'lava-morph-2 50s ease-in-out infinite' }} />
+                  <div className="absolute bottom-0 left-1/4 w-[190px] h-[190px]" style={{ background: isDark ? 'linear-gradient(45deg, #1e1b4b 0%, #312e81 50%, #1e3a8a 100%)' : 'linear-gradient(45deg, #7c3aed 0%, #8b5cf6 50%, #a78bfa 100%)', borderRadius: '70% 30% 50% 50% / 30% 50% 50% 70%', filter: 'blur(18px)', opacity: isDark ? 0.55 : 0.75, animation: 'lava-morph-3 44s ease-in-out infinite' }} />
+                  <div className="absolute top-1/2 right-1/4 w-[170px] h-[170px]" style={{ background: isDark ? 'linear-gradient(315deg, #4338ca 0%, #3730a3 50%, #312e81 100%)' : 'linear-gradient(315deg, #4338ca 0%, #4f46e5 50%, #6366f1 100%)', borderRadius: '40% 60% 60% 40% / 60% 40% 60% 40%', filter: 'blur(14px)', opacity: isDark ? 0.45 : 0.6, animation: 'lava-morph-4 36s ease-in-out infinite' }} />
+                  <div className="absolute bottom-1/4 left-0 w-[150px] h-[150px]" style={{ background: isDark ? 'linear-gradient(135deg, #312e81 0%, #1e1b4b 100%)' : 'linear-gradient(135deg, #3b82f6 0%, #60a5fa 100%)', borderRadius: '50% 50% 40% 60% / 50% 40% 60% 50%', filter: 'blur(11px)', opacity: isDark ? 0.4 : 0.6, animation: 'lava-morph-5 48s ease-in-out infinite' }} />
+                  <div className="absolute top-1/4 right-1/5 w-[130px] h-[130px]" style={{ background: isDark ? 'linear-gradient(180deg, #4c1d95 0%, #5b21b6 50%, #312e81 100%)' : 'linear-gradient(180deg, #6d28d9 0%, #7c3aed 50%, #8b5cf6 100%)', borderRadius: '60% 40% 70% 30% / 40% 60% 30% 70%', filter: 'blur(10px)', opacity: isDark ? 0.35 : 0.65, animation: 'lava-morph-6 56s ease-in-out infinite' }} />
+                  <div className="absolute bottom-0 left-1/3 w-[110px] h-[110px]" style={{ background: isDark ? 'linear-gradient(45deg, #1e3a8a 0%, #3730a3 100%)' : 'linear-gradient(45deg, #2563eb 0%, #3b82f6 100%)', borderRadius: '40% 60% 50% 50% / 50% 40% 50% 60%', filter: 'blur(9px)', opacity: isDark ? 0.3 : 0.55, animation: 'lava-morph-7 60s ease-in-out infinite' }} />
+
+                  {/* Overlay */}
+                  <div className="absolute inset-0 transition-all duration-700" style={{ background: isDark ? 'radial-gradient(ellipse at center, transparent 0%, rgba(10,10,26,0.4) 100%)' : 'radial-gradient(ellipse at center, transparent 0%, rgba(255,255,255,0.3) 100%)' }} />
+                </div>
+              )}
+              <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-black/5" />
+            </div>
+            <div className="p-4 pt-0">
+              <div className="flex items-center gap-3 -mt-8 mb-3">
+                <div
+                  className="w-14 h-14 rounded-full border-[3px] border-card flex items-center justify-center overflow-hidden relative shadow-xl"
+                  style={{ backgroundColor: isDark ? '#1e293b' : '#ffffff', boxShadow: `0 6px 24px -6px ${colors.primary}40` }}
+                >
+                  {form.logoImageUrl ? (
+                    <Image src={form.logoImageUrl} alt="" fill className="object-cover" sizes="512px" />
+                  ) : selectedCompanyId ? (
+                    <Building2 className="w-7 h-7" style={{ color: colors.primary }} />
+                  ) : (
+                    <UserCircle className="w-7 h-7" style={{ color: colors.primary }} />
+                  )}
+                </div>
+                <div className="flex-1 min-w-0 -mt-0.5">
+                </div>
+              </div>
+              <div className="flex gap-2">
+                <div
+                  className="h-8 flex-1 rounded-lg shadow-sm ring-1 ring-black/5 dark:ring-white/10"
+                  style={{ backgroundColor: colors.primary }}
+                />
+                <div
+                  className="h-8 flex-1 rounded-lg shadow-sm ring-1 ring-black/5 dark:ring-white/10"
+                  style={{ backgroundColor: colors.secondary }}
+                />
+              </div>
+            </div>
           </div>
         </div>
 
-        {/* Color Palette Preview */}
-        <div className="space-y-3">
-          <p className="text-xs font-semibold text-text-secondary uppercase tracking-wider">{t("settings.colorPaletteLabel")}</p>
-          <div className="flex gap-2">
-            <div
-              className="h-10 flex-1 rounded-lg shadow-md ring-1 ring-black/5 dark:ring-white/10"
-              style={{ backgroundColor: colors.primary }}
-            />
-            <div
-              className="h-10 flex-1 rounded-lg shadow-md ring-1 ring-black/5 dark:ring-white/10"
-              style={{ backgroundColor: colors.secondary }}
-            />
-            <div
-              className="h-10 flex-1 rounded-lg shadow-md ring-1 ring-black/5 dark:ring-white/10"
-              style={{ backgroundColor: colors.tertiary }}
-            />
-          </div>
-        </div>
+        {/* Mobile Preview */}
+        <div className="col-span-1 space-y-2">
+          <p className="text-xs font-medium text-text-muted">{t("settings.mobileView")}</p>
+          <div className="rounded-xl border border-card-border bg-card overflow-hidden shadow-sm transform scale-65 origin-top">
+            <div className="h-16 relative">
+              {form.bannerImageUrl ? (
+                <Image
+                  src={form.bannerImageUrl}
+                  alt=""
+                  fill
+                  className="object-cover"
+                  sizes="3840px"
+                />
+              ) : (
+                <div className="absolute inset-0 overflow-hidden">
+                  {/* Base gradient */}
+                  <div
+                    className="absolute inset-0 transition-all duration-700"
+                    style={{
+                      background: isDark
+                        ? 'linear-gradient(135deg, #0a0a1a 0%, #1a1a2e 25%, #16213e 50%, #1a1a2e 75%, #0a0a1a 100%)'
+                        : 'linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 25%, #dbeafe 50%, #e0f2fe 75%, #f0f9ff 100%)',
+                    }}
+                  />
 
-        {/* Sample Button Preview */}
-        <div className="mt-5 flex gap-2.5">
-          <div
-            className="flex-1 py-2.5 rounded-lg text-sm font-medium text-center shadow-lg"
-            style={{ backgroundColor: colors.primary, color: "#fff", boxShadow: `0 4px 14px -4px ${colors.primary}50` }}
-          >
-            {t("settings.primaryAction")}
-          </div>
-          <div
-            className="flex-1 py-2.5 rounded-lg text-sm font-medium text-center shadow-md"
-            style={{
-              backgroundColor: colors.secondary,
-              color: isDark ? "#fff" : "#1e293b",
-              boxShadow: `0 2px 8px -2px ${colors.secondary}40`,
-            }}
-          >
-            {t("settings.secondary")}
-          </div>
-          <div
-            className="flex-1 py-2.5 rounded-lg text-sm font-medium text-center shadow-sm"
-            style={{
-              backgroundColor: colors.tertiary,
-              color: isDark ? "#fff" : "#1e293b",
-              boxShadow: `0 1px 4px -1px ${colors.tertiary}30`,
-            }}
-          >
-            {t("settings.tertiary")}
+                  {/* Blob shapes - scaled for banner preview */}
+                  <div className="absolute top-0 left-0 w-[180px] h-[180px]" style={{ background: isDark ? 'linear-gradient(135deg, #1e3a8a 0%, #312e81 50%, #1e1b4b 100%)' : 'linear-gradient(135deg, #2563eb 0%, #3b82f6 50%, #60a5fa 100%)', borderRadius: '60% 40% 30% 70% / 60% 30% 70% 40%', filter: 'blur(15px)', opacity: isDark ? 0.6 : 0.7, animation: 'lava-morph-1 25s ease-in-out infinite' }} />
+                  <div className="absolute top-1/4 right-0 w-[160px] h-[160px]" style={{ background: isDark ? 'linear-gradient(225deg, #3730a3 0%, #4338ca 50%, #1e3a5f 100%)' : 'linear-gradient(225deg, #4f46e5 0%, #6366f1 50%, #818cf8 100%)', borderRadius: '30% 70% 70% 30% / 30% 30% 70% 70%', filter: 'blur(12px)', opacity: isDark ? 0.5 : 0.65, animation: 'lava-morph-2 30s ease-in-out infinite' }} />
+                  <div className="absolute bottom-0 left-1/4 w-[140px] h-[140px]" style={{ background: isDark ? 'linear-gradient(45deg, #1e1b4b 0%, #312e81 50%, #1e3a8a 100%)' : 'linear-gradient(45deg, #7c3aed 0%, #8b5cf6 50%, #a78bfa 100%)', borderRadius: '70% 30% 50% 50% / 30% 50% 50% 70%', filter: 'blur(18px)', opacity: isDark ? 0.55 : 0.75, animation: 'lava-morph-3 28s ease-in-out infinite' }} />
+                  <div className="absolute top-1/2 right-1/4 w-[130px] h-[130px]" style={{ background: isDark ? 'linear-gradient(315deg, #4338ca 0%, #3730a3 50%, #312e81 100%)' : 'linear-gradient(315deg, #4338ca 0%, #4f46e5 50%, #6366f1 100%)', borderRadius: '40% 60% 60% 40% / 60% 40% 60% 40%', filter: 'blur(14px)', opacity: isDark ? 0.45 : 0.6, animation: 'lava-morph-4 24s ease-in-out infinite' }} />
+                  <div className="absolute bottom-1/4 left-0 w-[110px] h-[110px]" style={{ background: isDark ? 'linear-gradient(135deg, #312e81 0%, #1e1b4b 100%)' : 'linear-gradient(135deg, #3b82f6 0%, #60a5fa 100%)', borderRadius: '50% 50% 40% 60% / 50% 40% 60% 50%', filter: 'blur(11px)', opacity: isDark ? 0.4 : 0.6, animation: 'lava-morph-5 32s ease-in-out infinite' }} />
+                  <div className="absolute top-1/4 right-1/5 w-[90px] h-[90px]" style={{ background: isDark ? 'linear-gradient(180deg, #4c1d95 0%, #5b21b6 50%, #312e81 100%)' : 'linear-gradient(180deg, #6d28d9 0%, #7c3aed 50%, #8b5cf6 100%)', borderRadius: '60% 40% 70% 30% / 40% 60% 30% 70%', filter: 'blur(10px)', opacity: isDark ? 0.35 : 0.65, animation: 'lava-morph-6 36s ease-in-out infinite' }} />
+                  <div className="absolute bottom-0 left-1/3 w-[80px] h-[80px]" style={{ background: isDark ? 'linear-gradient(45deg, #1e3a8a 0%, #3730a3 100%)' : 'linear-gradient(45deg, #2563eb 0%, #3b82f6 100%)', borderRadius: '40% 60% 50% 50% / 50% 40% 50% 60%', filter: 'blur(9px)', opacity: isDark ? 0.3 : 0.55, animation: 'lava-morph-7 40s ease-in-out infinite' }} />
+
+                  {/* Overlay */}
+                  <div className="absolute inset-0 transition-all duration-700" style={{ background: isDark ? 'radial-gradient(ellipse at center, transparent 0%, rgba(10,10,26,0.4) 100%)' : 'radial-gradient(ellipse at center, transparent 0%, rgba(255,255,255,0.3) 100%)' }} />
+                </div>
+              )}
+              <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-black/5" />
+            </div>
+            <div className="p-3 pt-0">
+              <div className="flex items-center gap-2 -mt-6 mb-2">
+                <div
+                  className="w-10 h-10 rounded-full border-[3px] border-card flex items-center justify-center overflow-hidden relative shadow-xl"
+                  style={{ backgroundColor: isDark ? '#1e293b' : '#ffffff', boxShadow: `0 8px 32px -8px ${colors.primary}40` }}
+                >
+                  {form.logoImageUrl ? (
+                    <Image src={form.logoImageUrl} alt="" fill className="object-cover" sizes="512px" />
+                  ) : selectedCompanyId ? (
+                    <Building2 className="w-5 h-5" style={{ color: colors.primary }} />
+                  ) : (
+                    <UserCircle className="w-5 h-5" style={{ color: colors.primary }} />
+                  )}
+                </div>
+                <div className="flex-1 min-w-0 -mt-0.5">
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
     </div>
   );
 }
-
 export default function SettingsPage() {
   const { t } = useTranslation();
   const { showSuccess, showError } = useToast();
@@ -265,7 +390,8 @@ export default function SettingsPage() {
   const [form, setForm] = useState<BrandingConfig>(defaultForm);
   const [initialForm, setInitialForm] = useState<BrandingConfig>(defaultForm);
 
-  const [loading, setLoading] = useState(true);
+  const [_loading, _setLoading] = useState(true);
+  const [initialLoad, setInitialLoad] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [reverting, setReverting] = useState(false);
   const [loadError, setLoadError] = useState<string | null>(null);
@@ -310,7 +436,10 @@ export default function SettingsPage() {
       } catch {
         if (!cancelled) setLoadError(t("settings.saveError"));
       } finally {
-        if (!cancelled) setLoading(false);
+        if (!cancelled) {
+          _setLoading(false);
+          setInitialLoad(false);
+        }
       }
     })();
     return () => {
@@ -380,42 +509,66 @@ export default function SettingsPage() {
   const handleRevertToDefault = async () => {
     setReverting(true);
     try {
-      const serverPayload = {
-        bannerImageUrl: null,
-        logoImageUrl: null,
-        primaryColor: THEME_DEFAULT_PRIMARY_LIGHT,
-        primaryColorDark: THEME_DEFAULT_PRIMARY_DARK,
-        secondaryColor: THEME_DEFAULT_SECONDARY_LIGHT,
-        secondaryColorDark: THEME_DEFAULT_SECONDARY_DARK,
-        tertiaryColor: THEME_DEFAULT_TERTIARY_LIGHT,
-        tertiaryColorDark: THEME_DEFAULT_TERTIARY_DARK,
-      };
+      // Only revert fields of the active tab
+      const serverPayload: Partial<BrandingConfig> = {};
+      
+      if (activeTab === "visual") {
+        serverPayload.bannerImageUrl = null;
+        serverPayload.logoImageUrl = null;
+      } else if (activeTab === "colors") {
+        serverPayload.primaryColor = THEME_DEFAULT_PRIMARY_LIGHT;
+        serverPayload.primaryColorDark = THEME_DEFAULT_PRIMARY_DARK;
+        serverPayload.secondaryColor = THEME_DEFAULT_SECONDARY_LIGHT;
+        serverPayload.secondaryColorDark = THEME_DEFAULT_SECONDARY_DARK;
+        serverPayload.tertiaryColor = THEME_DEFAULT_TERTIARY_LIGHT;
+        serverPayload.tertiaryColorDark = THEME_DEFAULT_TERTIARY_DARK;
+      }
 
       await apiClient.patch("/companies/me", {
         brandingConfig: serverPayload,
       });
 
-      const defaultBranding = {
+      // Merge with current branding to preserve other fields
+      const updatedBranding = {
+        ...currentBranding,
         ...serverPayload,
         businessActivity: currentBranding?.businessActivity ?? null,
       };
 
-      setCompanyBranding(defaultBranding);
-      if (selectedCompanyId) setBrandingInCache(selectedCompanyId, defaultBranding);
+      setCompanyBranding(updatedBranding);
+      if (selectedCompanyId) setBrandingInCache(selectedCompanyId, updatedBranding);
 
       // Form state uses empty strings for image URLs (UI inputs need strings)
-      const revertedForm: BrandingConfig = {
-        bannerImageUrl: "",
-        logoImageUrl: "",
-        primaryColor: serverPayload.primaryColor,
-        primaryColorDark: serverPayload.primaryColorDark,
-        secondaryColor: serverPayload.secondaryColor,
-        secondaryColorDark: serverPayload.secondaryColorDark,
-        tertiaryColor: serverPayload.tertiaryColor,
-        tertiaryColorDark: serverPayload.tertiaryColorDark,
-      };
-      setForm(revertedForm);
-      setInitialForm(revertedForm);
+      setForm((p) => ({
+        ...p,
+        ...(activeTab === "visual" && {
+          bannerImageUrl: "",
+          logoImageUrl: "",
+        }),
+        ...(activeTab === "colors" && {
+          primaryColor: THEME_DEFAULT_PRIMARY_LIGHT,
+          primaryColorDark: THEME_DEFAULT_PRIMARY_DARK,
+          secondaryColor: THEME_DEFAULT_SECONDARY_LIGHT,
+          secondaryColorDark: THEME_DEFAULT_SECONDARY_DARK,
+          tertiaryColor: THEME_DEFAULT_TERTIARY_LIGHT,
+          tertiaryColorDark: THEME_DEFAULT_TERTIARY_DARK,
+        }),
+      }));
+      setInitialForm((p) => ({
+        ...p,
+        ...(activeTab === "visual" && {
+          bannerImageUrl: "",
+          logoImageUrl: "",
+        }),
+        ...(activeTab === "colors" && {
+          primaryColor: THEME_DEFAULT_PRIMARY_LIGHT,
+          primaryColorDark: THEME_DEFAULT_PRIMARY_DARK,
+          secondaryColor: THEME_DEFAULT_SECONDARY_LIGHT,
+          secondaryColorDark: THEME_DEFAULT_SECONDARY_DARK,
+          tertiaryColor: THEME_DEFAULT_TERTIARY_LIGHT,
+          tertiaryColorDark: THEME_DEFAULT_TERTIARY_DARK,
+        }),
+      }));
       showSuccess(t("settings.saveSuccess"));
     } catch {
       showError(t("settings.saveError"));
@@ -424,18 +577,45 @@ export default function SettingsPage() {
     }
   };
 
-  if (loading) {
+  if (initialLoad) {
     return (
-      <div className="flex-1 flex flex-col pt-14 pb-8 px-4 md:px-10 lg:px-12 w-full">
-        <div className="flex flex-1 items-center justify-center">
-          <PageLoader />
+      <div className="flex flex-col flex-1 min-h-0 pt-4 pb-6 px-4 md:px-8 lg:px-10 w-full">
+        {/* Skeleton Tab Navigation */}
+        <div className="flex items-center gap-1 p-0.5 rounded-lg bg-input-bg border border-card-border mb-6 w-64 h-10 animate-pulse" />
+
+        {/* Skeleton Settings Content */}
+        <div className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden pb-4">
+          <div className="grid grid-cols-1 xl:grid-cols-12 gap-6 items-start">
+            <div className="space-y-6 xl:col-span-12">
+              <div className="space-y-8">
+                <div className="space-y-6">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 rounded-xl bg-slate-200 dark:bg-slate-700 w-10 h-10 animate-pulse" />
+                    <div className="space-y-2">
+                      <div className="h-6 bg-slate-200 dark:bg-slate-700 rounded w-48 animate-pulse" />
+                      <div className="h-4 bg-slate-200 dark:bg-slate-700 rounded w-64 animate-pulse" />
+                    </div>
+                  </div>
+                  <div className="space-y-8 pl-1">
+                    <div className="h-32 bg-slate-200 dark:bg-slate-700 rounded-xl animate-pulse" />
+                    <div className="h-32 bg-slate-200 dark:bg-slate-700 rounded-xl animate-pulse" />
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="flex flex-col flex-1 min-h-0 pt-4 pb-6 px-4 md:px-8 lg:px-10 w-full">
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.2 }}
+      className="flex flex-col flex-1 min-h-0 pt-4 pb-6 px-4 md:px-8 lg:px-10 w-full"
+    >
       {loadError && (
         <motion.div
           initial={{ opacity: 0, scale: 0.95 }}
@@ -717,9 +897,9 @@ export default function SettingsPage() {
                 </div>
               ) : activeTab === "preview" ? (
                 <div className="space-y-8">
-                  {/* Row 1: Live Preview */}
-                  <div>
-                    <div className="flex items-center gap-3 mb-4">
+                  {/* Live Preview Section */}
+                  <div className="space-y-6">
+                    <div className="flex items-center gap-3">
                       <div className="p-2 rounded-xl bg-company-primary/10">
                         <Eye className="w-5 h-5 text-company-primary" />
                       </div>
@@ -728,32 +908,11 @@ export default function SettingsPage() {
                         <p className="text-sm premium-subtitle">{t("settings.previewLabel")}</p>
                       </div>
                     </div>
-                    <div className="max-w-3xl">
-                      <BrandingPreview form={form} t={t} companyName={selectedCompanyName} />
-                    </div>
-                  </div>
-
-                  {/* Row 2: Pro Tips */}
-                  <div className="flex items-start gap-4">
-                    <div className="p-2.5 rounded-xl bg-company-primary/10 shrink-0">
-                      <Sparkles className="w-5 h-5 text-company-primary" />
-                    </div>
-                    <div>
-                      <h2 className="text-base premium-section-title mb-2">{t("settings.proTips")}</h2>
-                      <ul className="text-sm text-text-muted space-y-2">
-                        <li className="flex items-start gap-2">
-                          <span className="w-1.5 h-1.5 rounded-full bg-company-primary mt-1.5 shrink-0" />
-                          {t("settings.tipContrast")}
-                        </li>
-                        <li className="flex items-start gap-2">
-                          <span className="w-1.5 h-1.5 rounded-full bg-company-primary mt-1.5 shrink-0" />
-                          {t("settings.tipSimple")}
-                        </li>
-                        <li className="flex items-start gap-2">
-                          <span className="w-1.5 h-1.5 rounded-full bg-company-primary mt-1.5 shrink-0" />
-                          {t("settings.tipTest")}
-                        </li>
-                      </ul>
+                    <div className="space-y-8 pl-1">
+                      {/* Device Previews */}
+                      <div>
+                        <DevicePreviews form={form} t={t} companyName={selectedCompanyName} selectedCompanyId={selectedCompanyId} />
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -767,7 +926,7 @@ export default function SettingsPage() {
         <button
           type="button"
           onClick={handleRevertToDefault}
-          disabled={!isDirty || reverting || submitting}
+          disabled={reverting || submitting}
           className="group flex items-center gap-2 px-4 py-2.5 rounded-lg border border-card-border text-sm font-medium text-text-secondary hover:text-red-500 hover:border-red-200 hover:bg-red-50/50 dark:hover:bg-red-500/10 transition-all disabled:opacity-50 disabled:pointer-events-none disabled:hover:text-text-secondary disabled:hover:border-card-border disabled:hover:bg-transparent dark:disabled:hover:bg-transparent"
         >
           {reverting ? (
@@ -795,6 +954,6 @@ export default function SettingsPage() {
           </button>
         </div>
       </div>
-    </div>
+    </motion.div>
   );
 }

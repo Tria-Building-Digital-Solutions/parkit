@@ -177,15 +177,15 @@ function LinkCellRenderer(
 type DetailRow<T> = { __detail: true; __parent: T };
 
 /**
- * Altura inicial antes de medir: debe ser >0 para que el contenido no quede recortado.
- * Tras el primer layout, ResizeObserver + medición “ajustada” fijan la altura real por fila/grid.
+ * Initial height before measurement: must be >0 so content is not clipped.
+ * After first layout, ResizeObserver + "adjusted" measurement fix the actual height per row/grid.
  */
 const DETAIL_ROW_FALLBACK_HEIGHT = 220;
 const DETAIL_ROW_MEASURE_BUFFER_PX = 10;
 
 /**
- * Altura visual desde la parte superior del root hasta el borde inferior más bajo del contenido
- * (cada grid tiene distinto DOM en renderRowDetail; esto evita scrollHeight inflado por stretch del grid).
+ * Visual height from the top of the root to the bottom edge of the content
+ * (each grid has different DOM in renderRowDetail; this prevents scrollHeight inflation due to grid stretching).
  */
 function measureTightDetailHeight(root: HTMLElement): number {
   const rootTop = root.getBoundingClientRect().top;
@@ -329,6 +329,8 @@ interface DashboardDataTablePageProps<T> {
   refreshToken?: number;
   /** Callback al hacer clic en Editar (opcional). Si se pasa, se muestra el botón Editar. */
   onEdit?: (row: T) => void;
+  /** Función opcional para determinar si el botón Editar debe mostrarse para una fila específica. */
+  canEdit?: (row: T) => boolean;
   /** Callback al hacer clic en Ver (opcional). Si se pasa junto con renderRowDetail, se ignora; usar renderRowDetail para expandir fila. */
   onView?: (row: T) => void;
   /** Contenido a mostrar al expandir la fila. Si se pasa, se muestra botón expandir en lugar del botón Ver. */
@@ -349,14 +351,16 @@ interface DashboardDataTablePageProps<T> {
   onUpdate?: (row: T) => void | Promise<void>;
   /** Callback para crear un registro nuevo (opcional). Si se pasa, se muestra el botón Agregar y una fila editable temporal. */
   onCreate?: (draft: Partial<T>) => void | Promise<void>;
-  /** Botones de acción extra en la columna Actions (icono, etiqueta, onClick por fila). */
-  customActions?: Array<{ icon: React.ReactNode; label: string; onClick: (row: T) => void }>;
+  /** Botones de acción extra en la columna Actions (icono, etiqueta, onClick por fila). Puede ser un array estático o una función que retorna el array por fila. */
+  customActions?: Array<{ icon: React.ReactNode; label: string; onClick: (row: T) => void }> | ((row: T) => Array<{ icon: React.ReactNode; label: string; onClick: (row: T) => void }>);
 }
 
 function ActionsCellRenderer<T extends { id?: string | number }>(
   params: ICellRendererParams<T> & {
   onView?: (row: T) => void;
   onEdit?: (row: T) => void;
+  /** Función opcional para determinar si el botón Editar debe mostrarse para esta fila. */
+  canEdit?: (row: T) => boolean;
   /** Al hacer clic en Eliminar se llama esto (abre modal en el padre). */
   onRequestDelete?: (row: T) => void;
   viewLabel: string;
@@ -375,16 +379,18 @@ function ActionsCellRenderer<T extends { id?: string | number }>(
   customActions?: Array<{ icon: React.ReactNode; label: string; onClick: (row: T) => void }>;
   }
 ) {
-  const { data, onView, onEdit, onRequestDelete, viewLabel, editLabel, deleteLabel, saveLabel, cancelLabel, firstEditableColId, onCreate, onCancelCreate, renderRowDetail, customActions } = params;
+  const { data, onView, onEdit, canEdit, onRequestDelete, viewLabel, editLabel, deleteLabel, saveLabel, cancelLabel, firstEditableColId, onCreate, onCancelCreate, renderRowDetail, customActions } = params;
   const [saving, setSaving] = useState(false);
 
   if (!data) return null;
   const isNew = Boolean((data as unknown as { __isNew?: boolean }).__isNew);
   const hasView = !isNew && typeof onView === "function" && renderRowDetail == null;
-  const hasEdit = !isNew && (typeof onEdit === "function" || firstEditableColId != null);
+  const canEditRow = typeof canEdit === "function" ? canEdit(data) : true;
+  const hasEdit = !isNew && canEditRow && (typeof onEdit === "function" || firstEditableColId != null);
   const hasDelete = typeof onRequestDelete === "function";
   const hasCreate = isNew && typeof onCreate === "function";
-  const hasCustomActions = !isNew && Array.isArray(customActions) && customActions.length > 0;
+  const resolvedCustomActions = typeof customActions === "function" ? (customActions as (row: T) => Array<{ icon: React.ReactNode; label: string; onClick: (row: T) => void }>)(data) : customActions;
+  const hasCustomActions = !isNew && Array.isArray(resolvedCustomActions) && resolvedCustomActions.length > 0;
 
   const handleEdit = () => {
     if (typeof onEdit === "function") {
@@ -447,7 +453,7 @@ function ActionsCellRenderer<T extends { id?: string | number }>(
           <Eye className="w-4 h-4" />
         </button>
       )}
-      {hasCustomActions && customActions!.map((action, idx) => (
+      {hasCustomActions && resolvedCustomActions!.map((action, idx) => (
         <button
           key={idx}
           type="button"
@@ -507,6 +513,7 @@ export function DashboardDataTablePage<T extends { id?: string | number }>({
   refreshToken,
   onView,
   onEdit,
+  canEdit,
   onDelete,
   getConfirmDeleteMessage,
   onUpdate,
@@ -597,7 +604,7 @@ export function DashboardDataTablePage<T extends { id?: string | number }>({
     return () => mq.removeEventListener?.("change", update);
   }, []);
 
-  /** Evita alturas cacheadas de otra fila detalle; fuerza nueva medición al expandir. */
+  /** Avoids cached heights from another detail row; forces new measurement when expanding. */
   useEffect(() => {
     setDetailRowHeights({});
   }, [expandedRowId]);
@@ -872,6 +879,7 @@ export function DashboardDataTablePage<T extends { id?: string | number }>({
         cellRendererParams: {
           onView: onView ?? undefined,
           onEdit: onEdit ? handleEditRow : undefined,
+          canEdit: canEdit ?? undefined,
           onRequestDelete: onDelete ? onRequestDelete : undefined,
           viewLabel: t(locale, "common.view"),
           editLabel: t(locale, "common.edit"),
@@ -887,7 +895,7 @@ export function DashboardDataTablePage<T extends { id?: string | number }>({
       });
     }
     return dataCols;
-  }, [columns, locale, onView, onEdit, onDelete, onCreate, onRequestDelete, handleCreate, onUpdate, renderRowDetail, hasRowDetail, expandedRowId, customActions, handleEditRow]);
+  }, [columns, locale, onView, onEdit, canEdit, onDelete, onCreate, onRequestDelete, handleCreate, onUpdate, renderRowDetail, hasRowDetail, expandedRowId, customActions, handleEditRow]);
 
   const hasEditableColumns = useMemo(
     () => columns.some((c) => Boolean(c.editable && c.field)),
@@ -1128,7 +1136,7 @@ export function DashboardDataTablePage<T extends { id?: string | number }>({
                       minWidth: isMobile ? 180 : 140,
                     }}
                     alwaysShowHorizontalScroll={isMobile}
-                    overlayNoRowsTemplate={`<div class="flex flex-col items-center justify-center text-company-tertiary"><svg class="w-12 h-12 mb-3 opacity-20" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" /></svg><span>${emptyMessage}</span></div>`}
+                    overlayNoRowsTemplate={`<div class="flex flex-col items-center justify-center text-company-primary"><svg class="w-12 h-12 mb-3 opacity-40" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" /></svg><span class="font-medium">${emptyMessage}</span></div>`}
                     pagination
                     paginationPageSize={20}
                     animateRows={false}

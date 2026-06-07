@@ -1,18 +1,12 @@
 import React, { useState, useCallback } from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  Pressable,
-  ActivityIndicator,
-} from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import { View, Text, Pressable, StyleSheet, ActivityIndicator, Linking } from 'react-native';
+import { useValetTheme } from '@/theme/valetTheme';
 import { LinearGradient } from 'expo-linear-gradient';
-import * as Linking from 'expo-linking';
 import { t } from '@/lib/i18n';
 import type { Locale } from '@parkit/shared';
+import { IconCard, IconShieldCheck, IconAlertCircle, IconArrowRight, IconScan, IconExternalLink, IconCircleCheck } from '@/components/Icons';
 import api from '@/lib/api';
-import { messageFromAxios } from "@parkit/shared";
+import { messageFromAxios } from '@parkit/shared';
 import { CardScanner } from './CardScanner';
 
 interface CardVerificationProps {
@@ -32,11 +26,14 @@ interface CardVerificationProps {
     text: string;
   };
   fonts: {
-    secondary: number;
-    body: number;
-    button: number;
-    title: number;
-    status: number;
+    xs: number;
+    sm: number;
+    base: number;
+    md: number;
+    lg: number;
+    xl: number;
+    xxl: number;
+    xxxl: number;
   };
   space: {
     sm: number;
@@ -56,10 +53,12 @@ export function CardVerification({
   fonts: F,
   space: S,
 }: CardVerificationProps) {
+  const theme = useValetTheme();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showScanner, setShowScanner] = useState(false);
   const [_scanSuccess, setScanSuccess] = useState(false);
+  const [scannedCardData, setScannedCardData] = useState<any>(null);
 
   const startVerification = useCallback(async () => {
     setLoading(true);
@@ -94,7 +93,8 @@ export function CardVerification({
     }
   }, [cardVerificationStarted, onVerified]);
 
-  const handleCardScanned = useCallback(() => {
+  const handleCardScanned = useCallback((data: any) => {
+    setScannedCardData(data);
     setScanSuccess(true);
     setShowScanner(false);
     void startVerification();
@@ -127,6 +127,7 @@ export function CardVerification({
           onClose={handleScannerClose}
           onCardScanned={handleCardScanned}
           onCancel={handleScannerCancel}
+          scannedCardData={scannedCardData}
           colors={{
             primary: C.primary,
             text: C.text,
@@ -134,7 +135,7 @@ export function CardVerification({
             card: C.card,
             border: C.border,
           }}
-          fonts={{ secondary: F.secondary, body: F.body, button: F.button, title: F.title, status: F.status }}
+          fonts={{ xs: F.xs, sm: F.sm, base: F.base, md: F.md, lg: F.lg, xl: F.xl, xxl: F.xxl, xxxl: F.xxxl }}
           space={{ sm: S.sm, md: S.md, lg: S.lg }}
         />
       </View>
@@ -143,7 +144,7 @@ export function CardVerification({
 
   const styles = StyleSheet.create({
     sectionLabel: {
-      fontSize: F.secondary,
+      fontSize: F.md,
       fontWeight: '800',
       color: C.textMuted,
       marginBottom: S.sm,
@@ -151,7 +152,7 @@ export function CardVerification({
       letterSpacing: 0.6,
     },
     stepExplain: {
-      fontSize: F.secondary,
+      fontSize: F.base,
       color: C.textSubtle,
       marginTop: -4,
       marginBottom: S.md,
@@ -185,13 +186,13 @@ export function CardVerification({
       flex: 1,
     },
     cardTitle: {
-      fontSize: F.secondary - 1,
+      fontSize: F.md,
       fontWeight: '800',
       color: C.text,
       marginBottom: 4,
     },
     cardBody: {
-      fontSize: F.secondary,
+      fontSize: F.base,
       color: C.textMuted,
       lineHeight: 20,
     },
@@ -212,7 +213,7 @@ export function CardVerification({
       backgroundColor: 'rgba(245, 158, 11, 0.15)',
     },
     badgeText: {
-      fontSize: Math.round(F.secondary * 0.75),
+      fontSize: F.sm,
       fontWeight: '800',
       color: '#2563EB',
       textTransform: 'uppercase',
@@ -230,7 +231,7 @@ export function CardVerification({
       gap: 4,
     },
     verifiedText: {
-      fontSize: Math.round(F.secondary * 0.75),
+      fontSize: F.sm,
       color: '#059669',
       fontWeight: '800',
     },
@@ -243,7 +244,7 @@ export function CardVerification({
       marginBottom: S.md,
     },
     errorText: {
-      fontSize: F.secondary,
+      fontSize: F.base,
       color: '#EF4444',
       marginLeft: 8,
       flex: 1,
@@ -264,7 +265,7 @@ export function CardVerification({
       borderColor: C.border,
     },
     cancelBtnText: {
-      fontSize: F.secondary - 1,
+      fontSize: F.md,
       fontWeight: '800',
       color: isDark ? '#CBD5E1' : '#475569',
     },
@@ -288,12 +289,12 @@ export function CardVerification({
       gap: S.sm,
     },
     primaryBtnText: {
-      fontSize: F.secondary - 1,
+      fontSize: F.md,
       fontWeight: '800',
       color: '#FFFFFF',
     },
     hintText: {
-      fontSize: F.secondary,
+      fontSize: F.base,
       color: C.textMuted,
       textAlign: 'center',
       lineHeight: 22,
@@ -317,11 +318,7 @@ export function CardVerification({
         <View style={styles.innerCard}>
           <View style={styles.cardRow}>
             <View style={styles.iconBubble}>
-              <Ionicons
-                name={cardVerificationStarted ? 'checkmark-done-circle' : 'card-outline'}
-                size={26}
-                color={cardVerificationStarted ? '#10B981' : C.primary}
-              />
+              {cardVerificationStarted ? <IconCircleCheck size={theme.icon.md} color="#10B981" /> : <IconCard size={theme.icon.md} color={C.primary} />}
             </View>
             <View style={styles.textCol}>
               <Text style={styles.cardTitle}>
@@ -341,7 +338,7 @@ export function CardVerification({
             </View>
             {cardVerificationStarted ? (
               <View style={styles.verifiedBadge}>
-                <Ionicons name="shield-checkmark-outline" size={14} color="#10B981" />
+                <IconShieldCheck size={theme.icon.xs} color="#10B981" />
                 <Text style={styles.verifiedText}>{t(locale, 'receive.cardVerifyStarted')}</Text>
               </View>
             ) : (
@@ -357,7 +354,7 @@ export function CardVerification({
 
       {error && (
         <View style={styles.errorContainer}>
-          <Ionicons name="alert-circle" size={18} color="#EF4444" />
+          <IconAlertCircle size={theme.icon.sm} color="#EF4444" />
           <Text style={styles.errorText}>{error}</Text>
         </View>
       )}
@@ -384,7 +381,7 @@ export function CardVerification({
               end={{ x: 1, y: 1 }}
               style={styles.primaryBtnBg}
             >
-              <Ionicons name="arrow-forward" size={18} color="#FFFFFF" />
+              <IconArrowRight size={theme.icon.sm} color="#FFFFFF" />
               <Text style={styles.primaryBtnText}>{t(locale, 'common.next')}</Text>
             </LinearGradient>
           </Pressable>
@@ -401,7 +398,7 @@ export function CardVerification({
                 end={{ x: 1, y: 1 }}
                 style={styles.primaryBtnBg}
               >
-                <Ionicons name="scan-outline" size={18} color="#FFFFFF" />
+                <IconScan size={theme.icon.sm} color="#FFFFFF" />
                 <Text style={styles.primaryBtnText}>{t(locale, 'receive.cardScanButton')}</Text>
               </LinearGradient>
             </Pressable>
@@ -421,7 +418,7 @@ export function CardVerification({
                   <ActivityIndicator color="#FFFFFF" />
                 ) : (
                   <>
-                    <Ionicons name="open-outline" size={18} color="#FFFFFF" />
+                    <IconExternalLink size={theme.icon.sm} color="#FFFFFF" />
                     <Text style={styles.primaryBtnText}>{t(locale, 'receive.cardVerifyStart')}</Text>
                   </>
                 )}

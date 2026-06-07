@@ -38,13 +38,7 @@ export function Logo({
       >
         {isMark ? "p" : "park"}
       </span>
-      <span
-        className={
-          isOnDark
-            ? "text-sky-300 drop-shadow-[0_0_16px_rgba(56,189,248,0.25)] transition-colors duration-300"
-            : "text-blue-600 dark:text-blue-500 transition-colors duration-300"
-        }
-      >
+      <span className="text-blue-600 dark:text-blue-500 transition-colors duration-300">
         {isMark ? "." : "it."}
       </span>
     </div>

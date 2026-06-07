@@ -2,15 +2,9 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import dynamic from "next/dynamic";
 import { Plus } from "@/lib/premiumIcons";
 import { useRouter } from "next/navigation";
-import { PageLoader } from "@/components/PageLoader";
-
-const DashboardDataTablePage = dynamic(
-  () => import("@/components/DashboardDataTablePage").then((m) => ({ default: m.DashboardDataTablePage })),
-  { ssr: false, loading: () => <div className="flex flex-1 items-center justify-center p-8"><PageLoader /></div> }
-);
+import { DashboardDataTablePage } from "@/components/DashboardDataTablePage";
 import { DetailField, DetailSectionLabel } from "@/components/RowDetailModal";
 import { useTranslation } from "@/hooks/useTranslation";
 import { apiClient } from "@/lib/api";
@@ -63,6 +57,7 @@ export default function TicketsPage() {
   const [hasCustomers, setHasCustomers] = useState(false);
 
   useEffect(() => {
+    let cancelled = false;
     (async () => {
       try {
         const [v, p, customers] = await Promise.all([
@@ -70,15 +65,22 @@ export default function TicketsPage() {
           apiClient.get<ParkingOption[]>("/parkings"),
           apiClient.get<unknown[]>("/users?systemRole=CUSTOMER").catch(() => []),
         ]);
-        setVehicles(Array.isArray(v) ? v : []);
-        setParkings(Array.isArray(p) ? p : []);
-        setHasCustomers(Array.isArray(customers) && customers.length > 0);
+        if (!cancelled) {
+          setVehicles(Array.isArray(v) ? v : []);
+          setParkings(Array.isArray(p) ? p : []);
+          setHasCustomers(Array.isArray(customers) && customers.length > 0);
+        }
       } catch {
-        setVehicles([]);
-        setParkings([]);
-        setHasCustomers(false);
+        if (!cancelled) {
+          setVehicles([]);
+          setParkings([]);
+          setHasCustomers(false);
+        }
       }
     })();
+    return () => {
+      cancelled = true;
+    };
   }, [selectedCompanyId]);
 
   const fetchData = useCallback(
@@ -238,7 +240,7 @@ export default function TicketsPage() {
           const driver = (byStaffRole.DRIVER ?? []).join(", ") || "—";
           const deliverer = driver;
           return (
-            <dl className="grid grid-cols-3 gap-x-4 gap-y-3">
+            <dl className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-4 gap-y-3">
               <DetailSectionLabel text={t("common.additionalInfo")} />
               {ownerName != null && ownerName !== "" && (
                 <DetailField label={t("tickets.client")} value={ownerName} />
