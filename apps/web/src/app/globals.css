@@ -870,23 +870,23 @@ input:-webkit-autofill:active {
   }
 }
 
-/* ── Custom scrollbar ── */
+/* ── Custom subtle scrollbar ── */
 ::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+  width: 6px;
+  height: 6px;
 }
 ::-webkit-scrollbar-track {
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: color-mix(in srgb, var(--company-primary) 30%, transparent);
+  background: color-mix(in srgb, var(--company-primary) 15%, transparent);
   border-radius: 9999px;
   transition: background 0.2s;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: color-mix(in srgb, var(--company-primary) 55%, transparent);
+  background: color-mix(in srgb, var(--company-primary) 30%, transparent);
 }
 * {
   scrollbar-width: thin;
-  scrollbar-color: color-mix(in srgb, var(--company-primary) 30%, transparent) transparent;
+  scrollbar-color: color-mix(in srgb, var(--company-primary) 15%, transparent) transparent;
 }

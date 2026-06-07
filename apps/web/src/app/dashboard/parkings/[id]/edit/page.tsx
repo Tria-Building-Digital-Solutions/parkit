@@ -13,9 +13,9 @@ import { useDashboardStore } from "@/lib/store";
 import { PageLoader } from "@/components/PageLoader";
 import { LoadingSpinner } from "@/components/LoadingSpinner";
 
-const IL = "w-full pl-10 pr-4 py-3 rounded-lg border border-input-border bg-input-bg text-text-primary text-sm transition-all duration-200 ease-out focus:border-company-primary focus:outline-none focus:ring-1 focus:ring-company-primary/20 focus:ring-inset placeholder:text-text-muted";
-const INPUT = "w-full px-4 py-3 rounded-lg border border-input-border bg-input-bg text-text-primary text-sm transition-all duration-200 ease-out focus:border-company-primary focus:outline-none focus:ring-1 focus:ring-company-primary/20 focus:ring-inset placeholder:text-text-muted";
-const LABEL = "block text-sm font-medium text-text-secondary mb-1.5";
+const IL = "w-full pl-10 pr-4 py-2.5 rounded-xl border border-input-border bg-input-bg text-text-primary text-sm transition-all duration-200 focus:border-company-primary focus:outline-none focus:ring-1 focus:ring-company-primary/20 placeholder:text-text-muted";
+const INPUT = "w-full px-4 py-2.5 rounded-xl border border-input-border bg-input-bg text-text-primary text-sm transition-all duration-200 focus:border-company-primary focus:outline-none focus:ring-1 focus:ring-company-primary/20 placeholder:text-text-muted";
+const LABEL = "block text-sm font-medium text-text-primary mb-1.5";
 
 const PARKING_TYPES = ["OPEN", "COVERED", "TOWER", "UNDERGROUND", "ELEVATOR"] as const;
 const SLOT_TYPES = ["REGULAR", "PREMIUM", "ELECTRIC", "HANDICAPPED"] as const;

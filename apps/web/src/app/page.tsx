@@ -1,14 +1,17 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useLayoutEffect, useRef } from "react";
+import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import { TypewriterEffect } from "@/components/ui/typewriter-effect";
 import { AuthModal } from "@/components/AuthModal";
 import { ArrowRight, Menu, X, Plus, Minus, Check, Mail } from "lucide-react";
 import { DeviceMobile, LayoutDashboard, Gauge, ClipboardText, Key, MapPin, Bell } from "@/lib/premiumIcons";
-import Hyperspeed from "@/components/effects/Hyperspeed";
 import { BackgroundBeams } from "@/components/ui/background-beams";
 import { hyperspeedPresets } from "@/components/effects/hyperspeedPresets";
+import dynamic from "next/dynamic";
+
+const Hyperspeed = dynamic(() => import("@/components/effects/Hyperspeed"), { ssr: false });
 import { useRouter } from "next/navigation";
 import { Logo } from "@/components/Logo";
 import { ThemeToggleSimple } from "@/components/ThemeToggleSimple";
@@ -24,25 +27,22 @@ export default function Home() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [openFaq, setOpenFaq] = useState<number | null>(null);
   const [annual, setAnnual] = useState(false);
-  const [authModalOpen, setAuthModalOpen] = useState(false);
-  const [authModalView, setAuthModalView] = useState<"login" | "request-access">("login");
-  const [authAnchor, setAuthAnchor] = useState<"sign-in" | "request-access" | null>(null);
+  const [authModalOpen, setAuthModalOpen] = useState(
+    typeof window !== 'undefined' && new URLSearchParams(window.location.search).get("auth") === "login"
+  );
+  const [authModalView, setAuthModalView] = useState<"login">("login");
+  const [authAnchor, setAuthAnchor] = useState<"sign-in" | null>(
+    typeof window !== 'undefined' && new URLSearchParams(window.location.search).get("auth") === "login" ? "sign-in" : null
+  );
   const [scrolled, setScrolled] = useState(false);
   const signInBtnRef = useRef<HTMLButtonElement>(null);
-  const requestAccessBtnRef = useRef<HTMLButtonElement>(null);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     setMounted(true);
-    const params = new URLSearchParams(window.location.search);
-    const auth = params.get("auth");
-    if (auth === "request-access") {
-      setAuthAnchor(null);
-      setAuthModalView("request-access");
+    if (new URLSearchParams(window.location.search).get("auth") === "login") {
       setAuthModalOpen(true);
-    } else if (auth === "login") {
-      setAuthAnchor(null);
       setAuthModalView("login");
-      setAuthModalOpen(true);
+      setAuthAnchor("sign-in");
     }
   }, []);
 
@@ -54,6 +54,10 @@ export default function Home() {
   }, []);
 
   const logoVariant = mounted && resolvedTheme === "dark" ? "onDark" : "default";
+
+  const handleGetStarted = (plan?: string) => {
+    router.push(plan ? `/signup?plan=${plan}` : "/signup");
+  };
 
   const handleRequestDemo = () => {
     router.push("/demo-request");
@@ -75,10 +79,10 @@ export default function Home() {
       title: t("landing.footer.solutions"),
       idPrefix: "footer-solutions",
       links: [
-        { name: t("landing.footer.linksValet"), href: "#services" },
-        { name: t("landing.footer.linksAccess"), href: "#services" },
-        { name: t("landing.footer.linksReports"), href: "#services" },
-        { name: t("landing.footer.linksApp"), href: "#services" },
+        { name: t("landing.footer.linksValet"), href: "/services/key-management" },
+        { name: t("landing.footer.linksAccess"), href: "/services/dashboard" },
+        { name: t("landing.footer.linksReports"), href: "/services/mobile-checkin" },
+        { name: t("landing.footer.linksApp"), href: "/services/reports" },
       ],
     },
     {
@@ -108,7 +112,7 @@ export default function Home() {
         { name: t("landing.footer.linksTerms"), href: "/terms" },
         { name: t("landing.footer.linksPrivacy"), href: "/privacy" },
         { name: t("landing.footer.linksCookies"), href: "/cookies" },
-        { name: t("landing.footer.linksContact"), href: "#faq" },
+        { name: t("landing.footer.linksContact"), href: "/contact" },
       ],
     },
   ];
@@ -117,7 +121,6 @@ export default function Home() {
     <div className="min-h-screen bg-background">
       {/* Hero Section with Navbar */}
       <div className="relative min-h-screen bg-gray-900 flex flex-col">
-        {/* Hyperspeed Background */}
         <div className="absolute inset-0">
           <Hyperspeed effectOptions={hyperspeedPresets.four} />
           <div className="absolute inset-0 bg-gray-900/70 mix-blend-multiply" />
@@ -171,13 +174,7 @@ export default function Home() {
                 >
                   {t("auth.signIn")}
                 </button>
-                <button
-                  ref={requestAccessBtnRef}
-                  onClick={() => { setAuthAnchor("request-access"); setAuthModalView("request-access"); setAuthModalOpen(true); }}
-                  className="text-sm font-medium text-white/60 hover:text-white transition-all"
-                >
-                  {t("auth.requestAccess")}
-                </button>
+
               </div>
             </div>
           </div>
@@ -230,12 +227,6 @@ export default function Home() {
                           {t("auth.signIn")}<ArrowRight className="h-4 w-4" />
                         </span>
                       </button>
-                      <button
-                        onClick={() => { setAuthAnchor(null); setMobileMenuOpen(false); setAuthModalView("request-access"); setAuthModalOpen(true); }}
-                        className="w-full text-center text-sm font-medium text-text-secondary hover:text-text-primary transition-all"
-                      >
-                        {t("auth.requestAccess")}
-                      </button>
                     </div>
                   </div>
                 </div>
@@ -264,15 +255,9 @@ export default function Home() {
             <h1 className="text-4xl font-bold tracking-tight text-white sm:text-6xl lg:text-7xl">
               {t("landing.hero.title")}
               <br />
-              <span>sin </span>
+              <span>{t("landing.hero.subtitle")} </span>
               <TypewriterEffect
-                words={[
-                  { text: "complicaciones", className: "text-company-primary" },
-                  { text: "estrés", className: "text-company-primary" },
-                  { text: "caos", className: "text-company-primary" },
-                  { text: "desorden", className: "text-company-primary" },
-                  { text: "preocupaciones", className: "text-company-primary" },
-                ]}
+                words={t("landing.hero.typewriterWords").split(",").map((w) => ({ text: w.trim(), className: "text-company-primary" }))}
                 className="text-company-primary"
                 cursorClassName="bg-company-primary"
               />
@@ -295,19 +280,25 @@ export default function Home() {
                 hidden: { opacity: 0, y: 20 },
                 visible: { opacity: 1, y: 0, transition: { type: "spring", stiffness: 100, damping: 15 } },
               }}
-              className="mt-10 flex flex-col sm:flex-row gap-4 justify-center items-center"
+              className="mt-12 flex flex-col sm:flex-row gap-8 justify-center items-center"
             >
               <motion.button
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
-                onClick={handleRequestDemo}
+                onClick={() => handleGetStarted()}
                 className="rounded-full bg-white px-8 py-4 text-base font-semibold text-gray-900 shadow-sm hover:bg-gray-100 transition-all"
               >
-                <span className="flex items-center gap-2">
-                  {t("landing.hero.cta")}
-                  <ArrowRight className="w-5 h-5" />
-                </span>
+                {t("landing.hero.cta")}
               </motion.button>
+              <button
+                onClick={handleRequestDemo}
+                className="text-sm font-medium text-gray-400 hover:text-white transition-colors"
+              >
+                <span className="flex items-center gap-1.5">
+                  {t("landing.hero.requestDemoLink")}
+                  <ArrowRight className="w-4 h-4" />
+                </span>
+              </button>
 
             </motion.div>
 
@@ -336,11 +327,11 @@ export default function Home() {
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
             {[
-              { Icon: Key, title: t("landing.services.item1Title"), desc: t("landing.services.item1Desc") },
-              { Icon: LayoutDashboard, title: t("landing.services.item2Title"), desc: t("landing.services.item2Desc") },
-              { Icon: DeviceMobile, title: t("landing.services.item3Title"), desc: t("landing.services.item3Desc") },
-              { Icon: ClipboardText, title: t("landing.services.item4Title"), desc: t("landing.services.item4Desc") },
-            ].map(({ Icon, title, desc }, i) => (
+              { href: "/services/key-management", Icon: Key, title: t("landing.services.item1Title"), desc: t("landing.services.item1Desc") },
+              { href: "/services/dashboard", Icon: LayoutDashboard, title: t("landing.services.item2Title"), desc: t("landing.services.item2Desc") },
+              { href: "/services/mobile-checkin", Icon: DeviceMobile, title: t("landing.services.item3Title"), desc: t("landing.services.item3Desc") },
+              { href: "/services/reports", Icon: ClipboardText, title: t("landing.services.item4Title"), desc: t("landing.services.item4Desc") },
+            ].map(({ href, Icon, title, desc }, i) => (
               <motion.div
                 key={i}
                 initial={{ opacity: 0, y: 20 }}
@@ -354,10 +345,13 @@ export default function Home() {
                 </div>
                 <h3 className="text-lg font-semibold text-text-primary">{title}</h3>
                 <p className="mt-3 text-sm text-text-secondary leading-relaxed">{desc}</p>
-                <button className="mt-auto pt-5 inline-flex items-center gap-2 text-sm font-semibold text-company-primary hover:underline group/btn">
+                <Link
+                  href={href}
+                  className="mt-auto pt-5 inline-flex items-center gap-2 text-sm font-semibold text-company-primary hover:underline group/btn"
+                >
                   {t("landing.services.title") === "Services" ? "Read More" : "Leer más"}
                   <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover/btn:translate-x-1" />
-                </button>
+                </Link>
               </motion.div>
             ))}
           </div>
@@ -376,7 +370,7 @@ export default function Home() {
               {t("landing.ctaBanner.description")}
             </p>
             <button
-              onClick={handleRequestDemo}
+              onClick={() => handleGetStarted()}
               className="mt-6 rounded-full bg-company-primary px-10 py-4 text-base font-semibold text-white shadow-sm hover:brightness-110 transition-all"
             >
               {t("landing.cta.button")}
@@ -612,7 +606,10 @@ export default function Home() {
                     </span>
                   </p>
                   <button
-                    onClick={handleRequestDemo}
+                    onClick={() => {
+                      const plans = ["basic", "professional", "enterprise"];
+                      handleGetStarted(plans[index]);
+                    }}
                     className={`mt-6 w-full rounded-full py-2.5 text-sm font-semibold transition-all ${
                       tier.featured
                         ? "bg-company-primary text-white shadow-sm hover:brightness-110"
@@ -722,6 +719,26 @@ export default function Home() {
               <div className="mt-8 flex gap-x-6">
                 <a
                   href="#"
+                  id="footer-social-instagram"
+                  className="text-gray-400 transition-colors hover:text-white"
+                >
+                  <span className="sr-only">{t("landing.footer.socialInstagram")}</span>
+                  <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M12.315 2c2.43 0 2.784.013 3.808.06 1.064.049 1.791.218 2.427.465a4.902 4.902 0 0 1 1.772 1.153 4.902 4.902 0 0 1 1.153 1.772c.247.636.416 1.363.465 2.427.048 1.067.06 1.407.06 4.123v.08c0 2.643-.012 2.987-.06 4.043-.049 1.064-.218 1.791-.465 2.427a4.902 4.902 0 0 1-1.153 1.772 4.902 4.902 0 0 1-1.772 1.153c-.636.247-1.363.416-2.427.465-1.067.048-1.407.06-4.123.06h-.08c-2.643 0-2.987-.012-4.043-.06-1.064-.049-1.791-.218-2.427-.465a4.902 4.902 0 0 1-1.772-1.153 4.902 4.902 0 0 1-1.153-1.772c-.247-.636-.416-1.363-.465-2.427-.047-1.024-.06-1.379-.06-3.808v-.63c0-2.43.013-2.784.06-3.808.049-1.064.218-1.791.465-2.427a4.902 4.902 0 0 1 1.153-1.772A4.902 4.902 0 0 1 6.38 2.525c.636-.247 1.363-.416 2.427-.465C8.552 2.013 8.907 2 11.38 2h.935zm.02 1.802h-.875c-2.36 0-2.598.009-3.526.051-1.023.047-1.58.21-1.951.348-.488.182-.875.399-1.258.782a3.17 3.17 0 0 0-.782 1.258c-.138.37-.301.928-.348 1.951-.042.928-.051 1.165-.051 3.526v.875c0 2.36.009 2.598.051 3.526.047 1.023.21 1.58.348 1.951.182.488.399.875.782 1.258a3.17 3.17 0 0 0 1.258.782c.37.138.928.301 1.951.348.928.042 1.165.051 3.526.051h.875c2.36 0 2.598-.009 3.526-.051 1.023-.047 1.58-.21 1.951-.348a3.17 3.17 0 0 0 1.258-.782 3.17 3.17 0 0 0 .782-1.258c.138-.37.301-.928.348-1.951.042-.928.051-1.165.051-3.526v-.875c0-2.36-.009-2.598-.051-3.526-.047-1.023-.21-1.58-.348-1.951a3.17 3.17 0 0 0-.782-1.258 3.17 3.17 0 0 0-1.258-.782c-.37-.138-.928-.301-1.951-.348-.928-.042-1.165-.051-3.526-.051zm0 1.802a6.398 6.398 0 1 0 0 12.796 6.398 6.398 0 0 0 0-12.796zm0 10.994a4.596 4.596 0 1 1 0-9.192 4.596 4.596 0 0 1 0 9.192zM17.164 4.85a1.496 1.496 0 1 0 0 2.992 1.496 1.496 0 0 0 0-2.992z" />
+                  </svg>
+                </a>
+                <a
+                  href="#"
+                  id="footer-social-tiktok"
+                  className="text-gray-400 transition-colors hover:text-white"
+                >
+                  <span className="sr-only">{t("landing.footer.socialTikTok")}</span>
+                  <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M12.525.02c1.31-.02 2.61-.01 3.91-.02.08 1.53.63 3.09 1.75 4.17 1.12 1.11 2.7 1.62 4.24 1.79v4.03c-1.44-.05-2.89-.35-4.2-.97-.57-.26-1.1-.59-1.62-.93-.01 2.92.01 5.84-.02 8.75-.08 1.4-.54 2.79-1.35 3.94-1.31 1.92-3.58 3.17-5.91 3.21-1.43.08-2.86-.31-4.08-1.03-2.02-1.19-3.44-3.37-3.65-5.71-.02-.5-.03-1-.01-1.49.18-1.9 1.12-3.72 2.58-4.96 1.66-1.44 3.98-2.13 6.15-1.72.02 1.48-.04 2.96-.04 4.44-.99-.32-2.15-.23-3.02.37-.63.41-1.11 1.04-1.36 1.75-.21.51-.15 1.07-.14 1.61.24 1.64 1.82 3.02 3.5 2.87 1.12-.01 2.19-.66 2.77-1.61.19-.33.4-.67.41-1.06.1-1.79.06-3.57.07-5.36.01-4.03-.01-8.05.02-12.07z" />
+                  </svg>
+                </a>
+                <a
+                  href="#"
                   id="footer-social-x"
                   className="text-gray-400 transition-colors hover:text-white"
                 >
@@ -739,24 +756,6 @@ export default function Home() {
                   <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                     <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z" />
                   </svg>
-                </a>
-                <a
-                  href="#"
-                  id="footer-social-github"
-                  className="text-gray-400 transition-colors hover:text-white"
-                >
-                  <span className="sr-only">{t("landing.footer.socialGithub")}</span>
-                  <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                    <path d="M12 0C5.374 0 0 5.373 0 12c0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23A11.509 11.509 0 0112 5.803c1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576C20.566 21.797 24 17.3 24 12c0-6.627-5.373-12-12-12z" />
-                  </svg>
-                </a>
-                <a
-                  href="#"
-                  id="footer-social-email"
-                  className="text-gray-400 transition-colors hover:text-white"
-                >
-                  <span className="sr-only">{t("landing.footer.socialEmail")}</span>
-                  <Mail className="h-5 w-5" aria-hidden="true" />
                 </a>
               </div>
             </div>
@@ -805,11 +804,15 @@ export default function Home() {
           </div>
         </div>
       </footer>
-
       <AuthModal
         open={authModalOpen}
-        onClose={() => setAuthModalOpen(false)}
-        buttonRef={authAnchor === "sign-in" ? signInBtnRef : authAnchor === "request-access" ? requestAccessBtnRef : undefined}
+        onClose={() => {
+          setAuthModalOpen(false);
+          if (typeof window !== 'undefined' && window.location.search.includes('auth=')) {
+            window.history.replaceState({}, '', '/');
+          }
+        }}
+        buttonRef={authAnchor === "sign-in" ? signInBtnRef : undefined}
         initialView={authModalView}
       />
     </div>

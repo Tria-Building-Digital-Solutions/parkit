@@ -9,7 +9,7 @@ import {
   RenderPass,
   SMAAEffect,
 } from "postprocessing";
-import type { HyperspeedOptions, HyperspeedProps } from "./types";
+import type { HyperspeedOptions, HyperspeedProps, Distortion } from "./types";
 
 const defaultOptions: HyperspeedOptions = {
   onSpeedUp: () => {},
@@ -911,6 +911,7 @@ function resizeRendererToDisplaySize(
   const canvas = renderer.domElement;
   const width = canvas.clientWidth;
   const height = canvas.clientHeight;
+  if (width <= 0 || height <= 0) return false;
   const needResize = canvas.width !== width || canvas.height !== height;
   if (needResize) {
     setSize(width, height, false);
@@ -930,6 +931,7 @@ class App {
   clock: THREE.Clock;
   assets: Record<string, any>;
   disposed: boolean;
+  hasValidSize: boolean;
   road: Road;
   leftCarLights: CarLights;
   rightCarLights: CarLights;
@@ -949,20 +951,36 @@ class App {
       };
     }
     this.container = container;
+    this.hasValidSize = false;
+
+    const initW = Math.max(1, container.offsetWidth);
+    const initH = Math.max(1, container.offsetHeight);
 
     this.renderer = new THREE.WebGLRenderer({
       antialias: false,
       alpha: true,
     });
-    this.renderer.setSize(container.offsetWidth, container.offsetHeight, false);
+    this.renderer.setSize(initW, initH, false);
     this.renderer.setPixelRatio(window.devicePixelRatio);
 
-    this.composer = new EffectComposer(this.renderer);
     container.appendChild(this.renderer.domElement);
+
+    // Ensure WebGL context attributes are accessible (postprocessing v6 needs this)
+    const _origGetContext = this.renderer.getContext.bind(this.renderer);
+    const gl = _origGetContext();
+    if (gl && !gl.getContextAttributes()) {
+      const origGetContextAttributes = gl.getContextAttributes.bind(gl);
+      Object.defineProperty(gl, 'getContextAttributes', {
+        value: () => ({ alpha: true, antialias: false, depth: true, stencil: false, premultipliedAlpha: true, preserveDrawingBuffer: false, powerPreference: 'default', failIfMajorPerformanceCaveat: false }),
+        writable: false,
+      });
+    }
+
+    this.composer = new EffectComposer(this.renderer);
 
     this.camera = new THREE.PerspectiveCamera(
       options.fov,
-      container.offsetWidth / container.offsetHeight,
+      initW / initH,
       0.1,
       10000
     );
@@ -971,7 +989,7 @@ class App {
     this.camera.position.x = 0;
 
     this.scene = new THREE.Scene();
-    this.scene.background = null;
+    this.scene.background = new THREE.Color(options.colors.background);
 
     const fog = new THREE.Fog(
       options.colors.background,
@@ -1017,18 +1035,32 @@ class App {
     this.setSize = this.setSize.bind(this);
     this.onMouseDown = this.onMouseDown.bind(this);
     this.onMouseUp = this.onMouseUp.bind(this);
+    this.onTouchStart = this.onTouchStart.bind(this);
+    this.onTouchEnd = this.onTouchEnd.bind(this);
+    this.onContextMenu = this.onContextMenu.bind(this);
 
-    window.addEventListener("resize", this.onWindowResize.bind(this));
+    this.onWindowResize = this.onWindowResize.bind(this);
+    window.addEventListener("resize", this.onWindowResize);
+
+    if (container.offsetWidth > 0 && container.offsetHeight > 0) {
+      this.hasValidSize = true;
+    }
   }
 
   onWindowResize() {
     const width = this.container.offsetWidth;
     const height = this.container.offsetHeight;
 
+    if (width <= 0 || height <= 0) {
+      this.hasValidSize = false;
+      return;
+    }
+
     this.renderer.setSize(width, height);
     this.camera.aspect = width / height;
     this.camera.updateProjectionMatrix();
     this.composer.setSize(width, height);
+    this.hasValidSize = true;
   }
 
   initPasses() {
@@ -1064,18 +1096,21 @@ class App {
       const areaImage = new Image();
       assets.smaa = {};
 
-      searchImage.addEventListener("load", function () {
-        assets.smaa.search = this;
-        manager.itemEnd("smaa-search");
-      });
+      const onLoad = function (this: HTMLImageElement, key: string) {
+        assets.smaa[key] = this;
+        manager.itemEnd(key);
+      };
+      const onError = function (this: HTMLImageElement, key: string) {
+        manager.itemEnd(key);
+      };
 
-      areaImage.addEventListener("load", function () {
-        assets.smaa.area = this;
-        manager.itemEnd("smaa-area");
-      });
+      searchImage.addEventListener("load", onLoad.bind(searchImage, "search"));
+      searchImage.addEventListener("error", onError.bind(searchImage, "search"));
+      areaImage.addEventListener("load", onLoad.bind(areaImage, "area"));
+      areaImage.addEventListener("error", onError.bind(areaImage, "area"));
 
-      manager.itemStart("smaa-search");
-      manager.itemStart("smaa-area");
+      manager.itemStart("search");
+      manager.itemStart("area");
 
       searchImage.src = SMAAEffect.searchImageDataURL;
       areaImage.src = SMAAEffect.areaImageDataURL;
@@ -1105,6 +1140,12 @@ class App {
     this.container.addEventListener("mouseup", this.onMouseUp);
     this.container.addEventListener("mouseout", this.onMouseUp);
 
+    this.container.addEventListener("touchstart", this.onTouchStart, { passive: true });
+    this.container.addEventListener("touchend", this.onTouchEnd, { passive: true });
+    this.container.addEventListener("touchcancel", this.onTouchEnd, { passive: true });
+
+    this.container.addEventListener("contextmenu", this.onContextMenu);
+
     this.tick();
   }
 
@@ -1118,6 +1159,22 @@ class App {
     if (this.options.onSlowDown) this.options.onSlowDown(ev);
     this.fovTarget = this.options.fov;
     this.speedUpTarget = 0;
+  }
+
+  onTouchStart(ev: TouchEvent) {
+    if (this.options.onSpeedUp) this.options.onSpeedUp(ev as unknown as MouseEvent);
+    this.fovTarget = this.options.fovSpeedUp;
+    this.speedUpTarget = this.options.speedUp;
+  }
+
+  onTouchEnd(ev: TouchEvent) {
+    if (this.options.onSlowDown) this.options.onSlowDown(ev as unknown as MouseEvent);
+    this.fovTarget = this.options.fov;
+    this.speedUpTarget = 0;
+  }
+
+  onContextMenu(ev: MouseEvent) {
+    ev.preventDefault();
   }
 
   update(delta: number) {
@@ -1139,10 +1196,11 @@ class App {
     }
 
     if (
+      this.options.distortion &&
       typeof this.options.distortion === "object" &&
-      this.options.distortion!.getJS
+      (this.options.distortion as Distortion).getJS
     ) {
-      const distortion = this.options.distortion!.getJS(0.025, time);
+      const distortion = (this.options.distortion as Distortion).getJS!(0.025, time);
       this.camera.lookAt(
         new THREE.Vector3(
           this.camera.position.x + distortion.x,
@@ -1164,22 +1222,88 @@ class App {
 
   dispose() {
     this.disposed = true;
+
+    if (this.scene) {
+      this.scene.traverse((object) => {
+        const obj = object as THREE.Mesh & { isMesh: boolean };
+        if (!obj.isMesh) return;
+        if (obj.geometry) obj.geometry.dispose();
+        if (obj.material) {
+          if (Array.isArray(obj.material)) {
+            obj.material.forEach((m) => m.dispose());
+          } else {
+            obj.material.dispose();
+          }
+        }
+      });
+      this.scene.clear();
+    }
+
+    if (this.renderer) {
+      this.renderer.dispose();
+      this.renderer.forceContextLoss();
+      if (this.renderer.domElement && this.renderer.domElement.parentNode) {
+        this.renderer.domElement.parentNode.removeChild(this.renderer.domElement);
+      }
+    }
+
+    if (this.composer) {
+      this.composer.dispose();
+    }
+
+    window.removeEventListener("resize", this.onWindowResize);
+    if (this.container) {
+      this.container.removeEventListener("mousedown", this.onMouseDown);
+      this.container.removeEventListener("mouseup", this.onMouseUp);
+      this.container.removeEventListener("mouseout", this.onMouseUp);
+      this.container.removeEventListener("touchstart", this.onTouchStart);
+      this.container.removeEventListener("touchend", this.onTouchEnd);
+      this.container.removeEventListener("touchcancel", this.onTouchEnd);
+      this.container.removeEventListener("contextmenu", this.onContextMenu);
+    }
   }
 
   setSize(width: number, height: number, updateStyles: boolean) {
+    if (width <= 0 || height <= 0) {
+      this.hasValidSize = false;
+      return;
+    }
     this.composer.setSize(width, height, updateStyles);
+    this.hasValidSize = true;
   }
 
   tick() {
-    if (this.disposed || !this) return;
+    if (this.disposed) return;
+
+    if (!this.hasValidSize) {
+      const w = this.container.offsetWidth;
+      const h = this.container.offsetHeight;
+      if (w > 0 && h > 0) {
+        this.renderer.setSize(w, h, false);
+        this.camera.aspect = w / h;
+        this.camera.updateProjectionMatrix();
+        this.composer.setSize(w, h);
+        this.hasValidSize = true;
+      } else {
+        requestAnimationFrame(this.tick);
+        return;
+      }
+    }
+
     if (resizeRendererToDisplaySize(this.renderer, this.setSize)) {
       const canvas = this.renderer.domElement;
-      this.camera.aspect = canvas.clientWidth / canvas.clientHeight;
-      this.camera.updateProjectionMatrix();
+      if (this.hasValidSize) {
+        this.camera.aspect = canvas.clientWidth / canvas.clientHeight;
+        this.camera.updateProjectionMatrix();
+      }
     }
-    const delta = this.clock.getDelta();
-    this.render(delta);
-    this.update(delta);
+
+    if (this.hasValidSize) {
+      const delta = this.clock.getDelta();
+      this.render(delta);
+      this.update(delta);
+    }
+
     requestAnimationFrame(this.tick);
   }
 }
@@ -1190,8 +1314,20 @@ const Hyperspeed: FC<HyperspeedProps> = ({ effectOptions = {} }) => {
     ...effectOptions,
   };
   const hyperspeed = useRef<HTMLDivElement>(null);
+  const appRef = useRef<App | null>(null);
 
   useEffect(() => {
+    if (appRef.current) {
+      appRef.current.dispose();
+      appRef.current = null;
+      const container = hyperspeed.current;
+      if (container) {
+        while (container.firstChild) {
+          container.removeChild(container.firstChild);
+        }
+      }
+    }
+
     const container = hyperspeed.current;
     if (!container) return;
 
@@ -1200,8 +1336,16 @@ const Hyperspeed: FC<HyperspeedProps> = ({ effectOptions = {} }) => {
     }
 
     const myApp = new App(container, mergedOptions as HyperspeedOptions);
+    appRef.current = myApp;
     myApp.loadAssets().then(myApp.init);
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+    return () => {
+      if (appRef.current) {
+        appRef.current.dispose();
+        appRef.current = null;
+      }
+    };
+  }, [effectOptions]); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <>

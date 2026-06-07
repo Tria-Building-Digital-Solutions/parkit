@@ -24,6 +24,19 @@ const nextConfig = {
    */
   outputFileTracingRoot: path.join(__dirname, '../../'),
 
+  async headers() {
+    return [
+      {
+        source: '/:path*',
+        headers: [
+          { key: 'Cache-Control', value: 'no-cache, no-store, must-revalidate' },
+          { key: 'Pragma', value: 'no-cache' },
+          { key: 'Expires', value: '0' },
+        ],
+      },
+    ];
+  },
+
   /**
    * BUILD OPTIMIZATIONS
    * Temporary bypass for Type and Lint errors to ensure the build 

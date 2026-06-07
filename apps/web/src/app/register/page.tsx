@@ -20,11 +20,12 @@ import { LoadingSpinner } from "@/components/LoadingSpinner";
 import { PageLoader } from "@/components/PageLoader";
 import { ThemeToggleSimple } from "@/components/ThemeToggleSimple";
 import { LocaleToggle } from "@/components/LocaleToggle";
+import { INPUT_CLASSES, BUTTON_CLASSES, LABEL_CLASSES } from "@/lib/utils";
 
 const REDIRECT_DELAY_SECONDS = 3;
 
-const INPUT_BASE = "w-full rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-4 py-3 text-slate-900 dark:text-white text-sm transition-all duration-200 ease-out focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500/20 focus:ring-inset placeholder:text-slate-400 dark:placeholder:text-slate-500";
-const LABEL_BASE = "block text-sm font-medium text-slate-600 dark:text-slate-400 mb-1.5";
+const INPUT_BASE = INPUT_CLASSES;
+const LABEL_BASE = LABEL_CLASSES;
 
 function PasswordRequirement({ label, met }: { label: string; met: boolean }) {
   return (
@@ -410,7 +411,7 @@ function RegisterForm() {
             <button
               type="submit"
               disabled={isSubmitting}
-              className="group w-full flex items-center justify-center gap-2 rounded-lg bg-indigo-600 py-3 text-sm font-medium text-white hover:bg-indigo-700 focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:ring-offset-2 focus:ring-offset-white dark:focus:ring-offset-slate-900 disabled:opacity-50 disabled:pointer-events-none transition-all"
+              className={`${BUTTON_CLASSES} group flex items-center justify-center gap-2 disabled:opacity-50 disabled:pointer-events-none`}
             >
               {isSubmitting ? (
                 <LoadingSpinner size="sm" variant="white" />
@@ -429,10 +430,10 @@ function RegisterForm() {
             )}
           </form>
 
-          <div className="mt-8 pt-6 border-t border-slate-200 dark:border-slate-700 text-center">
-            <p className="text-sm text-slate-500 dark:text-slate-400">
+          <div className="mt-8 pt-6 border-t border-border-color/50 text-center">
+            <p className="text-sm text-text-muted">
               {t("auth.alreadyHaveAccount")}{" "}
-              <Link href="/?auth=login" className="font-medium text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300 underline-offset-2 hover:underline transition-colors">
+              <Link href="/?auth=login" className="font-medium text-company-primary hover:brightness-110 underline-offset-2 hover:underline transition-colors">
                 {t("auth.signIn")}
               </Link>
             </p>

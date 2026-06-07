@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useLayoutEffect } from "react";
 import { createPortal } from "react-dom";
 import { useTheme } from "next-themes";
 import { motion, AnimatePresence } from "framer-motion";
@@ -9,10 +9,11 @@ import { apiClient, getApiErrorMessage, getTranslatedApiErrorMessage } from "@/l
 import { useAuthStore, useLocaleStore, useDashboardStore } from "@/lib/store";
 import { isSuperAdmin } from "@/lib/auth";
 import { useTranslation } from "@/hooks/useTranslation";
-import { ArrowRight, Eye, EyeOff, GoogleIcon, FacebookIcon, MicrosoftIcon, ArrowLeft, CheckCircle, Mail, Building2, User } from "@/lib/premiumIcons";
+import { ArrowRight, Eye, EyeOff, GoogleIcon, FacebookIcon, MicrosoftIcon, ArrowLeft } from "@/lib/premiumIcons";
 import { LoadingSpinner } from "@/components/LoadingSpinner";
+import { INPUT_CLASSES, BUTTON_CLASSES, LABEL_CLASSES } from "@/lib/utils";
 
-type AuthView = "login" | "forgot-password" | "request-access";
+type AuthView = "login" | "forgot-password";
 type AuthAnchorRef = React.RefObject<HTMLElement | null>;
 
 export function AuthModal({ open, onClose, buttonRef, initialView }: { open: boolean; onClose: () => void; buttonRef?: AuthAnchorRef; initialView?: AuthView }) {
@@ -50,7 +51,7 @@ function AuthModalInner({ open, onClose, buttonRef, initialView }: { open: boole
     return () => { document.body.style.overflow = ""; };
   }, [open]);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     const updatePos = () => {
       if (!open) return;
       const viewportWidth = window.innerWidth;
@@ -60,7 +61,7 @@ function AuthModalInner({ open, onClose, buttonRef, initialView }: { open: boole
       if (!mobile && buttonRef?.current) {
         const rect = buttonRef.current.getBoundingClientRect();
         const gutter = 16;
-        const preferredWidth = view === "request-access" ? 460 : 420;
+        const preferredWidth = 420;
         const width = Math.min(preferredWidth, viewportWidth - gutter * 2);
         const anchorCenter = rect.left + rect.width / 2;
         const left = Math.min(
@@ -118,7 +119,6 @@ function AuthModalInner({ open, onClose, buttonRef, initialView }: { open: boole
               >
                 {view === "login" && <LoginView onSwitch={setView} />}
                 {view === "forgot-password" && <ForgotPasswordView onSwitch={setView} />}
-                {view === "request-access" && <RequestAccessView onSwitch={setView} />}
               </motion.div>
             </AnimatePresence>
           </div>
@@ -234,20 +234,20 @@ function LoginView({ onSwitch }: { onSwitch: (v: AuthView) => void }) {
   return (
     <div>
       <div className="flex flex-col items-center mb-6">
-        <p className="text-sm text-slate-500 dark:text-slate-400">{t("auth.signInToContinue")}</p>
+        <p className="text-sm text-text-muted">{t("auth.signInToContinue")}</p>
       </div>
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
-          <label htmlFor="modal-email" className="block text-sm font-medium text-slate-600 dark:text-slate-400 mb-1.5">{t("auth.email")}</label>
-          <input id="modal-email" name="email" type="email" value={formData.email} onChange={(e) => setFormData((p) => ({ ...p, email: e.target.value }))} required autoComplete="email" className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-4 py-2.5 text-slate-900 dark:text-white text-sm transition-all duration-200 ease-out focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500/20 focus:ring-inset placeholder:text-slate-400 dark:placeholder:text-slate-500" />
+          <label htmlFor="modal-email" className={LABEL_CLASSES}>{t("auth.email")}</label>
+          <input id="modal-email" name="email" type="email" value={formData.email} onChange={(e) => setFormData((p) => ({ ...p, email: e.target.value }))} required autoComplete="email" className={INPUT_CLASSES} />
         </div>
         <div>
           <div className="flex items-center justify-between mb-1.5">
-            <label htmlFor="modal-password" className="block text-sm font-medium text-slate-600 dark:text-slate-400">{t("auth.password")}</label>
-            <button type="button" onClick={() => onSwitch("forgot-password")} className="text-xs text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300">{t("auth.forgotPassword")}</button>
+            <label htmlFor="modal-password" className="text-sm font-medium text-text-primary">{t("auth.password")}</label>
+            <button type="button" onClick={() => onSwitch("forgot-password")} className="text-xs text-company-primary hover:brightness-110">{t("auth.forgotPassword")}</button>
           </div>
           <div className="relative">
-            <input id="modal-password" name="password" type={showPassword ? "text" : "password"} value={formData.password} onChange={(e) => setFormData((p) => ({ ...p, password: e.target.value }))} required autoComplete="current-password" className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 py-2.5 pl-4 pr-10 text-slate-900 dark:text-white text-sm transition-all duration-200 ease-out focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500/20 focus:ring-inset placeholder:text-slate-400 dark:placeholder:text-slate-500" />
+            <input id="modal-password" name="password" type={showPassword ? "text" : "password"} value={formData.password} onChange={(e) => setFormData((p) => ({ ...p, password: e.target.value }))} required autoComplete="current-password" className={`${INPUT_CLASSES} pr-10`} />
             <button type="button" onClick={() => setShowPassword((v) => !v)} className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-slate-400 hover:text-slate-600 dark:text-slate-500 dark:hover:text-slate-300">
               {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
             </button>
@@ -259,16 +259,25 @@ function LoginView({ onSwitch }: { onSwitch: (v: AuthView) => void }) {
         {error && <p className="text-xs text-red-600 dark:text-red-400 text-center">{error}</p>}
       </form>
       <div className="relative my-5">
-        <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-slate-200 dark:border-slate-700" /></div>
-        <div className="relative flex justify-center text-xs"><span className="bg-white dark:bg-slate-900 px-2 text-slate-500 dark:text-slate-400">{t("auth.orContinueWith")}</span></div>
+        <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-border-color/50" /></div>
+        <div className="relative flex justify-center text-xs"><span className="bg-white/60 dark:bg-slate-900/60 px-2 text-text-muted">{t("auth.orContinueWith")}</span></div>
       </div>
-      <div className="flex items-center justify-center gap-3">
-        <button type="button" onClick={() => handleOAuthLogin("google")} className="flex items-center justify-center rounded-full border border-slate-200 dark:border-slate-700 bg-white/90 dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 transition-all h-10 w-10" title={t("auth.continueWithGoogle")}><GoogleIcon className="h-5 w-5 text-red-500" /></button>
-        <button type="button" onClick={() => handleOAuthLogin("microsoft")} className="flex items-center justify-center rounded-full border border-slate-200 dark:border-slate-700 bg-white/90 dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 transition-all h-10 w-10" title={t("auth.continueWithMicrosoft")}><MicrosoftIcon className="h-5 w-5 text-blue-600" /></button>
-        <button type="button" onClick={() => handleOAuthLogin("facebook")} className="flex items-center justify-center rounded-full border border-slate-200 dark:border-slate-700 bg-white/90 dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 transition-all h-10 w-10" title={t("auth.continueWithFacebook")}><FacebookIcon className="h-5 w-5 text-blue-600" /></button>
+      <div className="flex flex-col gap-3">
+        <button type="button" onClick={() => handleOAuthLogin("google")} className="flex items-center justify-center gap-2.5 w-full rounded-xl border border-border-color/60 bg-white/80 dark:bg-white/5 px-4 py-2.5 text-sm font-medium text-text-primary transition-all duration-200 hover:bg-slate-50 dark:hover:bg-slate-700/80 backdrop-blur-sm">
+          <GoogleIcon className="w-5 h-5" />
+          {t("auth.continueWithGoogle")}
+        </button>
+        <button type="button" onClick={() => handleOAuthLogin("microsoft")} className="flex items-center justify-center gap-2.5 w-full rounded-xl border border-border-color/60 bg-white/80 dark:bg-white/5 px-4 py-2.5 text-sm font-medium text-text-primary transition-all duration-200 hover:bg-slate-50 dark:hover:bg-slate-700/80 backdrop-blur-sm">
+          <MicrosoftIcon className="w-5 h-5" />
+          {t("auth.continueWithMicrosoft")}
+        </button>
+        <button type="button" onClick={() => handleOAuthLogin("facebook")} className="flex items-center justify-center gap-2.5 w-full rounded-xl border border-border-color/60 bg-white/80 dark:bg-white/5 px-4 py-2.5 text-sm font-medium text-text-primary transition-all duration-200 hover:bg-slate-50 dark:hover:bg-slate-700/80 backdrop-blur-sm">
+          <FacebookIcon className="w-5 h-5" />
+          {t("auth.continueWithFacebook")}
+        </button>
       </div>
-      <div className="mt-6 pt-5 border-t border-slate-200 dark:border-slate-700 text-center">
-        <p className="text-sm text-slate-500 dark:text-slate-400">{t("auth.dontHaveAccount")} <button type="button" onClick={() => onSwitch("request-access")} className="font-medium text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 underline-offset-2 hover:underline transition-colors">{t("auth.requestAccess")}</button></p>
+      <div className="mt-6 pt-5 border-t border-border-color/50 text-center">
+        <p className="text-sm text-text-muted">{t("auth.dontHaveAccount")} <a href="/signup" className="font-medium text-company-primary hover:brightness-110 underline-offset-2 hover:underline transition-colors">{t("auth.signUp")}</a></p>
       </div>
     </div>
   );
@@ -294,12 +303,12 @@ function ForgotPasswordView({ onSwitch }: { onSwitch: (v: AuthView) => void }) {
   return (
     <div>
       <div className="flex flex-col items-center mb-6">
-        <h1 className="text-xl font-semibold text-gray-900 dark:text-white">{t("auth.resetPasswordTitle")}</h1>
-        <p className="text-sm text-slate-500 dark:text-slate-400 mt-1 text-center">{submitted ? t("auth.resetSubmittedMessage").replace("{{email}}", email) : t("auth.resetPasswordDescription")}</p>
+        <h1 className="text-xl font-semibold text-text-primary">{t("auth.resetPasswordTitle")}</h1>
+        <p className="text-sm text-text-muted mt-1 text-center">{submitted ? t("auth.resetSubmittedMessage").replace("{{email}}", email) : t("auth.resetPasswordDescription")}</p>
       </div>
       {submitted ? (
         <div className="flex justify-center">
-          <button type="button" onClick={() => onSwitch("login")} className="inline-flex items-center gap-2 text-sm font-medium text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 transition-colors">
+          <button type="button" onClick={() => onSwitch("login")} className="inline-flex items-center gap-2 text-sm font-medium text-company-primary hover:brightness-110 transition-colors">
             <ArrowLeft className="h-4 w-4" />{t("auth.backToSignIn")}
           </button>
         </div>
@@ -307,15 +316,15 @@ function ForgotPasswordView({ onSwitch }: { onSwitch: (v: AuthView) => void }) {
         <>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label htmlFor="modal-fp-email" className="block text-sm font-medium text-slate-600 dark:text-slate-400 mb-1.5">{t("auth.email")}</label>
-              <input id="modal-fp-email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required autoComplete="email" className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-4 py-2.5 text-slate-900 dark:text-white text-sm transition-all duration-200 ease-out focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500/20 focus:ring-inset placeholder:text-slate-400 dark:placeholder:text-slate-500" />
+              <label htmlFor="modal-fp-email" className={LABEL_CLASSES}>{t("auth.email")}</label>
+              <input id="modal-fp-email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required autoComplete="email" className={INPUT_CLASSES} />
             </div>
-            <button type="submit" disabled={isSubmitting} className="w-full flex items-center justify-center gap-2 rounded-full bg-blue-600 py-2.5 text-sm font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-white dark:focus:ring-offset-slate-900 disabled:opacity-50 disabled:pointer-events-none transition-all">
+            <button type="submit" disabled={isSubmitting} className={`${BUTTON_CLASSES} flex items-center justify-center gap-2 disabled:opacity-50 disabled:pointer-events-none`}>
               {isSubmitting ? <LoadingSpinner size="sm" variant="white" /> : t("auth.sendResetLink")}
             </button>
             {error && <div className="rounded-lg border border-red-500/20 bg-red-500/10 px-4 py-3 text-sm text-red-600 dark:text-red-400" role="alert">{error}</div>}
           </form>
-          <button type="button" onClick={() => onSwitch("login")} className="mt-5 flex items-center justify-center gap-2 text-sm text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 transition-colors mx-auto">
+          <button type="button" onClick={() => onSwitch("login")} className="mt-5 flex items-center justify-center gap-2 text-sm text-text-muted hover:text-text-secondary transition-colors mx-auto">
             <ArrowLeft className="h-4 w-4" />{t("auth.backToSignIn")}
           </button>
         </>
@@ -324,75 +333,4 @@ function ForgotPasswordView({ onSwitch }: { onSwitch: (v: AuthView) => void }) {
   );
 }
 
-function RequestAccessView({ onSwitch }: { onSwitch: (v: AuthView) => void }) {
-  const { t } = useTranslation();
-  const [formData, setFormData] = useState({ name: "", email: "", company: "", message: "" });
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [success, setSuccess] = useState(false);
-  const [error, setError] = useState<string | null>(null);
 
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    setError(null);
-    if (!formData.name.trim() || !formData.email.trim() || !formData.company.trim()) { setError(t("auth.requiredFields")); return; }
-    setIsSubmitting(true);
-    try { await fetch("/api/request-access", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(formData) }); setSuccess(true); }
-    catch { setError(t("common.error")); }
-    finally { setIsSubmitting(false); }
-  };
-
-  if (success) {
-    return (
-      <div className="text-center">
-        <span className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 mb-4"><CheckCircle className="w-7 h-7" /></span>
-        <h1 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">{t("auth.requestAccessSuccess")}</h1>
-        <p className="text-sm text-slate-500 dark:text-slate-400 mb-5">{t("auth.requestAccessSuccessDescription")}</p>
-        <a href={`mailto:${process.env.NEXT_PUBLIC_SUPPORT_EMAIL}`} className="inline-flex items-center gap-2 text-sm font-medium text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300"><Mail className="w-4 h-4" />{t("auth.contactSupport")}</a>
-      </div>
-    );
-  }
-
-  return (
-    <div>
-      <div className="flex flex-col items-center mb-6">
-        <p className="text-sm text-slate-500 dark:text-slate-400 text-center">{t("auth.requestAccessDescription")}</p>
-      </div>
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <div>
-          <label htmlFor="modal-ra-name" className="block text-sm font-medium text-slate-600 dark:text-slate-400 mb-1.5">{t("auth.name")}</label>
-          <div className="relative">
-            <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 dark:text-slate-500 pointer-events-none" />
-            <input id="modal-ra-name" name="name" type="text" value={formData.name} onChange={(e) => setFormData((p) => ({ ...p, name: e.target.value }))} required className="w-full pl-9 pr-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white text-sm transition-all duration-200 ease-out focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500/20 focus:ring-inset placeholder:text-slate-400 dark:placeholder:text-slate-500" placeholder={t("auth.namePlaceholder")} />
-          </div>
-        </div>
-        <div>
-          <label htmlFor="modal-ra-email" className="block text-sm font-medium text-slate-600 dark:text-slate-400 mb-1.5">{t("auth.email")}</label>
-          <div className="relative">
-            <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 dark:text-slate-500 pointer-events-none" />
-            <input id="modal-ra-email" name="email" type="email" value={formData.email} onChange={(e) => setFormData((p) => ({ ...p, email: e.target.value }))} required className="w-full pl-9 pr-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white text-sm transition-all duration-200 ease-out focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500/20 focus:ring-inset placeholder:text-slate-400 dark:placeholder:text-slate-500" placeholder={t("auth.emailPlaceholder")} />
-          </div>
-        </div>
-        <div>
-          <label htmlFor="modal-ra-company" className="block text-sm font-medium text-slate-600 dark:text-slate-400 mb-1.5">{t("auth.company")}</label>
-          <div className="relative">
-            <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 dark:text-slate-500 pointer-events-none" />
-            <input id="modal-ra-company" name="company" type="text" value={formData.company} onChange={(e) => setFormData((p) => ({ ...p, company: e.target.value }))} required className="w-full pl-9 pr-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white text-sm transition-all duration-200 ease-out focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500/20 focus:ring-inset placeholder:text-slate-400 dark:placeholder:text-slate-500" placeholder={t("auth.companyPlaceholder")} />
-          </div>
-        </div>
-        <div>
-          <label htmlFor="modal-ra-message" className="block text-sm font-medium text-slate-600 dark:text-slate-400 mb-1.5">{t("auth.message")}</label>
-          <textarea id="modal-ra-message" name="message" value={formData.message} onChange={(e) => setFormData((p) => ({ ...p, message: e.target.value }))} rows={3} className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white text-sm transition-all duration-200 ease-out focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500/20 focus:ring-inset placeholder:text-slate-400 dark:placeholder:text-slate-500 resize-none" placeholder={t("auth.messagePlaceholder")} />
-        </div>
-        <button type="submit" disabled={isSubmitting} className="group w-full flex items-center justify-center gap-2 rounded-full bg-blue-600 py-2.5 text-sm font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-white dark:focus:ring-offset-slate-900 disabled:opacity-50 disabled:pointer-events-none transition-all">
-          {isSubmitting ? <LoadingSpinner size="sm" variant="white" /> : <>{t("auth.sendRequest")}<ArrowRight className="w-4 h-4 transition-transform duration-300 group-hover:translate-x-1" /></>}
-        </button>
-        {error && <div className="rounded-lg border border-red-500/20 bg-red-500/10 px-4 py-3 text-sm text-red-600 dark:text-red-400" role="alert">{error}</div>}
-        <p className="text-center">
-          <button type="button" onClick={() => onSwitch("login")} className="group text-sm text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 inline-flex items-center gap-1">
-            {t("auth.backToSignIn")}<ArrowRight className="w-3.5 h-3.5 transition-transform duration-300 group-hover:translate-x-1" />
-          </button>
-        </p>
-      </form>
-    </div>
-  );
-}
