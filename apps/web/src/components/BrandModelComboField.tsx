@@ -7,6 +7,7 @@ import { useTheme } from "next-themes";
 import { LoadingSpinner } from "./LoadingSpinner";
 import { toTitleCase } from "@/lib/inputMasks";
 import { useTranslation } from "@/hooks/useTranslation";
+import { SELECT_OPTION } from "@/lib/dashboardStyles";
 
 export interface BrandModelComboOption {
   value: string;
@@ -202,7 +203,7 @@ export function BrandModelComboField({
     return (
       <div
         className={[
-          "relative flex items-center rounded-lg border border-input-border bg-input-bg/50 py-3 px-4 text-sm text-text-muted",
+          "relative flex items-center rounded-xl border border-border-color/60 bg-white/50 dark:bg-white/[0.03] py-2.5 px-4 text-sm text-text-muted",
           Icon ? "pl-10" : "",
           className ?? "",
         ].join(" ")}
@@ -252,7 +253,7 @@ export function BrandModelComboField({
                 type="button"
                 onClick={() => handleSelect(opt)}
                 onMouseEnter={() => setHighlightIndex(idx)}
-                className={`w-full px-3 py-2.5 text-left text-sm rounded-xl transition-all duration-200 ${
+                className={`${SELECT_OPTION} ${
                   idx === highlightIndex || opt.value === value
                     ? "bg-company-primary/10 dark:bg-company-primary/20 text-company-primary font-medium"
                     : "text-slate-700 dark:text-slate-200 hover:bg-slate-100/80 dark:hover:bg-slate-800/80"
@@ -284,8 +285,8 @@ export function BrandModelComboField({
           setOpen((o) => !o);
         }}
         className={[
-          "flex items-center rounded-lg border bg-input-bg text-sm text-left transition-colors cursor-pointer",
-          open ? "border-company-primary ring-1 ring-company-primary" : "border-input-border hover:border-company-primary-muted",
+          "flex items-center rounded-xl border bg-white dark:bg-white/5 text-sm text-left transition-colors cursor-pointer",
+          open ? "border-company-primary ring-1 ring-company-primary" : "border-border-color/60 hover:border-company-primary-muted",
           Icon ? "pl-10 pr-9" : "pl-4 pr-9",
           !value ? "text-text-muted" : "text-text-primary",
         ].join(" ")}
@@ -303,7 +304,7 @@ export function BrandModelComboField({
           onBlur={handleBlur}
           onKeyDown={handleKeyDown}
           placeholder={displayPlaceholder}
-          className="w-full min-w-0 bg-transparent outline-none py-3 pr-2 placeholder:text-text-muted"
+          className="w-full min-w-0 bg-transparent outline-none py-2.5 pr-2 placeholder:text-text-muted"
         />
         <ChevronDown
           className={`absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 pointer-events-none transition-transform duration-200 ${

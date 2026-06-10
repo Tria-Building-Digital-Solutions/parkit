@@ -38,6 +38,7 @@ import {
   phone as validatePhone,
 } from "@/lib/validation";
 import { isSuperAdmin } from "@/lib/auth";
+import { INPUT_ICON, LABEL, BTN_PRIMARY, BTN_SECONDARY, BTN_GHOST, BTN_ACTION } from "@/lib/dashboardStyles";
 
 type ThemeValue = "light" | "dark";
 type LocaleValue = "es" | "en";
@@ -48,9 +49,7 @@ const LOCALE_OPTIONS: { value: LocaleValue; labelKey: string }[] = [
   { value: "en", labelKey: "profile.languageEn" },
 ];
 
-const IL =
-  "w-full pl-10 pr-4 py-3 rounded-lg border border-input-border bg-input-bg text-text-primary text-sm transition-all duration-200 ease-out focus:border-company-primary focus:outline-none focus:ring-1 focus:ring-company-primary/20 focus:ring-inset placeholder:text-text-muted";
-const LABEL = "block text-sm font-medium text-text-secondary mb-1.5";
+
 
 const defaultForm = {
   firstName: "",
@@ -416,7 +415,7 @@ export default function ProfilePage() {
                         value={form.firstName}
                         onChange={setAndClearError("firstName")}
                         placeholder={t("common.placeholderName")}
-                        className={IL}
+                        className={INPUT_ICON}
                         aria-invalid={!!errors.firstName}
                       />
                     </div>
@@ -439,7 +438,7 @@ export default function ProfilePage() {
                         value={form.lastName}
                         onChange={setAndClearError("lastName")}
                         placeholder={t("common.placeholderLastName")}
-                        className={IL}
+                        className={INPUT_ICON}
                         aria-invalid={!!errors.lastName}
                       />
                     </div>
@@ -462,7 +461,7 @@ export default function ProfilePage() {
                         value={form.email}
                         onChange={setAndClearError("email")}
                         placeholder={t("common.placeholderEmail")}
-                        className={IL}
+                        className={INPUT_ICON}
                         aria-invalid={!!errors.email}
                       />
                     </div>
@@ -486,7 +485,7 @@ export default function ProfilePage() {
                           setErrors((prev) => ({ ...prev, phone: undefined }));
                         }}
                         placeholder={`+${COUNTRY_DIAL_CODES[phoneCountry] || "1"}`}
-                        className={IL}
+                        className={INPUT_ICON}
                         aria-invalid={!!errors.phone}
                       />
                     </div>
@@ -692,7 +691,7 @@ export default function ProfilePage() {
               setTimeout(() => setReverting(false), 300);
             }}
             disabled={submitting || reverting}
-            className="group flex items-center gap-2 px-4 py-2.5 rounded-lg border border-card-border text-sm font-medium text-text-secondary hover:text-red-500 hover:border-red-200 hover:bg-red-50/50 dark:hover:bg-red-500/10 transition-all disabled:opacity-50 disabled:pointer-events-none disabled:hover:text-text-secondary disabled:hover:border-card-border disabled:hover:bg-transparent dark:disabled:hover:bg-transparent"
+            className={BTN_GHOST + " group"}
           >
             {reverting ? (
               <LoadingSpinner size="sm" />
@@ -708,7 +707,7 @@ export default function ProfilePage() {
               type="button"
               onClick={handleSendSuperAdminInvites}
               disabled={sendingSuperAdminInvites || superAdminEmails.length === 0}
-              className="group inline-flex items-center gap-2 px-6 py-3 rounded-lg bg-company-primary text-white text-sm font-medium hover:opacity-95 transition-all disabled:opacity-50 disabled:pointer-events-none"
+              className={BTN_PRIMARY + " group"}
             >
               {sendingSuperAdminInvites ? (
                 <>
@@ -726,7 +725,7 @@ export default function ProfilePage() {
             <>
               <Link
                 href="/dashboard"
-                className="px-5 py-3 rounded-lg border border-card-border text-sm font-medium text-text-secondary hover:bg-input-bg transition-colors"
+                className={BTN_SECONDARY}
               >
                 {t("common.cancel")}
               </Link>
@@ -734,7 +733,7 @@ export default function ProfilePage() {
                 type="button"
                 onClick={handleSubmit}
                 disabled={submitting || !isDirty || !isValid}
-                className="group inline-flex items-center gap-2 px-6 py-3 rounded-lg bg-company-primary text-white text-sm font-medium hover:opacity-95 transition-all disabled:opacity-50 disabled:pointer-events-none"
+                className={BTN_PRIMARY + " group"}
               >
                 {submitting ? (
                   <>
@@ -807,14 +806,14 @@ function SuperAdminTab({
               onChange={(e) => setEmailInput(e.target.value)}
               onKeyDown={handleKeyDown}
               placeholder={t("common.placeholderEmail")}
-              className={IL}
+              className={INPUT_ICON}
             />
           </div>
           <button
             type="button"
             onClick={onAddEmail}
             disabled={!emailInput.trim().includes("@")}
-            className="px-4 py-3 rounded-lg border border-card-border bg-input-bg text-text-primary hover:bg-input-bg/80 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            className={BTN_ACTION}
           >
             {t("users.addAnother")}
           </button>

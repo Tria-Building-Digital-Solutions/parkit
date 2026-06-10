@@ -481,14 +481,7 @@ body {
   background-color: var(--company-tertiary, #94a3b8);
 }
 
-/* Dashboard input/button focus uses primary theme color */
-[data-dashboard] input:focus,
-[data-dashboard] button:focus-visible,
-[data-dashboard] [role="button"]:focus-visible {
-  outline: none;
-  ring: 2px solid var(--company-primary, #0ea5e9);
-  ring-offset: 2px;
-}
+/* Dashboard input/button focus uses primary theme color — now handled in Tailwind classes */
 
 /* Override browser autofill styling for consistent input backgrounds */
 input:-webkit-autofill,

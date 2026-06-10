@@ -234,7 +234,7 @@ function DashboardLayoutInner({
       <HeaderActionContext.Provider value={setHeaderAction}>
         <div className="flex h-screen overflow-hidden bg-page-alt gap-3 p-3">
           <DashboardSidebar />
-          <main className="flex-1 flex flex-col min-h-0 min-w-0 overflow-hidden" data-dashboard>
+          <main className="flex-1 flex flex-col min-h-0 min-w-0 overflow-hidden">
             <header
               className={`shrink-0 sticky top-0 z-10 flex flex-col bg-card/50 backdrop-blur-sm transition-all duration-200 ${
                 headerShadow 

@@ -13,9 +13,7 @@ import { TIMEZONES, getLocalTimezone } from "@/lib/companyOptions";
 import { formatPhoneWithCountryCode, COUNTRY_DIAL_CODES, getDeviceCountryCode } from "@/lib/inputMasks";
 import { required, email as validateEmail, phone as validatePhone } from "@/lib/validation";
 import { isSuperAdmin } from "@/lib/auth";
-
-const IL = "w-full pl-10 pr-4 py-3 rounded-lg border border-input-border bg-input-bg text-text-primary text-sm transition-all duration-200 ease-out focus:border-company-primary focus:outline-none focus:ring-1 focus:ring-company-primary/20 focus:ring-inset placeholder:text-text-muted";
-const LABEL = "block text-sm font-medium text-text-secondary mb-1.5";
+import { INPUT_ICON, LABEL, BTN_PRIMARY, BTN_SECONDARY, BTN_GHOST, BTN_ACTION } from "@/lib/dashboardStyles";
 const ROLES = ["CUSTOMER", "ADMIN"] as const;
 
 const defaultForm = {
@@ -132,7 +130,7 @@ export default function NewUserPage() {
             <label className={LABEL}>{t("users.firstName")} <span className="text-red-500">*</span></label>
             <div className="relative group">
               <UserCircle className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-text-muted group-focus-within:text-company-primary transition-colors pointer-events-none" />
-              <input value={form.firstName} onChange={set("firstName")} placeholder={t("common.placeholderName")} className={IL} aria-invalid={!!errors.firstName} />
+              <input value={form.firstName} onChange={set("firstName")} placeholder={t("common.placeholderName")} className={INPUT_ICON} aria-invalid={!!errors.firstName} />
             </div>
             <div className="min-h-[1.25rem] mt-1">{errors.firstName && <p className="text-sm text-red-500" role="alert">{errors.firstName}</p>}</div>
           </div>
@@ -140,7 +138,7 @@ export default function NewUserPage() {
             <label className={LABEL}>{t("users.lastName")} <span className="text-red-500">*</span></label>
             <div className="relative group">
               <UserCircle className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-text-muted group-focus-within:text-company-primary transition-colors pointer-events-none" />
-              <input value={form.lastName} onChange={set("lastName")} placeholder={t("common.placeholderLastName")} className={IL} aria-invalid={!!errors.lastName} />
+              <input value={form.lastName} onChange={set("lastName")} placeholder={t("common.placeholderLastName")} className={INPUT_ICON} aria-invalid={!!errors.lastName} />
             </div>
             <div className="min-h-[1.25rem] mt-1">{errors.lastName && <p className="text-sm text-red-500" role="alert">{errors.lastName}</p>}</div>
           </div>
@@ -148,7 +146,7 @@ export default function NewUserPage() {
             <label className={LABEL}>{t("users.email")} <span className="text-red-500">*</span></label>
             <div className="relative group">
               <MailOpen className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-text-muted group-focus-within:text-company-primary transition-colors pointer-events-none" />
-              <input type="email" value={form.email} onChange={set("email")} placeholder={t("common.placeholderEmail")} className={IL} aria-invalid={!!errors.email} />
+              <input type="email" value={form.email} onChange={set("email")} placeholder={t("common.placeholderEmail")} className={INPUT_ICON} aria-invalid={!!errors.email} />
             </div>
             <div className="min-h-[1.25rem] mt-1">{errors.email && <p className="text-sm text-red-500" role="alert">{errors.email}</p>}</div>
           </div>
@@ -185,7 +183,7 @@ export default function NewUserPage() {
                   setForm((p) => ({ ...p, phone: formatPhoneWithCountryCode(e.target.value, phoneCountry) }))
                 }
                 placeholder={`+${COUNTRY_DIAL_CODES[phoneCountry] || "1"}`}
-                className={IL}
+                className={INPUT_ICON}
                 aria-invalid={!!errors.phone}
               />
             </div>

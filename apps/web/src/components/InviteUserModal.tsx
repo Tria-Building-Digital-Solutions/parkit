@@ -6,6 +6,7 @@ import { MailOpen, Plus, Trash, XCircle, Users } from "@/lib/premiumIcons";
 import { apiClient, getTranslatedApiErrorMessage } from "@/lib/api";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useToast } from "@/lib/toastStore";
+import { INPUT_ICON, BTN_ACTION, BTN_PRIMARY, BTN_GHOST, BTN_DANGER, LABEL } from "@/lib/dashboardStyles";
 
 interface InviteUserModalProps {
   open: boolean;
@@ -110,7 +111,7 @@ export function InviteUserModal({
           <button
             type="button"
             onClick={onClose}
-            className="p-2 rounded-lg text-text-muted hover:text-text-primary hover:bg-input-bg transition-colors"
+            className="p-2 rounded-xl text-text-muted hover:text-text-primary hover:bg-black/5 dark:hover:bg-white/5 transition-colors"
             aria-label={t("common.close")}
           >
             <XCircle className="w-5 h-5" />
@@ -125,7 +126,7 @@ export function InviteUserModal({
 
           {/* Add single email */}
           <div className="space-y-2">
-            <label className="text-sm font-medium text-text-secondary">
+            <label className={LABEL}>
               {t("common.email")}
             </label>
             <div className="flex gap-2">
@@ -142,14 +143,14 @@ export function InviteUserModal({
                     }
                   }}
                   placeholder={t("common.placeholderEmail")}
-                  className="w-full pl-10 pr-4 py-3 rounded-lg border border-input-border bg-input-bg text-text-primary text-sm transition-all duration-200 ease-out focus:border-company-primary focus:outline-none focus:ring-1 focus:ring-company-primary/20 focus:ring-inset"
+                  className={INPUT_ICON}
                 />
               </div>
               <button
                 type="button"
                 onClick={addEmail}
                 disabled={!emailInput.trim() || !emailInput.includes("@")}
-                className="shrink-0 px-4 py-3 rounded-lg border border-input-border bg-input-bg text-text-secondary text-sm font-medium hover:bg-company-primary-subtle hover:border-company-primary-muted hover:text-company-primary transition-colors disabled:opacity-50 disabled:pointer-events-none flex items-center gap-2"
+                className={BTN_ACTION}
               >
                 <Plus className="w-4 h-4" />
                 {t("users.addAnother")}
@@ -179,7 +180,7 @@ export function InviteUserModal({
                     <button
                       type="button"
                       onClick={() => removeEmail(email)}
-                      className="p-1.5 rounded-md text-text-muted hover:text-red-500 hover:bg-red-500/10 transition-colors"
+                      className="p-1.5 rounded-xl text-text-muted hover:text-red-500 hover:bg-red-500/10 transition-colors"
                       title={t("users.removeEmail")}
                     >
                       <Trash className="w-4 h-4" />
@@ -200,7 +201,7 @@ export function InviteUserModal({
           <button
             type="button"
             onClick={onClose}
-            className="flex-1 px-4 py-3 rounded-lg border border-input-border text-sm font-medium text-text-secondary hover:bg-input-bg hover:text-text-primary transition-colors"
+            className={`flex-1 ${BTN_GHOST}`}
           >
             {t("common.cancel")}
           </button>
@@ -208,7 +209,7 @@ export function InviteUserModal({
             type="button"
             onClick={handleSubmit}
             disabled={loading || emails.length === 0}
-            className="flex-1 px-4 py-3 rounded-lg bg-company-primary text-white text-sm font-medium hover:opacity-90 active:scale-[0.98] transition-all disabled:opacity-50 disabled:pointer-events-none flex items-center justify-center gap-2 shadow-sm shadow-company-primary/20"
+            className={`flex-1 ${BTN_PRIMARY}`}
           >
             {loading ? t("common.sending") : t("users.sendInvitations")}
           </button>

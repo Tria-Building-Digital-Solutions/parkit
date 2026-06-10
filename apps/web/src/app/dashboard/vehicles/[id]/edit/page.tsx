@@ -16,9 +16,7 @@ import { COUNTRIES } from "@/lib/companyOptions";
 import { formatPlate, toTitleCase } from "@/lib/inputMasks";
 import { required, selectRequired } from "@/lib/validation";
 import { getVehicleColorOptions, normalizeVehicleColorValue } from "@parkit/shared/vehicleColors";
-
-const IL = "w-full pl-10 pr-4 py-3 rounded-lg border border-input-border bg-input-bg text-text-primary text-sm transition-all duration-200 ease-out focus:border-company-primary focus:outline-none focus:ring-1 focus:ring-company-primary/20 focus:ring-inset placeholder:text-text-muted";
-const LABEL = "block text-sm font-medium text-text-secondary mb-1.5";
+import { INPUT_ICON, LABEL, BTN_PRIMARY, BTN_SECONDARY, BTN_GHOST, BTN_ACTION } from "@/lib/dashboardStyles";
 
 type CatalogMake = { id: number; name: string };
 type CatalogModel = { id: number; name: string };
@@ -298,7 +296,7 @@ export default function EditVehiclePage() {
               <label className={LABEL}>{t("vehicles.plate")} <span className="text-company-primary">*</span></label>
               <div className="relative group">
                 <Hash className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-text-muted group-focus-within:text-company-primary transition-colors pointer-events-none" />
-                <input value={form.plate} onChange={(e) => setForm((p) => ({ ...p, plate: formatPlate(e.target.value) }))} placeholder={t("common.placeholderPlate")} className={IL} />
+                <input value={form.plate} onChange={(e) => setForm((p) => ({ ...p, plate: formatPlate(e.target.value) }))} placeholder={t("common.placeholderPlate")} className={INPUT_ICON} />
               </div>
             </div>
             <div>
@@ -333,7 +331,7 @@ export default function EditVehiclePage() {
                     value={form.model}
                     onChange={set("model")}
                     placeholder={t("common.selectOrType")}
-                    className={IL}
+                    className={INPUT_ICON}
                   />
                 </div>
               )}
@@ -364,7 +362,7 @@ export default function EditVehiclePage() {
                   onChange={setIntegerField("year")}
                   onFocus={(e) => e.target.select()}
                   placeholder={t("common.placeholderYear")}
-                  className={IL}
+                  className={INPUT_ICON}
                   aria-invalid={!!errors.year}
                 />
               </div>
@@ -418,21 +416,21 @@ export default function EditVehiclePage() {
               <label className={LABEL}>{t("vehicles.lengthCm")}</label>
               <div className="relative group">
                 <Hash className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-text-muted group-focus-within:text-company-primary transition-colors pointer-events-none" />
-                <input type="number" inputMode="numeric" min={1} max={9999} value={form.lengthCm} onChange={(e) => setForm((p) => ({ ...p, lengthCm: e.target.value.replace(/\D/g, "") }))} onFocus={(e) => e.target.select()} placeholder="cm" className={IL} />
+                <input type="number" inputMode="numeric" min={1} max={9999} value={form.lengthCm} onChange={(e) => setForm((p) => ({ ...p, lengthCm: e.target.value.replace(/\D/g, "") }))} onFocus={(e) => e.target.select()} placeholder="cm" className={INPUT_ICON} />
               </div>
             </div>
             <div>
               <label className={LABEL}>{t("vehicles.widthCm")}</label>
               <div className="relative group">
                 <Hash className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-text-muted group-focus-within:text-company-primary transition-colors pointer-events-none" />
-                <input type="number" inputMode="numeric" min={1} max={9999} value={form.widthCm} onChange={(e) => setForm((p) => ({ ...p, widthCm: e.target.value.replace(/\D/g, "") }))} onFocus={(e) => e.target.select()} placeholder="cm" className={IL} />
+                <input type="number" inputMode="numeric" min={1} max={9999} value={form.widthCm} onChange={(e) => setForm((p) => ({ ...p, widthCm: e.target.value.replace(/\D/g, "") }))} onFocus={(e) => e.target.select()} placeholder="cm" className={INPUT_ICON} />
               </div>
             </div>
             <div>
               <label className={LABEL}>{t("vehicles.heightCm")}</label>
               <div className="relative group">
                 <Hash className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-text-muted group-focus-within:text-company-primary transition-colors pointer-events-none" />
-                <input type="number" inputMode="numeric" min={1} max={9999} value={form.heightCm} onChange={(e) => setForm((p) => ({ ...p, heightCm: e.target.value.replace(/\D/g, "") }))} onFocus={(e) => e.target.select()} placeholder="cm" className={IL} />
+                <input type="number" inputMode="numeric" min={1} max={9999} value={form.heightCm} onChange={(e) => setForm((p) => ({ ...p, heightCm: e.target.value.replace(/\D/g, "") }))} onFocus={(e) => e.target.select()} placeholder="cm" className={INPUT_ICON} />
               </div>
             </div>
           </div>
@@ -452,11 +450,11 @@ export default function EditVehiclePage() {
           <p className="text-xs text-text-muted">{t("common.requiredNote")}</p>
           <div className="flex items-center gap-3 ml-auto">
           <Link href="/dashboard/vehicles"
-            className="px-5 py-3 rounded-lg border border-input-border text-sm font-medium text-text-secondary hover:bg-input-bg hover:text-text-primary transition-colors">
+            className={BTN_SECONDARY}>
             {t("common.cancel")}
           </Link>
           <button type="button" onClick={handleSubmit} disabled={submitting || !isDirty || !isValid}
-            className="inline-flex items-center gap-2 px-6 py-3 rounded-lg bg-company-primary text-white text-sm font-medium hover:bg-company-primary focus:outline-none focus:ring-1 focus:ring-company-primary focus:ring-offset-2 focus:ring-offset-page disabled:opacity-50 disabled:pointer-events-none transition-colors">
+            className={BTN_PRIMARY}>
             {submitting ? <><LoadingSpinner size="sm" />{t("common.saving")}</> : <>{t("common.save")}<ArrowRight className="w-4 h-4" /></>}
           </button>
         </div>

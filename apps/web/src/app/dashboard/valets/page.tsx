@@ -14,6 +14,7 @@ import { formatPhoneInternational } from "@/lib/inputMasks";
 import { useAuthStore, useDashboardStore } from "@/lib/store";
 import { isSuperAdmin } from "@/lib/auth";
 import { StatusFilterToolbar } from "@/components/StatusFilterToolbar";
+import { BTN_PRIMARY } from "@/lib/dashboardStyles";
 
 type ValetLastActivity = {
   companyId?: string | null;
@@ -258,7 +259,7 @@ export default function ValetsPage() {
                         <button
                           type="button"
                           onClick={() => handleResendInvitation(valet)}
-                          className="inline-flex items-center gap-2 px-3 py-2 rounded-lg border border-amber-500/30 bg-amber-500/10 text-amber-600 dark:text-amber-400 text-sm font-medium hover:bg-amber-500/20 transition-colors"
+                          className="inline-flex items-center gap-2 px-3 py-2 rounded-xl border border-amber-500/30 bg-amber-500/10 text-amber-600 dark:text-amber-400 text-sm font-medium hover:bg-amber-500/20 transition-colors"
                         >
                           <MailOpen className="w-4 h-4" />
                           {t("tables.employees.resendInvitation")}
@@ -320,7 +321,7 @@ export default function ValetsPage() {
             <button
               type="button"
               onClick={() => setIsInviteModalOpen(true)}
-              className="group inline-flex items-center gap-2 px-4 min-h-[42px] rounded-lg bg-company-primary text-white text-sm font-medium hover:bg-company-primary focus:outline-none focus:ring-2 focus:ring-company-primary focus:ring-offset-2 focus:ring-offset-page transition-colors shadow-sm"
+              className={BTN_PRIMARY}
             >
               <UserPlus className="w-4 h-4 transition-transform duration-300 group-hover:scale-110" strokeWidth={2.25} />
               {t("users.inviteUser")}

@@ -111,6 +111,7 @@ function CompanySelector({
   logoImageUrl,
   hideAvatar = false,
   highContrast = false,
+  transparentBg = false,
   companyColors,
 }: {
   companies: { id: string; commercialName?: string; legalName?: string; requiresCustomerApp?: boolean }[];
@@ -124,6 +125,7 @@ function CompanySelector({
   logoImageUrl?: string | null;
   hideAvatar?: boolean;
   highContrast?: boolean;
+  transparentBg?: boolean;
   companyColors?: { primary: string };
 }) {
   const [open, setOpen] = useState(false);
@@ -274,27 +276,31 @@ function CompanySelector({
             )}
           </div>
         )}
-        <div className={hideAvatar ? "absolute -right-2 top-1/2 -translate-y-1/2" : "flex-1"}>
+        <div className={hideAvatar && !transparentBg ? "absolute -right-2 top-1/2 -translate-y-1/2" : "flex-1"}>
           <button
             ref={triggerRef}
             type="button"
             onClick={() => { if (!open) updatePosition(); setOpen((o) => !o); }}
             className={`flex items-center min-w-0 ${hideAvatar ? "pl-4" : "pl-3"} ${hideAvatar ? "pr-8" : "pr-9"} ${hideAvatar ? "py-1.5" : "py-2.5"} rounded-lg text-left text-sm transition-all duration-300 ease-out ${
               hideAvatar
-                ? `px-3 py-1.5 rounded-lg backdrop-blur-md hover:scale-[1.02]`
+                ? `px-3 py-1.5 rounded-lg ${transparentBg ? '' : 'backdrop-blur-md'} hover:scale-[1.02]`
                 : highContrast
                   ? `bg-white/25 hover:bg-white/35 ${isDark ? "text-white" : "text-slate-800"} border border-white/30 shadow-[0_4px_16px_-4px_rgba(0,0,0,0.08),0_1px_2px_rgba(255,255,255,0.3)_inset] backdrop-blur-xl hover:shadow-[0_6px_20px_-4px_rgba(0,0,0,0.1)] hover:border-white/50 hover:scale-[1.02]`
                     : isDark
                       ? "bg-white/10 hover:bg-white/20 text-white border border-white/10 shadow-[0_2px_12px_rgba(0,0,0,0.2)] backdrop-blur-sm hover:shadow-[0_4px_16px_rgba(0,0,0,0.3)]"
                       : "bg-white/25 text-slate-800 border border-white/80 shadow-[0_4px_24px_rgba(0,0,0,0.06),0_1px_2px_rgba(255,255,255,0.4)_inset,0_8px_16px_rgba(255,255,255,0.1)_inset] backdrop-blur-2xl hover:shadow-[0_8px_32px_rgba(0,0,0,0.1),0_1px_2px_rgba(255,255,255,0.5)_inset] hover:bg-white/35 hover:border-white/90"
             } ${open ? "ring-2 ring-company-primary/40 shadow-[0_0_20px_rgba(var(--company-primary-rgb),0.2)]" : ""} ${highContrast ? "max-w-[220px] justify-center text-center" : ""}`}
-            style={hideAvatar ? {
+            style={hideAvatar ? (transparentBg ? {
+              backgroundColor: 'transparent',
+              boxShadow: 'none',
+              border: 'none',
+            } : {
               backgroundColor: isDark ? "rgba(30, 41, 59, 0.9)" : "rgba(255, 255, 255, 0.9)",
               boxShadow: isDark ? "0 2px 8px -2px rgba(0, 0, 0, 0.3)" : "0 2px 8px -2px rgba(0, 0, 0, 0.1)",
               border: isDark ? "1px solid rgba(255, 255, 255, 0.1)" : "1px solid rgba(0, 0, 0, 0.05)",
-            } : undefined}
+            }) : undefined}
           >
-            <span className={`truncate flex-1 ${hideAvatar ? "text-xs font-medium" : "font-medium"}`} style={hideAvatar ? { color: 'var(--text-primary)' } : undefined}>
+            <span className={`truncate flex-1 ${hideAvatar ? "text-xs font-medium" : "font-medium"}`} style={hideAvatar ? { color: transparentBg ? '#fff' : 'var(--text-primary)' } : undefined}>
               {selectedCompanyName || (
                 <span className={highContrast ? "text-slate-500" : isDark ? "text-white/60" : "text-slate-500"}>
                   {placeholder}
@@ -565,75 +571,81 @@ export function DashboardSidebar() {
         )}
       </div>
 
-      {/* Company section */}
+      {/* Company card */}
       {hasCompanies ? (
-        <div className="border-b border-card-border/25 dark:border-white/[0.04] shrink-0">
-          <div className={`flex items-center gap-3 px-4 py-3 transition-all duration-500 ease-[cubic-bezier(0.23,1,0.32,1)] ${
-            collapsed ? 'justify-center' : ''
-          }`}>
-            <div className="w-9 h-9 rounded-full overflow-hidden shrink-0 flex items-center justify-center ring-2 ring-company-primary/20 ring-offset-2 ring-offset-page transition-all duration-300"
-              style={{
-                backgroundColor: isDark ? '#1e293b' : '#ffffff',
-                boxShadow: `0 4px 16px -4px ${companyColors?.primary ? companyColors.primary + '30' : 'rgba(0,0,0,0.08)'}`,
-              }}
-            >
-              {companyBranding?.logoImageUrl?.trim() ? (
-                <Image
-                  src={companyBranding.logoImageUrl}
-                  alt=""
-                  width={512}
-                  height={512}
-                  className="w-full h-full object-cover object-center"
-                />
-              ) : (
-                <IndustryIcon className="w-[18px] h-[18px]" strokeWidth={2} style={{ color: companyColors?.primary }} />
-              )}
-            </div>
-            <div className={`overflow-hidden transition-all duration-500 ease-[cubic-bezier(0.23,1,0.32,1)] ${
-              collapsed ? 'max-w-0 opacity-0' : 'max-w-[200px] opacity-100'
-            }`}>
-              <div className="flex-1 min-w-0 whitespace-nowrap">
-                {superAdmin ? (
-                  <CompanySelector
-                    companies={companies}
-                    selectedCompanyId={selectedCompanyId}
-                    selectedCompanyName={selectedCompanyName}
-                    onSelect={handleSelectCompany}
-                    placeholder={t("sidebar.selectCompany")}
-                    allCompaniesLabel={t("sidebar.allCompanies")}
-                    emptyLabel={t("companies.noCompanies")}
-                    isDark={isDark}
-                    logoImageUrl={companyBranding?.logoImageUrl}
-                    hideAvatar
-                    highContrast
-                    companyColors={defaults}
+        <div className="shrink-0 px-3 pt-3 pb-1">
+          <div className="relative overflow-hidden rounded-2xl border-2 border-card-border/30 dark:border-white/[0.08] shadow-lg">
+            {companyBranding?.bannerImageUrl?.trim() && (
+              <div
+                className="absolute inset-0 bg-cover bg-center"
+                style={{ backgroundImage: `url(${companyBranding.bannerImageUrl})` }}
+              />
+            )}
+            <div className="relative z-10 flex items-center gap-3 px-4 py-3">
+              <div className="w-9 h-9 rounded-full overflow-hidden shrink-0 flex items-center justify-center ring-2 ring-company-primary/20 ring-offset-2 ring-offset-page"
+                style={{
+                  backgroundColor: isDark ? '#1e293b' : '#ffffff',
+                  boxShadow: `0 0 20px ${companyColors?.primary ? companyColors.primary + '30' : 'rgba(0,0,0,0.08)'}`,
+                }}
+              >
+                {companyBranding?.logoImageUrl?.trim() ? (
+                  <Image
+                    src={companyBranding.logoImageUrl}
+                    alt=""
+                    width={512}
+                    height={512}
+                    className="w-full h-full object-cover object-center"
                   />
                 ) : (
-                  <p className="text-sm font-medium truncate text-text-primary">
-                    {adminCompanyName || selectedCompanyName || "Company"}
-                  </p>
+                  <IndustryIcon className="w-[18px] h-[18px]" strokeWidth={2} style={{ color: companyColors?.primary }} />
                 )}
+              </div>
+              <div className="flex-1 min-w-0 relative">
+                <div className="absolute inset-0 rounded-lg backdrop-blur-2xl bg-black/10 dark:bg-white/10 border border-white/30 dark:border-white/10 shadow-[0_4px_16px_-4px_rgba(0,0,0,0.08)]" />
+                <div className="relative z-10">
+                  {superAdmin ? (
+                    <CompanySelector
+                      companies={companies}
+                      selectedCompanyId={selectedCompanyId}
+                      selectedCompanyName={selectedCompanyName}
+                      onSelect={handleSelectCompany}
+                      placeholder={t("sidebar.selectCompany")}
+                      allCompaniesLabel={t("sidebar.allCompanies")}
+                      emptyLabel={t("companies.noCompanies")}
+                      isDark={isDark}
+                      logoImageUrl={companyBranding?.logoImageUrl}
+                      hideAvatar
+                      highContrast
+                      transparentBg
+                      companyColors={defaults}
+                    />
+                  ) : (
+                    <p className="text-sm font-medium truncate text-white px-3 py-1.5">
+                      {adminCompanyName || selectedCompanyName || "Company"}
+                    </p>
+                  )}
+                </div>
               </div>
             </div>
           </div>
         </div>
       ) : shouldShowLoading ? (
-        <div className="border-b border-card-border/25 dark:border-white/[0.04] px-3 py-3 shrink-0">
-          <div className="flex items-center gap-3 px-3 py-2.5 text-text-muted">
+        <div className="shrink-0 px-3 pt-3 pb-1">
+          <div className="flex items-center gap-3 px-4 py-3 text-text-muted bg-card/50 rounded-2xl border border-card-border/30">
             <div className="w-5 h-5 border-2 border-company-primary border-t-transparent rounded-full animate-spin" />
             <span className="text-sm">{t("common.loading")}</span>
           </div>
         </div>
       ) : (
-        <div className="border-b border-card-border/25 dark:border-white/[0.04] px-3 py-3 shrink-0">
+        <div className="shrink-0 px-3 pt-3 pb-1">
           <Link
             href="/dashboard/companies/new?first=1"
-            className="group relative flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 text-text-muted hover:bg-input-bg hover:text-text-secondary"
+            className="flex items-center gap-3 px-4 py-3 rounded-2xl border-2 border-dashed border-card-border/40 hover:border-company-primary/40 transition-all duration-200 text-text-muted hover:text-company-primary"
           >
-            <span className="flex items-center justify-center w-9 h-9 rounded-lg shrink-0 transition-all duration-200 bg-company-primary/10 text-company-primary group-hover:bg-company-primary/15">
+            <span className="flex items-center justify-center w-9 h-9 rounded-lg shrink-0 bg-company-primary/10 text-company-primary">
               <Building className="w-5 h-5" />
             </span>
-            <span className="font-medium truncate">
+            <span className="text-sm font-medium truncate">
               {t("companies.createCompany")}
             </span>
           </Link>

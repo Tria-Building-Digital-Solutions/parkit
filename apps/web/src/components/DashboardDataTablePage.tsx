@@ -1081,7 +1081,7 @@ export function DashboardDataTablePage<T extends { id?: string | number }>({
                       value={quickFilter}
                       onChange={(e) => setQuickFilter(e.target.value)}
                       placeholder={t(locale, "grid.filterOoo")}
-                      className="w-full min-h-[42px] pl-9 pr-4 py-3 rounded-lg border border-input-border bg-input-bg text-sm text-text-primary placeholder:text-text-muted transition-all duration-200 ease-out focus:outline-none focus:ring-1 focus:ring-company-primary/20 focus:ring-inset focus:border-company-primary"
+                      className="w-full min-h-[42px] pl-9 pr-4 py-2.5 rounded-xl border border-border-color/60 bg-white dark:bg-white/5 text-sm text-text-primary placeholder:text-text-muted/50 transition-all duration-200 focus:outline-none focus:ring-1 focus:ring-company-primary/20 focus:border-company-primary"
                     />
                   </div>
                 </div>
@@ -1094,7 +1094,7 @@ export function DashboardDataTablePage<T extends { id?: string | number }>({
                     value={quickFilter}
                     onChange={(e) => setQuickFilter(e.target.value)}
                     placeholder={t(locale, "grid.filterOoo")}
-                    className="w-full min-h-[42px] pl-9 pr-4 py-3 rounded-lg border border-input-border bg-input-bg text-sm text-text-primary placeholder:text-text-muted transition-all duration-200 ease-out focus:outline-none focus:ring-1 focus:ring-company-primary/20 focus:ring-inset focus:border-company-primary"
+                    className="w-full min-h-[42px] pl-9 pr-4 py-2.5 rounded-xl border border-border-color/60 bg-white dark:bg-white/5 text-sm text-text-primary placeholder:text-text-muted/50 transition-all duration-200 focus:outline-none focus:ring-1 focus:ring-company-primary/20 focus:border-company-primary"
                   />
                 </div>
                 {(toolbarRight != null || addButtonNode != null) && (

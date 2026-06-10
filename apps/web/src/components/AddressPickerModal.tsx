@@ -207,7 +207,7 @@ export function AddressPickerModal({
           <button
             type="button"
             onClick={onClose}
-            className="p-2 rounded-lg text-text-muted hover:text-text-primary hover:bg-input-bg transition-colors"
+            className="p-2 rounded-xl text-text-muted hover:text-text-primary hover:bg-black/5 dark:hover:bg-white/5 transition-colors"
             aria-label={t("common.close")}
           >
             <XCircle className="w-5 h-5" />
@@ -226,7 +226,7 @@ export function AddressPickerModal({
                 setSelected(null);
               }}
               placeholder={t("companies.addressPickerSearchPlaceholder")}
-              className="w-full pl-10 pr-4 py-3 rounded-lg border border-input-border bg-input-bg text-text-primary text-sm transition-all duration-200 ease-out focus:border-company-primary focus:outline-none focus:ring-1 focus:ring-company-primary/20 focus:ring-inset"
+              className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-border-color/60 bg-white dark:bg-white/5 text-text-primary text-sm transition-all duration-200 focus:border-company-primary focus:outline-none focus:ring-1 focus:ring-company-primary/20"
               autoFocus
             />
             {loading && (
@@ -235,13 +235,13 @@ export function AddressPickerModal({
           </div>
 
           {results.length > 0 && (
-            <ul className="border border-input-border rounded-lg overflow-hidden divide-y divide-card-border max-h-40 overflow-y-auto">
+            <ul className="border border-border-color/60 rounded-xl overflow-hidden divide-y divide-card-border max-h-40 overflow-y-auto">
               {results.map((r) => (
-                <li key={r.place_id}>
+                <li key={r.id}>
                   <button
                     type="button"
-                    onClick={() => handleSelectResult(r)}
-                    className="w-full text-left px-4 py-2.5 text-sm text-text-primary hover:bg-input-bg transition-colors"
+                    onClick={() => handleSelect(r)}
+                    className="w-full text-left px-4 py-2.5 text-sm text-text-primary hover:bg-black/5 dark:hover:bg-white/5 transition-colors"
                   >
                     {r.display_name}
                   </button>
@@ -298,7 +298,7 @@ export function AddressPickerModal({
           <button
             type="button"
             onClick={onClose}
-            className="flex-1 px-4 py-2.5 rounded-lg border border-input-border text-sm font-medium text-text-secondary hover:bg-input-bg hover:text-text-primary transition-colors"
+            className="flex-1 px-4 py-2.5 rounded-xl border border-border-color/60 bg-white dark:bg-white/5 text-sm font-medium text-text-secondary hover:brightness-95 hover:text-text-primary transition-all"
           >
             {t("common.cancel")}
           </button>
@@ -306,7 +306,7 @@ export function AddressPickerModal({
             type="button"
             onClick={handleUseAddress}
             disabled={!searchValue.trim()}
-            className="flex-1 px-4 py-2.5 rounded-lg border border-company-primary-muted bg-company-primary-subtle text-sm font-medium text-company-primary hover:bg-company-primary-subtle transition-colors disabled:opacity-50 disabled:pointer-events-none"
+            className="flex-1 px-4 py-2.5 rounded-xl border border-border-color/60 bg-white dark:bg-white/5 text-sm font-medium text-text-secondary hover:brightness-95 hover:text-text-primary transition-all disabled:opacity-50 disabled:pointer-events-none"
           >
             {t("companies.useThisAddress")}
           </button>

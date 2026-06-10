@@ -28,6 +28,7 @@ import {
   THEME_DEFAULT_TERTIARY_DARK,
 } from "@/lib/themeDefaults";
 import { LoadingSpinner } from "@/components/LoadingSpinner";
+import { BTN_PRIMARY } from "@/lib/dashboardStyles";
 import { ImageCropField } from "@/components/ImageCropField";
 import { useToast } from "@/lib/toastStore";
 
@@ -108,7 +109,7 @@ function ColorInput({
           }
         }}
         disabled={!validHex}
-        className="p-2 rounded-lg text-text-muted hover:text-company-primary hover:bg-company-primary/10 transition-all disabled:opacity-30 disabled:cursor-not-allowed"
+        className="p-2 rounded-xl text-text-muted hover:text-company-primary hover:bg-company-primary/10 transition-all disabled:opacity-30 disabled:cursor-not-allowed"
         title={copyLabel}
       >
         <AnimatePresence mode="wait">
@@ -630,7 +631,7 @@ export default function SettingsPage() {
       <div className="flex items-center gap-1 p-0.5 rounded-lg bg-input-bg border border-card-border mb-6 w-fit">
         <button
           onClick={() => setActiveTab("visual")}
-          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-all ${
+          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-sm font-medium transition-all ${
             activeTab === "visual"
               ? "bg-white dark:bg-slate-700 text-company-primary shadow-sm"
               : "text-text-muted hover:text-text-secondary"
@@ -641,7 +642,7 @@ export default function SettingsPage() {
         </button>
         <button
           onClick={() => setActiveTab("colors")}
-          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-all ${
+          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-sm font-medium transition-all ${
             activeTab === "colors"
               ? "bg-white dark:bg-slate-700 text-company-primary shadow-sm"
               : "text-text-muted hover:text-text-secondary"
@@ -652,7 +653,7 @@ export default function SettingsPage() {
         </button>
         <button
           onClick={() => setActiveTab("preview")}
-          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-all ${
+          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-sm font-medium transition-all ${
             activeTab === "preview"
               ? "bg-white dark:bg-slate-700 text-company-primary shadow-sm"
               : "text-text-muted hover:text-text-secondary"
@@ -927,7 +928,7 @@ export default function SettingsPage() {
           type="button"
           onClick={handleRevertToDefault}
           disabled={reverting || submitting}
-          className="group flex items-center gap-2 px-4 py-2.5 rounded-lg border border-card-border text-sm font-medium text-text-secondary hover:text-red-500 hover:border-red-200 hover:bg-red-50/50 dark:hover:bg-red-500/10 transition-all disabled:opacity-50 disabled:pointer-events-none disabled:hover:text-text-secondary disabled:hover:border-card-border disabled:hover:bg-transparent dark:disabled:hover:bg-transparent"
+          className="group flex items-center gap-2 px-4 py-2.5 rounded-xl border border-card-border text-sm font-medium text-text-secondary hover:text-red-500 hover:border-red-200 hover:bg-red-50/50 dark:hover:bg-red-500/10 transition-all disabled:opacity-50 disabled:pointer-events-none disabled:hover:text-text-secondary disabled:hover:border-card-border disabled:hover:bg-transparent dark:disabled:hover:bg-transparent"
         >
           {reverting ? (
             <LoadingSpinner size="sm" />
@@ -948,7 +949,7 @@ export default function SettingsPage() {
             type="button"
             onClick={handleSubmit}
             disabled={!isDirty || submitting}
-            className="inline-flex items-center gap-2 px-6 py-3 rounded-lg bg-company-primary text-white text-sm font-medium hover:bg-company-primary focus:outline-none focus:ring-2 focus:ring-company-primary focus:ring-offset-2 focus:ring-offset-page disabled:opacity-50 disabled:pointer-events-none transition-colors"
+            className={BTN_PRIMARY}
           >
             {submitting ? <><LoadingSpinner size="sm" />{t("common.saving")}</> : <>{t("common.save")}<ArrowRight className="w-4 h-4" /></>}
           </button>

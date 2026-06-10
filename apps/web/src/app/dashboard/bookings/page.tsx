@@ -25,6 +25,7 @@ import { formatPlate } from "@/lib/inputMasks";
 import { useAuthStore, useDashboardStore } from "@/lib/store";
 import { isSuperAdmin } from "@/lib/auth";
 import { StatusFilterToolbar } from "@/components/StatusFilterToolbar";
+import { BTN_PRIMARY } from "@/lib/dashboardStyles";
 
 type BookingRow = {
   id?: string;
@@ -272,7 +273,7 @@ export default function BookingsPage() {
           canManage && vehicles.length > 0 && parkings.length > 0 && hasCustomers ? (
             <Link
               href="/dashboard/bookings/new"
-              className="group inline-flex items-center gap-2 px-4 min-h-[42px] rounded-lg bg-company-primary text-white text-sm font-medium hover:bg-company-primary focus:outline-none focus:ring-2 focus:ring-company-primary focus:ring-offset-2 focus:ring-offset-page transition-colors shadow-sm"
+              className={BTN_PRIMARY}
             >
               <Plus className="w-4 h-4 transition-transform duration-300 group-hover:rotate-90" strokeWidth={2.25} />
               {t("common.add")}

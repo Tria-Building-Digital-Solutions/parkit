@@ -159,7 +159,7 @@ export default function NotificationsPage() {
                   type="button"
                   onClick={() => handleMarkAsRead(n)}
                   disabled={markingId === n.id || n.status === "READ"}
-                  className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium text-company-primary hover:bg-company-primary-subtle disabled:opacity-50 disabled:pointer-events-none transition-colors"
+                  className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-medium text-company-primary hover:bg-company-primary-subtle disabled:opacity-50 disabled:pointer-events-none transition-colors"
                 >
                   {markingId === n.id ? (
                     <LoadingSpinner size="sm" />
@@ -171,7 +171,7 @@ export default function NotificationsPage() {
                 <button
                   type="button"
                   onClick={() => setPendingDelete(n)}
-                  className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium text-red-600 dark:text-red-400 hover:bg-red-500/10 transition-colors"
+                  className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-medium text-red-600 dark:text-red-400 hover:bg-red-500/10 transition-colors"
                 >
                   <Trash className="w-4 h-4" />
                   {t("common.delete")}

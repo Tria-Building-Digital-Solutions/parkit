@@ -4,6 +4,7 @@ import React, { useState, useRef, useEffect, useCallback, useMemo } from "react"
 import { createPortal } from "react-dom";
 import { Calendar, ChevronLeft, ChevronRight, XCircle, Clock } from "@/lib/premiumIcons";
 import { useTranslation } from "@/hooks/useTranslation";
+import { INPUT } from "@/lib/dashboardStyles";
 
 interface DateTimePickerFieldProps {
   value: string;
@@ -394,7 +395,7 @@ export function DateTimePickerField({
               <select
                 value={hour12}
                 onChange={(e) => setHour(hour12AmPmTo24(Number(e.target.value), ampm))}
-                className="w-[3rem] rounded-lg border border-input-border bg-input-bg text-slate-800 dark:text-slate-200 text-xs py-1.5 px-1.5"
+                className="w-[3rem] rounded-xl border border-border-color/60 bg-white dark:bg-white/5 text-slate-800 dark:text-slate-200 text-xs py-1.5 px-1.5"
               >
                 {hours12.map((h) => (
                   <option key={h} value={h} disabled={isHourDisabled(h)}>
@@ -406,7 +407,7 @@ export function DateTimePickerField({
               <select
                 value={parsed ? parsed.getMinutes() : time.minute}
                 onChange={(e) => setMinute(Number(e.target.value))}
-                className="w-[3rem] rounded-lg border border-input-border bg-input-bg text-slate-800 dark:text-slate-200 text-xs py-1.5 px-1.5"
+                className="w-[3rem] rounded-xl border border-border-color/60 bg-white dark:bg-white/5 text-slate-800 dark:text-slate-200 text-xs py-1.5 px-1.5"
               >
                 {minutes.map((m) => (
                   <option key={m} value={m} disabled={isMinuteDisabled(m)}>
@@ -417,7 +418,7 @@ export function DateTimePickerField({
               <select
                 value={ampm}
                 onChange={(e) => setHour(hour12AmPmTo24(hour12, e.target.value as "AM" | "PM"))}
-                className="w-[3.25rem] rounded-lg border border-input-border bg-input-bg text-slate-800 dark:text-slate-200 text-xs py-1.5 px-1.5"
+                className="w-[3.25rem] rounded-xl border border-border-color/60 bg-white dark:bg-white/5 text-slate-800 dark:text-slate-200 text-xs py-1.5 px-1.5"
               >
                 <option value="AM">{t("datepicker.am")}</option>
                 <option value="PM">{t("datepicker.pm")}</option>
@@ -459,13 +460,13 @@ export function DateTimePickerField({
           type="button"
           onClick={handleOpen}
           className={[
-            variant === "inline"
-              ? "w-full py-2 px-2 text-xs sm:text-sm text-left cursor-pointer bg-transparent border-none shadow-none"
-              : "w-full py-3 pl-10 pr-4 rounded-lg border bg-input-bg text-sm text-left transition-colors cursor-pointer",
+              variant === "default"
+                ? "w-full py-2.5 pl-10 pr-4 rounded-xl border bg-white dark:bg-white/5 text-sm text-left transition-colors cursor-pointer"
+                : "w-full py-2 px-2 text-xs sm:text-sm text-left cursor-pointer bg-transparent border-none shadow-none",
             variant === "default" &&
               (open
                 ? "border-company-primary ring-1 ring-company-primary-full"
-                : "border-input-border hover:border-company-primary-muted"),
+                : "border-border-color/60 hover:border-company-primary-muted"),
             displayValue ? "text-text-primary" : "text-text-muted",
           ]
             .filter(Boolean)

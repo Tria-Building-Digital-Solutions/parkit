@@ -20,9 +20,7 @@ import { COUNTRIES, CURRENCIES, TIMEZONES, INDUSTRIES } from "@/lib/companyOptio
 import { getIndustryIcon } from "@/lib/companyIcons";
 import { formatTaxId, formatPhoneWithCountryCode, COUNTRY_DIAL_CODES } from "@/lib/inputMasks";
 import { required, email as validateEmail, phone as validatePhone } from "@/lib/validation";
-
-const IL = "w-full pl-10 pr-4 py-3 rounded-lg border border-input-border bg-input-bg text-text-primary text-sm transition-all duration-200 ease-out focus:border-company-primary focus:outline-none focus:ring-1 focus:ring-company-primary/20 focus:ring-inset placeholder:text-text-muted";
-const LABEL = "block text-sm font-medium text-text-secondary mb-1.5";
+import { INPUT_ICON, LABEL, BTN_PRIMARY, BTN_SECONDARY, BTN_GHOST, BTN_ACTION } from "@/lib/dashboardStyles";
 
 function Field({ label, required, icon: Icon, error, children }: {
   label: string; required?: boolean;
@@ -217,10 +215,10 @@ export default function EditCompanyPage() {
         <div className="p-6 pt-4">
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
             <Field label={t("companies.legalName")} required icon={Building} error={errors.legalName}>
-              <input value={form.legalName} onChange={set("legalName")} placeholder={t("common.placeholderLegalName")} className={IL} aria-invalid={errors.legalName ? "true" : "false"} />
+              <input value={form.legalName} onChange={set("legalName")} placeholder={t("common.placeholderLegalName")} className={INPUT_ICON} aria-invalid={errors.legalName ? "true" : "false"} />
             </Field>
             <Field label={t("companies.taxId")} required icon={Receipt} error={errors.taxId}>
-              <input value={form.taxId} onChange={(e) => setForm((p) => ({ ...p, taxId: formatTaxId(e.target.value) }))} placeholder={t("common.placeholderTaxId")} className={IL} aria-invalid={errors.taxId ? "true" : "false"} />
+              <input value={form.taxId} onChange={(e) => setForm((p) => ({ ...p, taxId: formatTaxId(e.target.value) }))} placeholder={t("common.placeholderTaxId")} className={INPUT_ICON} aria-invalid={errors.taxId ? "true" : "false"} />
             </Field>
             <Field label={t("companies.industry")} required icon={form.industry ? getIndustryIcon(form.industry) : Building}>
               <SelectField value={form.industry} onChange={set("industry")} icon={form.industry ? getIndustryIcon(form.industry) : Building}>
@@ -248,25 +246,25 @@ export default function EditCompanyPage() {
         <div className="p-6 pt-4">
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
             <Field label={t("companies.commercialName")} required icon={Building} error={errors.commercialName}>
-              <input value={form.commercialName} onChange={set("commercialName")} placeholder={t("common.placeholderCommercialName")} className={IL} aria-invalid={errors.commercialName ? "true" : "false"} />
+              <input value={form.commercialName} onChange={set("commercialName")} placeholder={t("common.placeholderCommercialName")} className={INPUT_ICON} aria-invalid={errors.commercialName ? "true" : "false"} />
             </Field>
             <Field label={t("companies.email")} required icon={Mail} error={errors.email}>
-              <input type="email" value={form.email} onChange={set("email")} placeholder={t("common.placeholderEmail")} className={IL} aria-invalid={errors.email ? "true" : "false"} />
+              <input type="email" value={form.email} onChange={set("email")} placeholder={t("common.placeholderEmail")} className={INPUT_ICON} aria-invalid={errors.email ? "true" : "false"} />
             </Field>
             <Field label={t("companies.contactPhone")} icon={Phone} error={errors.contactPhone}>
-              <input type="tel" value={form.contactPhone} onChange={(e) => setForm((p) => ({ ...p, contactPhone: formatPhoneWithCountryCode(e.target.value, form.countryCode) }))} placeholder={`+${COUNTRY_DIAL_CODES[form.countryCode] || "1"}`} className={IL} aria-invalid={errors.contactPhone ? "true" : "false"} />
+              <input type="tel" value={form.contactPhone} onChange={(e) => setForm((p) => ({ ...p, contactPhone: formatPhoneWithCountryCode(e.target.value, form.countryCode) }))} placeholder={`+${COUNTRY_DIAL_CODES[form.countryCode] || "1"}`} className={INPUT_ICON} aria-invalid={errors.contactPhone ? "true" : "false"} />
             </Field>
             <div className="sm:col-span-2 lg:col-span-3">
               <label className={LABEL}>{t("companies.legalAddress")}</label>
               <div className="flex gap-2">
                 <div className="relative group flex-1">
                   <Navigation className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-text-muted group-focus-within:text-company-primary transition-colors pointer-events-none" />
-                  <input value={form.legalAddress} readOnly placeholder={t("common.placeholderAddress")} className={IL + " cursor-pointer"} onClick={() => setAddressPickerOpen(true)} />
+                  <input value={form.legalAddress} readOnly placeholder={t("common.placeholderAddress")} className={INPUT_ICON + " cursor-pointer"} onClick={() => setAddressPickerOpen(true)} />
                 </div>
                 <button
                   type="button"
                   onClick={() => setAddressPickerOpen(true)}
-                  className="shrink-0 px-4 py-3 rounded-lg border border-input-border bg-input-bg text-text-secondary text-sm font-medium hover:bg-company-primary-subtle hover:border-company-primary-muted hover:text-company-primary transition-colors flex items-center gap-2"
+                  className={BTN_ACTION + " flex items-center gap-2"}
                 >
                   <World className="w-4 h-4" />
                   {t("companies.pickAddressOnMap")}
@@ -392,11 +390,11 @@ export default function EditCompanyPage() {
           <p className="text-xs text-text-muted">{t("common.requiredNote")}</p>
           <div className="flex items-center gap-3 ml-auto">
           <Link href="/dashboard/companies"
-            className="px-5 py-3 rounded-lg border border-company-secondary-muted text-sm font-medium text-company-secondary hover:bg-company-secondary-subtle hover:text-company-secondary transition-colors">
+            className={BTN_SECONDARY}>
             {t("common.cancel")}
           </Link>
           <button type="button" onClick={handleSubmit} disabled={submitting || !isDirty || !isValid}
-            className="inline-flex items-center gap-2 px-6 py-3 rounded-lg bg-company-primary text-white text-sm font-medium hover:bg-company-primary focus:outline-none focus:ring-1 focus:ring-company-primary focus:ring-offset-2 focus:ring-offset-page disabled:opacity-50 disabled:pointer-events-none transition-colors">
+            className={BTN_PRIMARY}>
             {submitting ? <><LoadingSpinner size="sm" />{t("common.saving")}</> : <>{t("common.save")}<ArrowRight className="w-4 h-4" /></>}
           </button>
         </div>
