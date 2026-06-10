@@ -8,26 +8,27 @@ import { ThemeToggleSimple } from "@/components/ThemeToggleSimple";
 import { LocaleToggle } from "@/components/LocaleToggle";
 import { BackgroundBeams } from "@/components/ui/background-beams";
 import { useTranslation } from "@/hooks/useTranslation";
-import { Key, LayoutDashboard, DeviceMobile, ClipboardText } from "@/lib/premiumIcons";
 import type { ComponentType, SVGProps } from "react";
+import { use } from "react";
+import { IconKeyFilled, IconLayoutDashboardFilled, IconDeviceMobileFilled, IconClipboardTextFilled } from "@tabler/icons-react";
 
 const SLUGS = ["key-management", "dashboard", "mobile-checkin", "reports"] as const;
 type Slug = (typeof SLUGS)[number];
 
-const SLUG_CONFIG: Record<Slug, { i18n: string; Icon: ComponentType<SVGProps<SVGSVGElement>> }> = {
-  "key-management": { i18n: "keyManagement", Icon: Key },
-  dashboard: { i18n: "dashboard", Icon: LayoutDashboard },
-  "mobile-checkin": { i18n: "mobileCheckin", Icon: DeviceMobile },
-  reports: { i18n: "reports", Icon: ClipboardText },
+const SLUG_CONFIG: Record<Slug, { i18n: string; Icon: ComponentType<SVGProps<SVGSVGElement>>; iconColor: string; iconBg: string }> = {
+  "key-management": { i18n: "keyManagement", Icon: IconKeyFilled, iconColor: "text-amber-500", iconBg: "bg-amber-500/10" },
+  dashboard: { i18n: "dashboard", Icon: IconLayoutDashboardFilled, iconColor: "text-sky-500", iconBg: "bg-sky-500/10" },
+  "mobile-checkin": { i18n: "mobileCheckin", Icon: IconDeviceMobileFilled, iconColor: "text-emerald-500", iconBg: "bg-emerald-500/10" },
+  reports: { i18n: "reports", Icon: IconClipboardTextFilled, iconColor: "text-violet-500", iconBg: "bg-violet-500/10" },
 };
 
-export default function ServicePage({ params }: { params: { slug: string } }) {
+export default function ServicePage({ params }: { params: Promise<{ slug: string }> }) {
+  const { slug: raw } = use(params);
+  const slug = raw as Slug;
   const { t } = useTranslation();
-  const slug = params.slug as Slug;
-
   if (!SLUGS.includes(slug)) notFound();
 
-  const { i18n, Icon } = SLUG_CONFIG[slug];
+  const { i18n, Icon, iconColor, iconBg } = SLUG_CONFIG[slug];
   const prefix = `landing.servicePages.${i18n}`;
 
   const features = [
@@ -39,7 +40,7 @@ export default function ServicePage({ params }: { params: { slug: string } }) {
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-page via-page to-page-alt/50 relative overflow-hidden">
+    <div className="min-h-screen bg-surface relative overflow-hidden">
       <BackgroundBeams />
 
       <div className="fixed top-0 left-0 right-0 z-30">
@@ -62,14 +63,13 @@ export default function ServicePage({ params }: { params: { slug: string } }) {
 
       <section className="relative z-10 pt-32 pb-20">
         <div className="mx-auto max-w-7xl px-6 lg:px-8">
-          <div className="max-w-3xl mx-auto">
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6 }}
             >
-              <div className="w-16 h-16 rounded-2xl bg-company-primary/10 flex items-center justify-center mb-8">
-                <Icon className="text-company-primary" width={32} height={32} strokeWidth={1.5} />
+              <div className={`w-16 h-16 rounded-2xl ${iconBg} flex items-center justify-center mb-8`}>
+                <Icon className={iconColor} width={32} height={32} />
               </div>
               <h1 className="text-4xl sm:text-5xl font-bold tracking-tight text-text-primary leading-[1.1]">
                 {t(`${prefix}.title`)}
@@ -128,7 +128,6 @@ export default function ServicePage({ params }: { params: { slug: string } }) {
                 {t("landing.cta.button")}
               </Link>
             </motion.div>
-          </div>
         </div>
       </section>
     </div>

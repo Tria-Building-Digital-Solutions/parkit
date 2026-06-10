@@ -121,9 +121,9 @@ function SignupForm() {
         </div>
       </div>
 
-      <section className="relative z-10 min-h-screen flex items-center pt-24 pb-16">
-        <div className="w-full mx-auto max-w-7xl px-4 lg:px-6">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-stretch">
+      <section className="relative z-10 min-h-dvh flex pt-24">
+        <div className="w-full mx-auto max-w-7xl px-4 lg:px-6 flex-1 min-h-0 flex flex-col justify-center">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-start">
             {/* Left — Value Proposition + Carousel */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
@@ -134,17 +134,17 @@ function SignupForm() {
               <div className="absolute -top-20 -left-20 w-72 h-72 rounded-full bg-company-primary/10 dark:bg-company-primary/5 blur-3xl pointer-events-none" />
               <div className="absolute top-40 -right-10 w-48 h-48 rounded-full bg-emerald-500/10 dark:bg-emerald-500/5 blur-3xl pointer-events-none" />
 
-              <div className="relative flex flex-col h-full pt-8 md:pt-10 pb-8 md:pb-10">
+              <div className="relative pt-6 md:pt-8">
                 <div>
                   <h1 className="text-4xl sm:text-5xl font-bold tracking-tight text-text-primary leading-[1.1]">
                     {t("landing.signup.title")}
                   </h1>
-                  <p className="mt-4 text-lg text-text-secondary leading-relaxed max-w-sm">
+                  <p className="mt-3 text-lg text-text-secondary leading-relaxed max-w-sm">
                     {t("landing.signup.subtitle")}
                   </p>
                 </div>
 
-                <div className="mt-auto">
+                <div className="mt-4">
                     <div className="flex items-center justify-between mb-4">
                       <p className="text-sm font-semibold text-text-primary">{t("landing.signup.planLabel")}</p>
                       <div className="flex rounded-xl border border-border-color/60 p-0.5 bg-white/50 dark:bg-white/5">
@@ -221,12 +221,8 @@ function SignupForm() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: 0.15 }}
-              className="h-full"
             >
-              <div className="rounded-2xl border border-card-border/80 bg-white/60 dark:bg-slate-900/60 backdrop-blur-2xl p-8 md:p-10 shadow-xl shadow-company-primary/[0.02] h-full">
-                <h2 className="text-xl font-semibold text-text-primary mb-6">
-                  {t("landing.signup.formTitle")}
-                </h2>
+              <div className="rounded-2xl border border-card-border/80 bg-white/60 dark:bg-slate-900/60 backdrop-blur-2xl p-8 md:p-10 shadow-xl shadow-company-primary/[0.02]">
 
                 <motion.form
                   initial="hidden"
@@ -315,7 +311,7 @@ function SignupForm() {
                   <motion.button
                     variants={staggerItem}
                     type="submit"
-                    className={`${BUTTON_CLASSES} group flex items-center justify-center mb-6`}
+                    className={`${BUTTON_CLASSES} group flex items-center justify-center`}
                   >
                     {t("landing.signup.formSubmit")}
                   </motion.button>
@@ -356,9 +352,7 @@ function SignupForm() {
                   </button>
                 </div>
 
-
-
-                <div className="mt-6 pt-6 border-t border-border-color/50 text-center">
+                <div className="mt-4 pt-4 border-t border-border-color/50 text-center">
                   <p className="text-sm text-text-secondary">
                     {t("landing.signup.alreadyAccount")}{" "}
                     <Link

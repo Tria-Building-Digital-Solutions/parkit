@@ -81,6 +81,7 @@ import {
   IconMovie,
   IconPaperclip,
   IconParkingCircle,
+  IconParkingMeter,
   IconPencil,
   IconPhone,
   IconPhoto,
@@ -224,6 +225,7 @@ export const HomeBolt = wrap(IconHomeBolt);
 export const HomeDollar = wrap(IconHomeDollar);
 export const Movie = wrap(IconMovie);
 export const ParkingCircle = wrap(IconParkingCircle);
+export const ParkingMeter = wrap(IconParkingMeter);
 export const Pick = wrap(IconPick);
 export const Pill = wrap(IconPill);
 export const PokerChip = wrap(IconPokerChip);

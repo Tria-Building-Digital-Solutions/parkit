@@ -232,7 +232,7 @@ function DashboardLayoutInner({
   return (
     <ProtectedRoute>
       <HeaderActionContext.Provider value={setHeaderAction}>
-        <div className="flex h-screen overflow-hidden bg-page">
+        <div className="flex h-screen overflow-hidden bg-page-alt gap-3 p-3">
           <DashboardSidebar />
           <main className="flex-1 flex flex-col min-h-0 min-w-0 overflow-hidden" data-dashboard>
             <header

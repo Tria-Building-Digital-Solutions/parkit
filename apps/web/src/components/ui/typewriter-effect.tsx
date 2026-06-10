@@ -46,7 +46,7 @@ export const TypewriterEffect = ({
     }
 
     return () => clearTimeout(timeout);
-  }, [displayText, isDeleting, currentWordIdx, currentWord.length, words.length]);
+  }, [displayText, isDeleting, currentWordIdx, currentWord, words.length]);
 
   return (
     <span className={cn("inline-flex items-baseline", className)}>

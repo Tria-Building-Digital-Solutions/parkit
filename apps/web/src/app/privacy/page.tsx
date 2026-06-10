@@ -40,7 +40,7 @@ export default function PrivacyPage() {
       <div className="relative z-10 pt-20 pb-24 px-4">
         <div className="max-w-3xl mx-auto">
           {/* Glass Card Container */}
-          <div className="bg-white/90 dark:bg-slate-900/70 backdrop-blur-2xl rounded-3xl border border-white/50 dark:border-white/20 shadow-[0_8px_32px_rgba(0,0,0,0.12)] dark:shadow-[0_8px_32px_rgba(0,0,0,0.4)] p-8 md:p-12">
+          <div className="bg-white/90 dark:bg-slate-900/70 backdrop-blur-2xl rounded-3xl border border-card-border/80 shadow-xl shadow-company-primary/[0.02] p-8 md:p-12">
             {/* Header */}
             <div className="mb-10 border-b border-slate-200 dark:border-slate-700 pb-8">
               <h1 className="text-[2rem] md:text-[2.25rem] leading-tight font-bold tracking-tight text-text-primary mb-2">
@@ -151,7 +151,7 @@ export default function PrivacyPage() {
                       key={title}
                       className="flex items-start gap-3 p-3 rounded-lg bg-slate-50 dark:bg-slate-800/50"
                     >
-                      <div className="w-2 h-2 rounded-full bg-indigo-500 mt-2 shrink-0" />
+                      <div className="w-2 h-2 rounded-full bg-company-primary mt-2 shrink-0" />
                       <div>
                         <h4 className="font-medium text-slate-800 dark:text-white text-sm">
                           {t(title)}
@@ -206,7 +206,7 @@ export default function PrivacyPage() {
                       {" "}
                       <a
                         href={`mailto:${t("privacy.contactEmail")}`}
-                        className="text-indigo-500 dark:text-indigo-400 hover:underline"
+                        className="text-company-primary hover:underline"
                       >
                         {t("privacy.contactEmail")}
                       </a>
@@ -221,7 +221,7 @@ export default function PrivacyPage() {
 
             {/* Footer */}
             <div className="mt-12 pt-8 border-t border-slate-200 dark:border-slate-700">
-              <button onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} className="inline-flex items-center gap-2 text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300 text-sm font-medium transition-colors">
+              <button onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} className="inline-flex items-center gap-2 text-company-primary hover:text-company-primary/80 text-sm font-medium transition-colors">
                 <ArrowUp className="w-4 h-4" />
                 {t("privacy.backToTop")}
               </button>

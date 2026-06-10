@@ -965,16 +965,25 @@ class App {
 
     container.appendChild(this.renderer.domElement);
 
-    // Ensure WebGL context attributes are accessible (postprocessing v6 needs this)
-    const _origGetContext = this.renderer.getContext.bind(this.renderer);
-    const gl = _origGetContext();
-    if (gl && !gl.getContextAttributes()) {
-      const origGetContextAttributes = gl.getContextAttributes.bind(gl);
-      Object.defineProperty(gl, 'getContextAttributes', {
-        value: () => ({ alpha: true, antialias: false, depth: true, stencil: false, premultipliedAlpha: true, preserveDrawingBuffer: false, powerPreference: 'default', failIfMajorPerformanceCaveat: false }),
-        writable: false,
-      });
-    }
+    // Ensure WebGL context attributes are always accessible (postprocessing v6 needs this)
+    const origGetContext = this.renderer.getContext.bind(this.renderer);
+    this.renderer.getContext = function patchedGetContext() {
+      const gl = origGetContext();
+      if (gl && !gl.__postprocessingPatched) {
+        gl.__postprocessingPatched = true;
+        const origGetContextAttributes = gl.getContextAttributes.bind(gl);
+        Object.defineProperty(gl, "getContextAttributes", {
+          value: () => {
+            const attrs = origGetContextAttributes();
+            return attrs != null
+              ? attrs
+              : { alpha: true, antialias: false, depth: true, stencil: false, premultipliedAlpha: true, preserveDrawingBuffer: false, powerPreference: "default", failIfMajorPerformanceCaveat: false };
+          },
+          writable: false,
+        });
+      }
+      return gl;
+    };
 
     this.composer = new EffectComposer(this.renderer);
 
