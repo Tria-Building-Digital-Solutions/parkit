@@ -13,15 +13,13 @@ import { useToast } from "@/lib/toastStore";
 import { PageLoader } from "@/components/PageLoader";
 import { LoadingSpinner } from "@/components/LoadingSpinner";
 import { LICENSE_TYPES } from "@/lib/companyOptions";
-
-const IL = "w-full pl-10 pr-4 py-3 rounded-lg border border-input-border bg-input-bg text-text-primary text-sm transition-all duration-200 ease-out focus:border-company-primary focus:outline-none focus:ring-1 focus:ring-company-primary/20 focus:ring-inset placeholder:text-text-muted";
-const LABEL = "block text-sm font-medium text-text-secondary mb-1.5";
-const STATUSES = ["AVAILABLE", "BUSY", "AWAY"] as const;
+import { INPUT_ICON, LABEL, BTN_PRIMARY, BTN_SECONDARY, BTN_GHOST, BTN_ACTION } from "@/lib/dashboardStyles";
+const STATUSES = ["AVAINPUT_ICONABLE", "BUSY", "AWAY"] as const;
 const STAFF_ROLES = ["RECEPTIONIST", "DRIVER"] as const;
 
 const defaultForm = {
   firstName: "", lastName: "", email: "",
-  licenseExpiry: "", currentStatus: "AVAILABLE",
+  licenseExpiry: "", currentStatus: "AVAINPUT_ICONABLE",
   staffRole: "RECEPTIONIST" as (typeof STAFF_ROLES)[number],
 };
 
@@ -66,7 +64,7 @@ export default function EditValetPage() {
           lastName: String(user?.lastName ?? ""),
           email: String(user?.email ?? ""),
           licenseExpiry: expiryRaw,
-          currentStatus: String(data.currentStatus ?? "AVAILABLE"),
+          currentStatus: String(data.currentStatus ?? "AVAINPUT_ICONABLE"),
           staffRole,
         };
         setForm(loaded);
@@ -160,21 +158,21 @@ export default function EditValetPage() {
               <label className={LABEL}>{t("users.firstName")} <span className="text-red-500">*</span></label>
               <div className="relative group">
                 <UserCircle className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-text-muted group-focus-within:text-company-primary transition-colors pointer-events-none" />
-                <input value={form.firstName} onChange={set("firstName")} className={IL} />
+                <input value={form.firstName} onChange={set("firstName")} className={INPUT_ICON} />
               </div>
             </div>
             <div>
               <label className={LABEL}>{t("users.lastName")} <span className="text-red-500">*</span></label>
               <div className="relative group">
                 <UserCircle className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-text-muted group-focus-within:text-company-primary transition-colors pointer-events-none" />
-                <input value={form.lastName} onChange={set("lastName")} className={IL} />
+                <input value={form.lastName} onChange={set("lastName")} className={INPUT_ICON} />
               </div>
             </div>
             <div>
               <label className={LABEL}>{t("users.email")} <span className="text-red-500">*</span></label>
               <div className="relative group">
                 <MailOpen className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-text-muted group-focus-within:text-company-primary transition-colors pointer-events-none" />
-                <input type="email" value={form.email} onChange={set("email")} className={IL} />
+                <input type="email" value={form.email} onChange={set("email")} className={INPUT_ICON} />
               </div>
             </div>
           </div>
@@ -287,11 +285,11 @@ export default function EditValetPage() {
           <p className="text-xs text-text-muted">{t("common.requiredNote")}</p>
           <div className="flex items-center gap-3 ml-auto">
           <Link href="/dashboard/valets"
-            className="px-5 py-3 rounded-lg border border-company-secondary-muted text-sm font-medium text-company-secondary hover:bg-company-secondary-subtle hover:text-company-secondary transition-colors">
+            className={BTN_SECONDARY}>
             {t("common.cancel")}
           </Link>
           <button type="button" onClick={handleSubmit} disabled={submitting || !isDirty || !isValid}
-            className="inline-flex items-center gap-2 px-6 py-3 rounded-lg bg-company-primary text-white text-sm font-medium hover:bg-company-primary focus:outline-none focus:ring-1 focus:ring-company-primary focus:ring-offset-2 focus:ring-offset-page disabled:opacity-50 disabled:pointer-events-none transition-colors">
+            className={BTN_PRIMARY}>
             {submitting
               ? <><LoadingSpinner size="sm" />{t("common.saving")}</>
               : <>{t("common.save")}<ArrowRight className="w-4 h-4" /></>}

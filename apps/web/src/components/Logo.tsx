@@ -8,18 +8,22 @@ const calSans = localFont({
   display: "swap",
 });
 
-type LogoVariant = "default" | "onDark" | "mark" | "markOnDark";
+type LogoVariant = "default" | "onDark" | "mark" | "markOnDark" | "mono" | "monoOnDark";
 
 export function Logo({
   className = "",
   variant = "default",
+  accentColor,
 }: {
   className?: string;
   /** "onDark" = full logo on dark bg. "mark" = solo "p." (fondo claro). "markOnDark" = solo "p." en fondo oscuro. */
   variant?: LogoVariant;
+  /** Override the "it." color (e.g. company primary color). Falls back to blue-600 if not set. */
+  accentColor?: string;
 }) {
-  const isOnDark = variant === "onDark" || variant === "markOnDark";
+  const isOnDark = variant === "onDark" || variant === "markOnDark" || variant === "monoOnDark";
   const isMark = variant === "mark" || variant === "markOnDark";
+  const isMono = variant === "mono" || variant === "monoOnDark";
 
   return (
     <div
@@ -38,9 +42,25 @@ export function Logo({
       >
         {isMark ? "p" : "park"}
       </span>
-      <span className="text-blue-600 dark:text-blue-500 transition-colors duration-300">
-        {isMark ? "." : "it."}
-      </span>
+      {isMono ? (
+        <span
+          className={
+            isOnDark
+              ? "text-white drop-shadow-[0_0_20px_rgba(255,255,255,0.12)] transition-colors duration-300"
+              : "text-slate-900 dark:text-white transition-colors duration-300"
+          }
+        >
+          {isMark ? "." : "it."}
+        </span>
+      ) : accentColor ? (
+        <span style={{ color: accentColor }} className="transition-colors duration-300">
+          {isMark ? "." : "it."}
+        </span>
+      ) : (
+        <span className="text-blue-600 dark:text-blue-500 transition-colors duration-300">
+          {isMark ? "." : "it."}
+        </span>
+      )}
     </div>
   );
 }

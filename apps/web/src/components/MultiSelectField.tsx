@@ -4,6 +4,7 @@ import React, { useState, useRef, useEffect, useCallback } from "react";
 import { createPortal } from "react-dom";
 import { ChevronDown, Check } from "@/lib/premiumIcons";
 import { useTheme } from "next-themes";
+import { SELECT_OPTION } from "@/lib/dashboardStyles";
 
 export interface MultiSelectOption {
   value: string;
@@ -146,7 +147,7 @@ export function MultiSelectField({
                 key={opt.value}
                 type="button"
                 onClick={() => toggle(opt.value)}
-                className={`group w-full px-3 py-2.5 text-left text-sm rounded-xl transition-all duration-200 flex items-center gap-3 ${
+                className={`${SELECT_OPTION} group ${
                   selected
                     ? "bg-company-primary/10 dark:bg-company-primary/20 text-company-primary font-medium"
                     : "text-slate-700 dark:text-slate-200 hover:bg-slate-100/80 dark:hover:bg-slate-800/80"
@@ -171,7 +172,7 @@ export function MultiSelectField({
             <button
               type="button"
               onClick={() => onChange([])}
-              className="w-full text-xs text-slate-500 dark:text-slate-400 hover:text-red-600 dark:hover:text-red-400 transition-colors text-center py-1.5 rounded-lg hover:bg-red-50 dark:hover:bg-red-500/10"
+              className="w-full text-xs text-slate-500 dark:text-slate-400 hover:text-red-600 dark:hover:text-red-400 transition-colors text-center py-1.5 rounded-xl hover:bg-red-50 dark:hover:bg-red-500/10"
             >
               Limpiar selección
             </button>
@@ -192,10 +193,10 @@ export function MultiSelectField({
           type="button"
           onClick={handleOpen}
           className={[
-            "w-full min-h-[46px] py-2 rounded-lg border bg-input-bg text-sm text-left transition-colors cursor-pointer flex flex-wrap items-center gap-1.5",
+            "w-full min-h-[46px] py-2 rounded-xl border bg-white dark:bg-white/5 text-sm text-left transition-colors cursor-pointer flex flex-wrap items-center gap-1.5",
             open
               ? "border-company-primary ring-1 ring-company-primary-full"
-              : "border-input-border hover:border-company-primary-muted",
+              : "border-border-color/60 hover:border-company-primary-muted",
             Icon ? "pl-10 pr-9" : "pl-4 pr-9",
           ].join(" ")}
         >

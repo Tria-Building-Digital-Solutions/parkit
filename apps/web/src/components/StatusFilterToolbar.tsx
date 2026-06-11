@@ -127,7 +127,7 @@ export function StatusFilterToolbar({
   const isAll = selected.length === 0;
 
   const formControlBase =
-    "rounded-lg border border-input-border bg-input-bg text-sm font-medium transition-colors min-h-[42px] px-4 py-3";
+    "rounded-xl border border-border-color/60 bg-white dark:bg-white/5 text-sm font-medium transition-colors min-h-[42px] px-4 py-2.5";
 
   return (
     <div className={`flex flex-nowrap md:flex-wrap items-center gap-2 ${className ?? ""}`}>
@@ -171,7 +171,7 @@ export function StatusFilterToolbar({
           createPortal(
             <div
               data-status-filter-dropdown={tableKey}
-              className="fixed z-[99999] flex flex-col rounded-lg overflow-hidden animate-in fade-in zoom-in-95 duration-200 min-w-[220px]"
+              className="fixed z-[99999] flex flex-col rounded-xl overflow-hidden animate-in fade-in zoom-in-95 duration-200 min-w-[220px]"
               style={{
                 ...getDropdownStyles(isDark),
                 top: position.top,
@@ -196,7 +196,7 @@ export function StatusFilterToolbar({
                       }`}
                     >
                       <span
-                        className={`shrink-0 w-4 h-4 rounded-lg flex items-center justify-center transition-all duration-200 ${
+                        className={`shrink-0 w-4 h-4 rounded-xl flex items-center justify-center transition-all duration-200 ${
                           isSelected
                             ? "bg-company-primary shadow-sm"
                             : "border border-slate-300 dark:border-slate-600 group-hover:border-company-primary/50"
@@ -216,7 +216,7 @@ export function StatusFilterToolbar({
                   <button
                     type="button"
                     onClick={() => onChange([])}
-                    className="w-full text-xs text-slate-500 dark:text-slate-400 hover:text-red-600 dark:hover:text-red-400 transition-colors text-center py-1.5 rounded-lg hover:bg-red-50 dark:hover:bg-red-500/10"
+                    className="w-full text-xs text-slate-500 dark:text-slate-400 hover:text-red-600 dark:hover:text-red-400 transition-colors text-center py-1.5 rounded-xl hover:bg-red-50 dark:hover:bg-red-500/10"
                   >
                     {resolvedClearLabel}
                   </button>

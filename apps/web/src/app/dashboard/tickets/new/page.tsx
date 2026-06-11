@@ -11,8 +11,7 @@ import { useDashboardStore } from "@/lib/store";
 import { useToast } from "@/lib/toastStore";
 import { PageLoader } from "@/components/PageLoader";
 import { selectRequired } from "@/lib/validation";
-
-const LABEL = "block text-sm font-medium text-text-secondary mb-1.5";
+import { LABEL, BTN_PRIMARY, BTN_SECONDARY } from "@/lib/dashboardStyles";
 
 type ClientOption = { id: string; user?: { firstName?: string; lastName?: string; email?: string } };
 type VehicleOption = { id: string; plate?: string; brand?: string; model?: string };
@@ -125,7 +124,7 @@ export default function NewTicketPage() {
     );
   }
 
-  const skel = <div className="h-[46px] rounded-lg bg-input-bg border border-input-border animate-pulse" />;
+  const skel = <div className="h-[46px] rounded-xl bg-white dark:bg-white/5 border border-border-color/60 animate-pulse" />;
 
   const step1Valid =
     !!form.clientId && !!form.vehicleId && !!form.parkingId && !errors.clientId && !errors.vehicleId && !errors.parkingId;

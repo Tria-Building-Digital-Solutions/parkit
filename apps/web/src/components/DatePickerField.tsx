@@ -4,6 +4,7 @@ import React, { useState, useRef, useEffect, useCallback, useMemo } from "react"
 import { createPortal } from "react-dom";
 import { Calendar, ChevronLeft, ChevronRight, XCircle } from "@/lib/premiumIcons";
 import { useTranslation } from "@/hooks/useTranslation";
+import { LABEL } from "@/lib/dashboardStyles";
 
 interface DatePickerFieldProps {
   value: string;
@@ -303,17 +304,17 @@ export function DatePickerField({
 
   const triggerClasses = compact
     ? [
-        "w-full py-2 pl-8 pr-3 rounded-lg border text-sm text-left transition-colors cursor-pointer",
+        "w-full py-2 pl-8 pr-3 rounded-xl border text-sm text-left transition-colors cursor-pointer",
         open
           ? "border-company-primary ring-1 ring-company-primary-full"
           : "border-transparent hover:border-company-primary-muted bg-transparent",
         displayValue ? "text-text-primary" : "text-text-muted",
       ].join(" ")
     : [
-        "w-full py-3 pl-10 pr-4 rounded-lg border bg-input-bg text-sm text-left transition-colors cursor-pointer",
+        "w-full py-2.5 pl-10 pr-4 rounded-xl border bg-white dark:bg-white/5 text-sm text-left transition-colors cursor-pointer",
         open
           ? "border-company-primary ring-1 ring-company-primary-full"
-          : "border-input-border hover:border-company-primary-muted",
+          : "border-border-color/60 hover:border-company-primary-muted",
         displayValue ? "text-text-primary" : "text-text-muted",
       ].join(" ");
 
@@ -341,7 +342,7 @@ export function DatePickerFieldWithLabel({
 }: DatePickerFieldProps & { label: string }) {
   return (
     <div>
-      <label className="block text-sm font-medium text-text-secondary mb-1.5">
+      <label className={LABEL}>
         {label}
       </label>
       <DatePickerField {...props} />

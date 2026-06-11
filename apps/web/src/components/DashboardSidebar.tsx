@@ -9,24 +9,32 @@ import { useTheme } from "next-themes";
 import { useAuthStore, useDashboardStore } from "@/lib/store";
 import { isSuperAdmin, isAdmin } from "@/lib/auth";
 import { Logo } from "@/components/Logo";
-import { DefaultBanner } from "@/components/DefaultBanner";
 import { getIndustryIcon } from "@/lib/companyIcons";
 import { apiClient } from "@/lib/api";
 import { useTranslation } from "@/hooks/useTranslation";
-import { APP_VERSION } from "@/lib/version";
 import {
   LayoutDashboard,
+  LayoutDashboardFilled,
   Users,
-  Shield,
-  User,
+  UserCircle,
+  UserCircleFilled,
+  Key,
+  KeyFilled,
   Car,
-  MapPin,
-  Calendar,
+  CarFilled,
+  ParkingCircle,
+  ParkingCircleFilled,
+  CalendarEvent,
+  CalendarEventFilled,
   TicketCheck,
+  TicketCheckFilled,
   Bell,
+  BellFilled,
   Settings,
+  SettingsFilled,
   SidebarCollapse,
   SidebarExpand,
+  ChevronRight,
   ChevronDown,
   Building,
 } from "@/lib/premiumIcons";
@@ -78,7 +86,6 @@ function SidebarTooltip({
         }}
       >
         {label}
-        {/* Flecha hacia el sidebar */}
         <span
           className="absolute top-1/2 w-0 h-0 -translate-y-1/2 border-[6px] border-transparent border-r-slate-800 dark:border-r-slate-700"
           style={{ right: "100%" }}
@@ -113,6 +120,7 @@ function CompanySelector({
   logoImageUrl,
   hideAvatar = false,
   highContrast = false,
+  transparentBg = false,
   companyColors,
 }: {
   companies: { id: string; commercialName?: string; legalName?: string; requiresCustomerApp?: boolean }[];
@@ -124,10 +132,9 @@ function CompanySelector({
   emptyLabel: string;
   isDark?: boolean;
   logoImageUrl?: string | null;
-  /** When true, the circle with avatar/logo is not shown (to use inside the banner without duplicating avatar). */
   hideAvatar?: boolean;
-  /** Forces high contrast to use over banners with any background. */
   highContrast?: boolean;
+  transparentBg?: boolean;
   companyColors?: { primary: string };
 }) {
   const [open, setOpen] = useState(false);
@@ -278,27 +285,31 @@ function CompanySelector({
             )}
           </div>
         )}
-        <div className={hideAvatar ? "absolute -right-2 top-1/2 -translate-y-1/2" : "flex-1"}>
+        <div className={hideAvatar && !transparentBg ? "absolute -right-2 top-1/2 -translate-y-1/2" : "flex-1"}>
           <button
             ref={triggerRef}
             type="button"
             onClick={() => { if (!open) updatePosition(); setOpen((o) => !o); }}
             className={`flex items-center min-w-0 ${hideAvatar ? "pl-4" : "pl-3"} ${hideAvatar ? "pr-8" : "pr-9"} ${hideAvatar ? "py-1.5" : "py-2.5"} rounded-lg text-left text-sm transition-all duration-300 ease-out ${
               hideAvatar
-                ? `px-3 py-1.5 rounded-lg backdrop-blur-md hover:scale-[1.02]`
+                ? `px-3 py-1.5 rounded-lg ${transparentBg ? '' : 'backdrop-blur-md'} hover:scale-[1.02]`
                 : highContrast
                   ? `bg-white/25 hover:bg-white/35 ${isDark ? "text-white" : "text-slate-800"} border border-white/30 shadow-[0_4px_16px_-4px_rgba(0,0,0,0.08),0_1px_2px_rgba(255,255,255,0.3)_inset] backdrop-blur-xl hover:shadow-[0_6px_20px_-4px_rgba(0,0,0,0.1)] hover:border-white/50 hover:scale-[1.02]`
-                  : isDark
-                    ? "bg-white/10 hover:bg-white/20 text-white border border-white/10 shadow-[0_2px_12px_rgba(0,0,0,0.2)] backdrop-blur-sm hover:shadow-[0_4px_16px_rgba(0,0,0,0.3)]"
-                    : "bg-white/25 text-slate-800 border border-white/80 shadow-[0_4px_24px_rgba(0,0,0,0.06),0_1px_2px_rgba(255,255,255,0.4)_inset,0_8px_16px_rgba(255,255,255,0.1)_inset] backdrop-blur-2xl hover:shadow-[0_8px_32px_rgba(0,0,0,0.1),0_1px_2px_rgba(255,255,255,0.5)_inset] hover:bg-white/35 hover:border-white/90"
+                    : isDark
+                      ? "bg-white/10 hover:bg-white/20 text-white border border-white/10 shadow-[0_2px_12px_rgba(0,0,0,0.2)] backdrop-blur-sm hover:shadow-[0_4px_16px_rgba(0,0,0,0.3)]"
+                      : "bg-white/25 text-slate-800 border border-white/80 shadow-[0_4px_24px_rgba(0,0,0,0.06),0_1px_2px_rgba(255,255,255,0.4)_inset,0_8px_16px_rgba(255,255,255,0.1)_inset] backdrop-blur-2xl hover:shadow-[0_8px_32px_rgba(0,0,0,0.1),0_1px_2px_rgba(255,255,255,0.5)_inset] hover:bg-white/35 hover:border-white/90"
             } ${open ? "ring-2 ring-company-primary/40 shadow-[0_0_20px_rgba(var(--company-primary-rgb),0.2)]" : ""} ${highContrast ? "max-w-[220px] justify-center text-center" : ""}`}
-            style={hideAvatar ? {
+            style={hideAvatar ? (transparentBg ? {
+              backgroundColor: 'transparent',
+              boxShadow: 'none',
+              border: 'none',
+            } : {
               backgroundColor: isDark ? "rgba(30, 41, 59, 0.9)" : "rgba(255, 255, 255, 0.9)",
               boxShadow: isDark ? "0 2px 8px -2px rgba(0, 0, 0, 0.3)" : "0 2px 8px -2px rgba(0, 0, 0, 0.1)",
               border: isDark ? "1px solid rgba(255, 255, 255, 0.1)" : "1px solid rgba(0, 0, 0, 0.05)",
-            } : undefined}
+            }) : undefined}
           >
-            <span className={`truncate flex-1 ${hideAvatar ? "text-xs font-medium" : "font-medium"}`} style={hideAvatar ? { color: 'var(--text-primary)' } : undefined}>
+            <span className={`truncate flex-1 ${hideAvatar ? "text-xs font-medium" : "font-medium"}`} style={hideAvatar ? { color: transparentBg ? '#fff' : 'var(--text-primary)' } : undefined}>
               {selectedCompanyName || (
                 <span className={highContrast ? "text-slate-500" : isDark ? "text-white/60" : "text-slate-500"}>
                   {placeholder}
@@ -341,28 +352,21 @@ export function DashboardSidebar() {
   const [unreadNotificationsCount, setUnreadNotificationsCount] = useState(0);
   const [hasBookableParkings, setHasBookableParkings] = useState(false);
   const [isLoadingCompany, setIsLoadingCompany] = useState(false);
-  const [hoverExpanded, setHoverExpanded] = useState(false);
+  const [openGroups, setOpenGroups] = useState<Record<number, boolean>>({});
+  const initializedGroups = useRef(false);
+
+  const toggleGroup = (index: number) => {
+    setOpenGroups((prev) => ({ ...prev, [index]: !prev[index] }));
+  };
 
   const superAdmin = isSuperAdmin(user);
   const admin = isAdmin(user);
-  // SUPER_ADMIN: has companies if loaded list has entries OR if a company is selected in store. ADMIN/STAFF: always have a company.
   const hasCompanies = superAdmin
     ? companies.length > 0 || Boolean(selectedCompanyId)
     : Boolean(adminCompanyName) || Boolean(user?.id);
-  // Show loading state if fetching company data and no companies are loaded yet
   const shouldShowLoading = isLoadingCompany && !hasCompanies;
   const isDark = resolvedTheme === "dark";
-  const expanded = !collapsed || hoverExpanded || sidebarOpen;
 
-  const bannerDefaultSrc = isDark
-    ? "/images/default-banner-dark.png"
-    : "/images/default-banner-light.png";
-  const brandingBanner = companyBranding?.bannerImageUrl;
-  const hasCustomBanner =
-    typeof brandingBanner === "string" && brandingBanner.trim().length > 0;
-  const effectiveBannerSrc = hasCustomBanner ? brandingBanner! : bannerDefaultSrc;
-
-  // Get company colors for the banner
   const getThemeDefaultColors = (dark: boolean) => ({
     primary: dark ? "#3b82f6" : "#2563eb",
     secondary: dark ? "#8b5cf6" : "#7c3aed",
@@ -384,8 +388,6 @@ export function DashboardSidebar() {
   const companyColors = { primary, secondary, tertiary };
   const IndustryIcon = getIndustryIcon(companyBranding?.businessActivity);
 
-  const bannerVariant = isDark;
-
   useEffect(() => {
     if (!superAdmin) return;
     setIsLoadingCompany(true);
@@ -396,7 +398,6 @@ export function DashboardSidebar() {
       .finally(() => setIsLoadingCompany(false));
   }, [superAdmin, companiesVersion]);
 
-  // SUPER_ADMIN: always keep a selected company (first one if none selected or current one no longer exists)
   useEffect(() => {
     if (!superAdmin || companies.length === 0) return;
     const currentId = useDashboardStore.getState().selectedCompanyId;
@@ -408,7 +409,6 @@ export function DashboardSidebar() {
     setSelectedCompany(first.id, name, first.requiresCustomerApp);
   }, [superAdmin, companies, setSelectedCompany]);
 
-  // For ADMIN: fetch company (name and id) and, if none is selected, set it so layout can load branding
   useEffect(() => {
     if (!user || superAdmin) return;
     setIsLoadingCompany(true);
@@ -427,7 +427,6 @@ export function DashboardSidebar() {
       .finally(() => setIsLoadingCompany(false));
   }, [user?.id, superAdmin, setSelectedCompany, user]);
 
-  // Unread notifications count for sidebar badge
   useEffect(() => {
     if (!user?.id) return;
     apiClient
@@ -436,7 +435,6 @@ export function DashboardSidebar() {
       .catch(() => setUnreadNotificationsCount(0));
   }, [user?.id]);
 
-  // Show "Bookings" only if company has at least one parking that requires booking
   useEffect(() => {
     const hasCompanyContext = superAdmin ? Boolean(selectedCompanyId) : Boolean(user?.id);
     if (!hasCompanyContext) {
@@ -449,10 +447,7 @@ export function DashboardSidebar() {
       .catch(() => setHasBookableParkings(false));
   }, [superAdmin, selectedCompanyId, user?.id, companiesVersion, parkingsVersion]);
 
-  const toggleCollapsed = () => {
-    setHoverExpanded(false);
-    setSidebarCollapsed(!collapsed);
-  };
+  const toggleCollapsed = () => setSidebarCollapsed(!collapsed);
 
   const handleNavClick = () => {
     if (sidebarOpen) {
@@ -469,20 +464,20 @@ export function DashboardSidebar() {
 
   const navGroups = useMemo(() => {
     const mainItems = [
-      { label: t("sidebar.overview"), href: "/dashboard", icon: LayoutDashboard },
-      { label: t("sidebar.parkings"), href: "/dashboard/parkings", icon: MapPin },
-      ...(hasBookableParkings ? [{ label: t("sidebar.bookings"), href: "/dashboard/bookings", icon: Calendar }] : []),
-      { label: t("sidebar.tickets"), href: "/dashboard/tickets", icon: TicketCheck },
+      { label: t("sidebar.overview"), href: "/dashboard", icon: LayoutDashboard, iconFilled: LayoutDashboardFilled },
+      { label: t("sidebar.parkings"), href: "/dashboard/parkings", icon: ParkingCircle, iconFilled: ParkingCircleFilled },
+      ...(hasBookableParkings ? [{ label: t("sidebar.bookings"), href: "/dashboard/bookings", icon: CalendarEvent, iconFilled: CalendarEventFilled }] : []),
+      { label: t("sidebar.tickets"), href: "/dashboard/tickets", icon: TicketCheck, iconFilled: TicketCheckFilled },
     ];
 
     const teamItems = [
-      ...(admin ? [{ label: t("sidebar.employees"), href: "/dashboard/users", icon: Shield }] : []),
-      ...(superAdmin ? [{ label: t("sidebar.valets"), href: "/dashboard/valets", icon: User }] : []),
+      ...(admin ? [{ label: t("sidebar.employees"), href: "/dashboard/users", icon: UserCircle, iconFilled: UserCircleFilled }] : []),
+      ...(superAdmin ? [{ label: t("sidebar.valets"), href: "/dashboard/valets", icon: Key, iconFilled: KeyFilled }] : []),
     ];
 
     const clientsItems = [
       { label: t("sidebar.customers"), href: "/dashboard/customers", icon: Users },
-      { label: t("sidebar.vehicles"), href: "/dashboard/vehicles", icon: Car },
+      { label: t("sidebar.vehicles"), href: "/dashboard/vehicles", icon: Car, iconFilled: CarFilled },
     ];
 
     return [
@@ -501,16 +496,23 @@ export function DashboardSidebar() {
       {
         label: t("sidebar.account"),
         items: [
-          { label: t("sidebar.notifications"), href: "/dashboard/notifications", icon: Bell },
-          { label: t("sidebar.settings"), href: "/dashboard/settings", icon: Settings },
+          { label: t("sidebar.notifications"), href: "/dashboard/notifications", icon: Bell, iconFilled: BellFilled },
+          { label: t("sidebar.settings"), href: "/dashboard/settings", icon: Settings, iconFilled: SettingsFilled },
         ],
       },
     ];
   }, [t, hasBookableParkings, admin, superAdmin]);
 
+  // Initialize all groups as open on first render
+  useEffect(() => {
+    if (navGroups.length > 0 && !initializedGroups.current) {
+      initializedGroups.current = true;
+      setOpenGroups(Object.fromEntries(navGroups.map((_, i) => [i, true])));
+    }
+  }, [navGroups.length]);
+
   return (
     <>
-      {/* Mobile overlay */}
       {sidebarOpen && (
         <div
           className="fixed inset-0 z-[20000] bg-black/50 md:hidden"
@@ -519,43 +521,32 @@ export function DashboardSidebar() {
         />
       )}
       <aside
-        onMouseEnter={() => {
-          if (collapsed) setHoverExpanded(true);
-        }}
-        onMouseLeave={() => setHoverExpanded(false)}
-        onFocusCapture={() => {
-          if (collapsed) setHoverExpanded(true);
-        }}
-        onBlurCapture={(event) => {
-          if (!event.currentTarget.contains(event.relatedTarget as Node | null)) {
-            setHoverExpanded(false);
-          }
-        }}
         className={`
           fixed md:relative inset-y-0 left-0 z-[20001] md:z-30
-          h-screen flex flex-col overflow-hidden bg-slate-50/95 dark:bg-neutral-950
-          backdrop-blur-xl border-r border-neutral-200 dark:border-neutral-800
+          h-screen md:h-full flex flex-col overflow-hidden
+          bg-gradient-to-b from-page via-page to-page/95
+          backdrop-blur-2xl rounded-2xl
           transition-[width,transform] duration-500 ease-[cubic-bezier(0.23,1,0.32,1)] shrink-0
-          w-[260px] ${expanded ? "md:w-[272px]" : "md:w-[76px]"}
+          w-[260px] ${collapsed ? "md:w-[76px]" : "md:w-[272px]"}
           ${sidebarOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"}
         `}
         style={{ 
           boxShadow: isDark 
-            ? "8px 0 30px -24px rgba(0,0,0,0.9)" 
-            : "8px 0 30px -24px rgba(15,23,42,0.28)",
+            ? "0 8px 32px -8px rgba(0,0,0,0.4), 0 0 0 1px rgba(255,255,255,0.03) inset" 
+            : "0 8px 32px -8px rgba(0,0,0,0.08), 0 0 0 1px rgba(255,255,255,0.5) inset",
         }}
       >
       {/* Logo / brand */}
       <div
-        className={`flex flex-col border-b border-neutral-200/80 dark:border-neutral-800 shrink-0 ${
-          expanded ? "px-4 py-4" : "items-center justify-center py-4 px-2"
+        className={`flex flex-col border-b border-card-border/25 dark:border-white/[0.04] shrink-0 ${
+          collapsed ? "items-center justify-center py-4 px-2" : "px-5 pt-5 pb-4"
         }`}
       >
-        {!expanded ? (
-          <SidebarTooltip show={!hoverExpanded} label={t("sidebar.expand")}>
+        {collapsed ? (
+          <SidebarTooltip show label={t("sidebar.expand")}>
             <button
               onClick={toggleCollapsed}
-              className="p-2.5 rounded-md text-neutral-500 hover:text-neutral-900 hover:bg-neutral-200/70 dark:text-neutral-400 dark:hover:text-white dark:hover:bg-neutral-800 transition-all duration-200 w-full flex justify-center group"
+              className="p-2.5 rounded-lg text-text-muted hover:text-company-primary hover:bg-company-primary/10 transition-all duration-300 ease-out w-full flex justify-center group"
               aria-label="Expand sidebar"
             >
               <SidebarExpand className="w-5 h-5 transition-transform duration-300 group-hover:scale-110" />
@@ -563,80 +554,41 @@ export function DashboardSidebar() {
           </SidebarTooltip>
         ) : (
           <>
-            <div className="flex items-center justify-between gap-2">
-              <Link href="/dashboard" className="flex items-center min-w-0 overflow-hidden">
-                <Logo variant={isDark ? "onDark" : "default"} className="text-3xl truncate" />
-              </Link>
-              {/* Collapse button: only visible on md+ */}
+            <div className="flex items-start justify-between gap-2">
+              <div className="min-w-0">
+                <Link href="/dashboard" className="flex items-center overflow-hidden">
+                  <Logo variant={isDark ? "onDark" : "default"} accentColor={primary} className="text-3xl truncate" />
+                </Link>
+                <a
+                  href="https://triacr.com"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="block mt-0.5 text-[8px] font-medium text-text-muted/40 hover:text-company-primary/60 transition-colors duration-200 tracking-wide"
+                >
+                  Powered by Tria
+                </a>
+              </div>
               <button
                 onClick={toggleCollapsed}
-                className="hidden md:flex p-2 rounded-md text-neutral-500 hover:text-neutral-900 hover:bg-neutral-200/70 dark:text-neutral-400 dark:hover:text-white dark:hover:bg-neutral-800 transition-all duration-200 shrink-0 group"
-                aria-label={collapsed ? "Pin sidebar open" : "Collapse sidebar"}
+                className="hidden md:flex p-2 rounded-lg text-text-muted hover:text-company-primary hover:bg-company-primary/10 transition-all duration-300 ease-out shrink-0 group mt-1"
+                aria-label="Collapse sidebar"
               >
-                {collapsed ? (
-                  <SidebarExpand className="w-5 h-5 transition-transform duration-300 group-hover:scale-110" />
-                ) : (
-                  <SidebarCollapse className="w-5 h-5 transition-transform duration-300 group-hover:scale-110" />
-                )}
+                <SidebarCollapse className="w-5 h-5 transition-all duration-300 group-hover:scale-110" />
               </button>
             </div>
           </>
         )}
       </div>
 
-      {/* Company banner + selector (SUPER_ADMIN) o banner con avatar (ADMIN) */}
+      {/* Company card */}
       {hasCompanies ? (
-        <>
-          {expanded ? (
-            <>
-              {superAdmin ? (
-                <div className="border-b border-neutral-200/80 dark:border-neutral-800 shrink-0 relative">
-                  <DefaultBanner
-                    companyName={selectedCompanyName || t("sidebar.company")}
-                    logoImageUrl={companyBranding?.logoImageUrl}
-                    businessActivity={companyBranding?.businessActivity}
-                    companyColors={companyColors}
-                    isDark={hasCustomBanner ? bannerVariant : isDark}
-                    backgroundImageUrl={hasCustomBanner ? effectiveBannerSrc : null}
-                    renderRight={
-                      <CompanySelector
-                        companies={companies}
-                        selectedCompanyId={selectedCompanyId}
-                        selectedCompanyName={selectedCompanyName}
-                        onSelect={handleSelectCompany}
-                        placeholder={t("sidebar.selectCompany")}
-                        allCompaniesLabel={t("sidebar.allCompanies")}
-                        emptyLabel={t("companies.noCompanies")}
-                        isDark={hasCustomBanner ? bannerVariant : isDark}
-                        logoImageUrl={companyBranding?.logoImageUrl}
-                        hideAvatar
-                        highContrast
-                        companyColors={defaults}
-                      />
-                    }
-                  />
-                </div>
-              ) : (adminCompanyName || selectedCompanyName) ? (
-                <div className="border-b border-neutral-200/80 dark:border-neutral-800 shrink-0 relative">
-                  <DefaultBanner
-                    companyName={adminCompanyName || selectedCompanyName || "Company"}
-                    logoImageUrl={companyBranding?.logoImageUrl}
-                    businessActivity={companyBranding?.businessActivity}
-                    companyColors={companyColors}
-                    isDark={hasCustomBanner ? bannerVariant : isDark}
-                    backgroundImageUrl={hasCustomBanner ? effectiveBannerSrc : null}
-                  />
-                </div>
-              ) : null}
-            </>
-          ) : (
-            <div className="px-3 py-7 shrink-0 flex justify-center">
-              <div
-                className="w-9 h-9 rounded-full overflow-hidden flex items-center justify-center transition-all duration-300"
+        <div className="shrink-0 px-3 pt-3 pb-1">
+          {collapsed ? (
+            <div className="flex justify-center">
+              <div className="w-9 h-9 rounded-full overflow-hidden flex items-center justify-center ring-2 ring-company-primary/20 ring-offset-2 ring-offset-page"
                 style={{
                   backgroundColor: isDark ? '#1e293b' : '#ffffff',
-                  border: '3px solid var(--card-border)',
-                  boxShadow: `0 8px 32px -8px ${companyColors?.primary ? companyColors.primary + '40' : 'rgba(0,0,0,0.1)'}`,
+                  boxShadow: `0 0 20px ${companyColors?.primary ? companyColors.primary + '30' : 'rgba(0,0,0,0.08)'}`,
                 }}
               >
                 {companyBranding?.logoImageUrl?.trim() ? (
@@ -652,139 +604,188 @@ export function DashboardSidebar() {
                 )}
               </div>
             </div>
+          ) : (
+            <div className="relative overflow-hidden rounded-2xl border-2 border-card-border/30 dark:border-white/[0.08] shadow-lg">
+              {companyBranding?.bannerImageUrl?.trim() && (
+                <div
+                  className="absolute inset-0 bg-cover bg-center"
+                  style={{ backgroundImage: `url(${companyBranding.bannerImageUrl})` }}
+                />
+              )}
+              <div className="relative z-10 flex items-center gap-3 px-4 py-3">
+                <div className="w-9 h-9 rounded-full overflow-hidden shrink-0 flex items-center justify-center ring-2 ring-company-primary/20 ring-offset-2 ring-offset-page"
+                  style={{
+                    backgroundColor: isDark ? '#1e293b' : '#ffffff',
+                    boxShadow: `0 0 20px ${companyColors?.primary ? companyColors.primary + '30' : 'rgba(0,0,0,0.08)'}`,
+                  }}
+                >
+                  {companyBranding?.logoImageUrl?.trim() ? (
+                    <Image
+                      src={companyBranding.logoImageUrl}
+                      alt=""
+                      width={512}
+                      height={512}
+                      className="w-full h-full object-cover object-center"
+                    />
+                  ) : (
+                    <IndustryIcon className="w-[18px] h-[18px]" strokeWidth={2} style={{ color: companyColors?.primary }} />
+                  )}
+                </div>
+                <div className="flex-1 min-w-0 relative">
+                  <div className="absolute inset-0 rounded-lg backdrop-blur-2xl bg-black/10 dark:bg-white/10 border border-white/30 dark:border-white/10 shadow-[0_4px_16px_-4px_rgba(0,0,0,0.08)]" />
+                  <div className="relative z-10">
+                    {superAdmin ? (
+                      <CompanySelector
+                        companies={companies}
+                        selectedCompanyId={selectedCompanyId}
+                        selectedCompanyName={selectedCompanyName}
+                        onSelect={handleSelectCompany}
+                        placeholder={t("sidebar.selectCompany")}
+                        allCompaniesLabel={t("sidebar.allCompanies")}
+                        emptyLabel={t("companies.noCompanies")}
+                        isDark={isDark}
+                        logoImageUrl={companyBranding?.logoImageUrl}
+                        hideAvatar
+                        highContrast
+                        transparentBg
+                        companyColors={defaults}
+                      />
+                    ) : (
+                      <p className="text-sm font-medium truncate text-white px-3 py-1.5">
+                        {adminCompanyName || selectedCompanyName || "Company"}
+                      </p>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
           )}
-        </>
+        </div>
       ) : shouldShowLoading ? (
-        <div className="border-b border-neutral-200/80 dark:border-neutral-800 px-3 py-3 shrink-0">
-          <div className="flex items-center gap-3 px-3 py-2.5 text-text-muted">
+        <div className="shrink-0 px-3 pt-3 pb-1">
+          <div className="flex items-center gap-3 px-4 py-3 text-text-muted bg-card/50 rounded-2xl border border-card-border/30">
             <div className="w-5 h-5 border-2 border-company-primary border-t-transparent rounded-full animate-spin" />
-            {expanded && <span className="text-sm">{t("common.loading")}</span>}
+            <span className="text-sm">{t("common.loading")}</span>
           </div>
         </div>
       ) : (
-        <div className="border-b border-neutral-200/80 dark:border-neutral-800 px-3 py-3 shrink-0">
+        <div className="shrink-0 px-3 pt-3 pb-1">
           <Link
             href="/dashboard/companies/new?first=1"
-            className="group relative flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 text-text-muted hover:bg-input-bg hover:text-text-secondary"
+            className="flex items-center gap-3 px-4 py-3 rounded-2xl border-2 border-dashed border-card-border/40 hover:border-company-primary/40 transition-all duration-200 text-text-muted hover:text-company-primary"
           >
-            <span className="flex items-center justify-center w-9 h-9 rounded-lg shrink-0 transition-all duration-200 bg-company-primary/10 text-company-primary group-hover:bg-company-primary/15">
+            <span className="flex items-center justify-center w-9 h-9 rounded-lg shrink-0 bg-company-primary/10 text-company-primary">
               <Building className="w-5 h-5" />
             </span>
-            {expanded && <span className="font-medium truncate">
+            <span className="text-sm font-medium truncate">
               {t("companies.createCompany")}
-            </span>}
+            </span>
           </Link>
         </div>
       )}
 
-      {/* Nav groups: no scroll, fits within viewport */}
+      {/* Nav groups */}
       {hasCompanies ? (
-        <nav className="flex-1 overflow-hidden py-3 px-2.5 space-y-3">
-          {navGroups.map((group) => (
-            <div key={group.label}>
-              {expanded && (
-                <p className="px-3 mb-2 text-[10px] font-semibold uppercase tracking-[0.16em] text-neutral-400 dark:text-neutral-500">
-                  {group.label}
-                </p>
-              )}
-              <ul className="space-y-0.5">
-                {group.items.map((item) => {
-                  const Icon = item.icon;
-                  const isActive = pathname === item.href;
-                  const linkContent = (
-                    <>
-                      <span
-                        className={`absolute left-1.5 top-1/2 -translate-y-1/2 w-1.5 h-1.5 rounded-full bg-company-primary transition-all duration-300 ${
-                          isActive && expanded ? "opacity-100 scale-100" : "opacity-0 scale-50"
-                        }`}
-                      />
-                      <span className={`flex items-center justify-center w-9 h-9 rounded-md shrink-0 transition-all duration-200 ease-out ${
-                          isActive 
-                            ? "bg-company-primary/10 dark:bg-company-primary/15" 
-                            : "group-hover:bg-neutral-200/70 dark:group-hover:bg-neutral-800"
-                        }`}>
-                        <Icon
-                          className={`w-[18px] h-[18px] transition-all duration-200 ${
-                            isActive ? "text-company-primary" : "text-neutral-500 group-hover:text-neutral-900 dark:text-neutral-400 dark:group-hover:text-white"
-                          }`}
-                        />
-                      </span>
-                      {expanded && (
-                        <>
-                          <span
-                            className={`font-medium truncate transition-colors duration-200 ${
-                              isActive ? "text-neutral-950 dark:text-white" : "text-neutral-600 group-hover:text-neutral-950 dark:text-neutral-300 dark:group-hover:text-white"
-                            }`}
-                          >
-                            {item.label}
-                          </span>
-                          {item.href === "/dashboard/notifications" && unreadNotificationsCount > 0 && (
-                            <span className="min-w-[22px] h-[22px] px-1.5 flex items-center justify-center rounded-full bg-gradient-to-br from-red-500 to-red-600 text-white text-[11px] font-bold shrink-0 ml-auto shadow-lg shadow-red-500/25">
-                              {unreadNotificationsCount > 99 ? "99+" : unreadNotificationsCount}
+        <nav className="flex-1 overflow-y-auto overflow-x-hidden py-3 px-3 space-y-1">
+          {navGroups.map((group, index) => {
+            const isGroupOpen = openGroups[index] !== false;
+            return (
+              <div key={group.label}>
+                {!collapsed && (
+                  <button
+                    type="button"
+                    onClick={() => toggleGroup(index)}
+                    className="w-full flex items-center gap-2 px-3 py-1.5 rounded-md text-[10px] font-bold uppercase tracking-[0.15em] text-text-secondary/70 hover:text-company-primary transition-all duration-200 group/header"
+                  >
+                    <span className="flex-1 text-left">{group.label}</span>
+                    <ChevronDown
+                      className={`w-3 h-3 transition-all duration-300 ease-[cubic-bezier(0.23,1,0.32,1)] ${
+                        isGroupOpen ? "rotate-0 opacity-50" : "-rotate-90 opacity-30"
+                      } group-hover/header:opacity-70`}
+                    />
+                  </button>
+                )}
+                <div
+                  className={`grid transition-all duration-500 ease-[cubic-bezier(0.23,1,0.32,1)] ${
+                    isGroupOpen ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0"
+                  }`}
+                >
+                  <div className="overflow-hidden">
+                    <ul className="space-y-0.5">
+                      {group.items.map((item) => {
+                        const isActive = pathname === item.href;
+                        const Icon = isActive && item.iconFilled ? item.iconFilled : item.icon;
+                        const fillValue = isActive ? "currentColor" : "none";
+                        const linkContent = (
+                          <>
+                            <span className={`flex items-center justify-center w-10 h-10 rounded-lg shrink-0 transition-all duration-300 ease-out ${
+                                isActive 
+                                  ? "" 
+                                  : "group-hover:bg-input-bg/50"
+                              }`}>
+                              <Icon
+                                className={`w-[18px] h-[18px] transition-all duration-300 ${
+                                  isActive ? "text-company-primary scale-105" : "text-text-secondary group-hover:text-company-primary group-hover:scale-105"
+                                }`}
+                                fill={fillValue}
+                              />
                             </span>
-                          )}
-                        </>
-                      )}
-                      {!expanded && item.href === "/dashboard/notifications" && unreadNotificationsCount > 0 && (
-                        <span
-                          className="absolute top-2 right-2 w-2.5 h-2.5 rounded-full bg-gradient-to-br from-red-500 to-red-600 ring-[2.5px] ring-slate-50 dark:ring-neutral-950 shadow-sm"
-                          aria-label={`${unreadNotificationsCount} sin leer`}
-                        />
-                      )}
-                    </>
-                  );
-                  return (
-                    <li key={item.href}>
-                      <SidebarTooltip show={!expanded} label={item.label}>
-                        <Link
-                          href={item.href}
-                          onClick={() => {
-                            handleNavClick();
-                          }}
-                          className={`group relative flex items-center gap-3 px-3 py-1.5 rounded-md transition-all duration-200 ${
-                            expanded ? "mx-1" : "justify-center mx-1"
-                          } ${
-                            isActive
-                              ? "bg-white shadow-sm ring-1 ring-neutral-200/80 dark:bg-neutral-900 dark:ring-neutral-800"
-                              : "hover:bg-white/70 dark:hover:bg-neutral-900/70"
-                          }`}
-                        >
-                          {linkContent}
-                        </Link>
-                      </SidebarTooltip>
-                    </li>
-                  );
-                })}
-              </ul>
-            </div>
-          ))}
+                            {!collapsed && (
+                              <>
+                                <span
+                                  className={`font-medium truncate transition-colors duration-300 ${
+                                    isActive ? "text-text-primary font-semibold" : "text-text-secondary group-hover:text-company-primary"
+                                  }`}
+                                >
+                                  {item.label}
+                                </span>
+                                {item.href === "/dashboard/notifications" && unreadNotificationsCount > 0 && (
+                                  <span className="min-w-[22px] h-[22px] px-1.5 flex items-center justify-center rounded-full bg-gradient-to-br from-red-500 to-red-600 text-white text-[11px] font-bold shrink-0 ml-auto shadow-lg shadow-red-500/25">
+                                    {unreadNotificationsCount > 99 ? "99+" : unreadNotificationsCount}
+                                  </span>
+                                )}
+                              </>
+                            )}
+                            {collapsed && item.href === "/dashboard/notifications" && unreadNotificationsCount > 0 && (
+                              <span
+                                className="absolute top-2 right-2 w-2.5 h-2.5 rounded-full bg-gradient-to-br from-red-500 to-red-600 ring-[2.5px] ring-page shadow-sm"
+                                aria-label={`${unreadNotificationsCount} sin leer`}
+                              />
+                            )}
+                          </>
+                        );
+                        return (
+                          <li key={item.href}>
+                            <SidebarTooltip show={collapsed} label={item.label}>
+                              <Link
+                                href={item.href}
+                                onClick={() => {
+                                  handleNavClick();
+                                }}
+                                className={`group relative flex items-center gap-3 px-3 py-2 rounded-lg transition-all duration-300 ease-[cubic-bezier(0.23,1,0.32,1)] ${
+                                  collapsed ? "justify-center mx-1" : "mx-1"
+                                } ${
+                                  isActive
+                                    ? "text-text-primary"
+                                    : "text-text-secondary hover:bg-input-bg/80 hover:text-company-primary"
+                                }`}
+                              >
+                                {linkContent}
+                              </Link>
+                            </SidebarTooltip>
+                          </li>
+                        );
+                      })}
+                    </ul>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
         </nav>
       ) : (
         <div className="flex-1" />
       )}
-
-      {/* Premium Footer */}
-      <footer className="shrink-0 border-t border-neutral-200/80 dark:border-neutral-800 bg-slate-50/80 dark:bg-neutral-950/80 backdrop-blur-sm">
-        {expanded ? (
-          <div className="px-4 py-2.5 flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <div className="w-1.5 h-1.5 rounded-full bg-company-primary animate-pulse" />
-              <span className="text-[9px] font-medium text-neutral-500 dark:text-neutral-400 tracking-wide">
-                v{APP_VERSION}
-              </span>
-            </div>
-            <span className="text-[8px] text-neutral-400 dark:text-neutral-500">
-              © {new Date().getFullYear()}
-            </span>
-          </div>
-        ) : (
-          <div className="py-3 flex justify-center">
-            <span className="text-[8px] text-neutral-400 dark:text-neutral-500">
-              v{APP_VERSION}
-            </span>
-          </div>
-        )}
-      </footer>
     </aside>
     </>
   );

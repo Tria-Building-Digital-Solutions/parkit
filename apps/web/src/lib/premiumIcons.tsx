@@ -9,6 +9,7 @@ import {
   IconBackhoe,
   IconBarbell,
   IconBell,
+  IconBellFilled,
   IconBook,
   IconBookmark,
   IconBriefcase,
@@ -25,8 +26,10 @@ import {
   IconBuildingStore,
   IconCalendar,
   IconCalendarEvent,
+  IconCalendarEventFilled,
   IconCamera,
   IconCar,
+  IconCarFilled,
   IconCarGarage,
   IconCash,
   IconCheck,
@@ -67,7 +70,9 @@ import {
   IconHomeDollar,
   IconInfoCircle,
   IconKey,
+  IconKeyFilled,
   IconLayoutDashboard,
+  IconLayoutDashboardFilled,
   IconLayoutSidebarLeftCollapse,
   IconLayoutSidebarLeftExpand,
   IconLink,
@@ -81,6 +86,8 @@ import {
   IconMovie,
   IconPaperclip,
   IconParkingCircle,
+  IconParkingCircleFilled,
+  IconParkingMeter,
   IconPencil,
   IconPhone,
   IconPhoto,
@@ -98,6 +105,7 @@ import {
   IconSearch,
   IconSend,
   IconSettings,
+  IconSettingsFilled,
   IconShare,
   IconShieldCheck,
   IconShoppingBag,
@@ -105,6 +113,7 @@ import {
   IconSun,
   IconTag,
   IconTicket,
+  IconTicketFilled,
   IconTools,
   IconToolsKitchen2,
   IconTrash,
@@ -177,6 +186,7 @@ export const ShoppingBag = wrap(IconShoppingBag);
 export const Tag = wrap(IconTag);
 export const Ticket = wrap(IconTicket);
 export const TicketCheck = wrap(IconTicket);
+export const TicketCheckFilled = wrap(IconTicketFilled);
 
 // Buildings & Places
 export const Building = wrap(IconBuilding);
@@ -195,6 +205,7 @@ export const University = wrap(IconSchool);
 // Business & Industry
 export const Briefcase = wrap(IconBriefcase);
 export const Car = wrap(IconCar);
+export const CarFilled = wrap(IconCarFilled);
 export const ClipboardText = wrap(IconClipboardText);
 export const Laptop = wrap(IconDeviceDesktop);
 export const DeviceMobile = wrap(IconDeviceMobile);
@@ -219,11 +230,14 @@ export const BuildingFactory2 = wrap(IconBuildingFactory2);
 export const BuildingHospital = wrap(IconBuildingHospital);
 export const BuildingSkyscraper = wrap(IconBuildingSkyscraper);
 export const CalendarEvent = wrap(IconCalendarEvent);
+export const CalendarEventFilled = wrap(IconCalendarEventFilled);
 export const CarGarage = wrap(IconCarGarage);
 export const HomeBolt = wrap(IconHomeBolt);
 export const HomeDollar = wrap(IconHomeDollar);
 export const Movie = wrap(IconMovie);
 export const ParkingCircle = wrap(IconParkingCircle);
+export const ParkingCircleFilled = wrap(IconParkingCircleFilled);
+export const ParkingMeter = wrap(IconParkingMeter);
 export const Pick = wrap(IconPick);
 export const Pill = wrap(IconPill);
 export const PokerChip = wrap(IconPokerChip);
@@ -232,6 +246,7 @@ export const TruckDelivery = wrap(IconTruckDelivery);
 
 // UI Elements
 export const Bell = wrap(IconBell);
+export const BellFilled = wrap(IconBellFilled);
 export const Bookmark = wrap(IconBookmark);
 export const Calendar = wrap(IconCalendar);
 export const Clock = wrap(IconClock);
@@ -240,6 +255,7 @@ export const Hash = wrap(IconHash);
 export const Heart = wrap(IconHeart);
 export const HelpCircle = wrap(IconHelpCircle);
 export const LayoutDashboard = wrap(IconLayoutDashboard);
+export const LayoutDashboardFilled = wrap(IconLayoutDashboardFilled);
 export const LinkIcon = wrap(IconLink);
 export const Lock = wrap(IconLock);
 export const MapPin = wrap(IconMapPin);
@@ -249,6 +265,7 @@ export const Palette = wrap(IconBrush);
 export const Paperclip = wrap(IconPaperclip);
 export const QrCode = wrap(IconQrcode);
 export const Settings = wrap(IconSettings);
+export const SettingsFilled = wrap(IconSettingsFilled);
 export const Settings2 = wrap(IconTools);
 export const Share2 = wrap(IconShare);
 export const SlidersHorizontal = wrap(IconAdjustmentsHorizontal);
@@ -262,6 +279,7 @@ export const FileText = wrap(IconFileDescription);
 export const ImageIcon = wrap(IconPhoto);
 export const PhotoIcon = wrap(IconPhoto);
 export const Key = wrap(IconKey);
+export const KeyFilled = wrap(IconKeyFilled);
 
 // Editing
 export const Edit = wrap(IconEdit);
@@ -291,6 +309,22 @@ export const CircleDashed = wrap(IconCircleDashed);
 export const Globe = wrap(IconGlobe);
 export const Radius = wrap(IconCoin);
 export const World = wrap(IconWorld);
+
+// Custom Filled Variants (not available in Tabler Icons)
+export const UserCircleFilled = (props: SVGProps<SVGSVGElement>) => (
+  <svg viewBox="0 0 24 24" fill="currentColor" stroke="none" xmlns="http://www.w3.org/2000/svg" width="24" height="24" {...props}>
+    <path fill-rule="evenodd" d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20 M9 10a3 3 0 1 1 6 0 3 3 0 0 1-6 0 M6.168 18.849a4 4 0 0 1 3.832-2.849h4a4 4 0 0 1 3.834 2.855z" />
+  </svg>
+);
+
+export const UsersFilled = (props: SVGProps<SVGSVGElement>) => (
+  <svg viewBox="0 0 24 24" fill="currentColor" stroke="none" xmlns="http://www.w3.org/2000/svg" width="24" height="24" {...props}>
+    <circle cx="9" cy="7" r="3.5" />
+    <path d="M5 13a4 4 0 0 1 4-3h0a4 4 0 0 1 4 3v6.5a.5.5 0 0 1-.5.5h-7a.5.5 0 0 1-.5-.5V13z" />
+    <circle cx="16" cy="6" r="3" />
+    <path d="M12.5 12.5a3.5 3.5 0 0 1 3.5-2.5h0a3.5 3.5 0 0 1 3.5 2.5V18a.5.5 0 0 1-.5.5h-6a.5.5 0 0 1-.5-.5v-5.5z" />
+  </svg>
+);
 
 // Social Icons - Official Brand Logos
 export const GoogleIcon = (props: SVGProps<SVGSVGElement>) => (

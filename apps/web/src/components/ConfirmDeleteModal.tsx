@@ -66,7 +66,7 @@ export function ConfirmDeleteModal({
               type="button"
               onClick={onCancel}
               disabled={loading}
-              className="flex-1 px-4 py-2.5 rounded-lg border border-company-secondary-muted text-sm font-medium text-company-secondary hover:bg-company-secondary-subtle hover:text-company-secondary transition-colors disabled:opacity-50"
+              className="flex-1 px-4 py-2.5 rounded-xl border border-border-color/60 bg-white dark:bg-white/5 text-sm font-medium text-text-secondary hover:brightness-95 hover:text-text-primary transition-all disabled:opacity-50"
             >
               {cancelLabel}
             </button>
@@ -74,7 +74,7 @@ export function ConfirmDeleteModal({
               type="button"
               onClick={() => void onConfirm()}
               disabled={loading}
-              className="flex-1 px-4 py-2.5 rounded-lg border border-red-500/30 bg-red-500/10 text-sm font-medium text-red-600 dark:text-red-400 hover:bg-red-500/20 transition-colors disabled:opacity-50"
+              className="flex-1 px-4 py-2.5 rounded-xl border border-red-500/30 bg-red-500/10 text-sm font-medium text-red-600 dark:text-red-400 hover:bg-red-500/20 transition-all disabled:opacity-50"
             >
               {loading ? "…" : confirmLabel}
             </button>

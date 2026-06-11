@@ -12,10 +12,7 @@ import { useToast } from "@/lib/toastStore";
 import { useDashboardStore } from "@/lib/store";
 import { PageLoader } from "@/components/PageLoader";
 import { LoadingSpinner } from "@/components/LoadingSpinner";
-
-const IL = "w-full pl-10 pr-4 py-2.5 rounded-xl border border-input-border bg-input-bg text-text-primary text-sm transition-all duration-200 focus:border-company-primary focus:outline-none focus:ring-1 focus:ring-company-primary/20 placeholder:text-text-muted";
-const INPUT = "w-full px-4 py-2.5 rounded-xl border border-input-border bg-input-bg text-text-primary text-sm transition-all duration-200 focus:border-company-primary focus:outline-none focus:ring-1 focus:ring-company-primary/20 placeholder:text-text-muted";
-const LABEL = "block text-sm font-medium text-text-primary mb-1.5";
+import { INPUT_ICON, INPUT, LABEL, BTN_PRIMARY, BTN_SECONDARY, BTN_GHOST, BTN_ACTION, BTN_DANGER } from "@/lib/dashboardStyles";
 
 const PARKING_TYPES = ["OPEN", "COVERED", "TOWER", "UNDERGROUND", "ELEVATOR"] as const;
 const SLOT_TYPES = ["REGULAR", "PREMIUM", "ELECTRIC", "HANDICAPPED"] as const;
@@ -422,7 +419,7 @@ export default function EditParkingPage() {
               <label className={LABEL}>{t("parkings.name")} <span className="text-company-primary">*</span></label>
               <div className="relative group">
                 <Building className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-text-muted group-focus-within:text-company-primary transition-colors pointer-events-none" />
-                <input value={form.name} onChange={set("name")} placeholder={t("common.placeholderName")} className={IL} aria-invalid={fieldErrors.name ? "true" : "false"} />
+                <input value={form.name} onChange={set("name")} placeholder={t("common.placeholderName")} className={INPUT_ICON} aria-invalid={fieldErrors.name ? "true" : "false"} />
               </div>
               <div className="min-h-[1.25rem] mt-1">
                 {fieldErrors.name && <p className="text-sm text-red-500" role="alert">{fieldErrors.name}</p>}
@@ -433,12 +430,12 @@ export default function EditParkingPage() {
               <div className="flex gap-2">
                 <div className="relative group flex-1">
                   <Navigation className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-text-muted group-focus-within:text-company-primary transition-colors pointer-events-none" />
-                  <input value={form.address} readOnly placeholder={t("common.placeholderAddress")} className={IL + " cursor-pointer"} onClick={() => setAddressPickerOpen(true)} aria-invalid={fieldErrors.address ? "true" : "false"} />
+                  <input value={form.address} readOnly placeholder={t("common.placeholderAddress")} className={INPUT_ICON + " cursor-pointer"} onClick={() => setAddressPickerOpen(true)} aria-invalid={fieldErrors.address ? "true" : "false"} />
                 </div>
                 <button
                   type="button"
                   onClick={() => setAddressPickerOpen(true)}
-                  className="shrink-0 px-4 py-3 rounded-lg border border-input-border bg-input-bg text-text-secondary text-sm font-medium hover:bg-company-primary-subtle hover:border-company-primary-muted hover:text-company-primary transition-colors flex items-center gap-2"
+                  className={BTN_ACTION}
                 >
                   <World className="w-4 h-4" />
                   {t("companies.pickAddressOnMap")}
@@ -515,7 +512,7 @@ export default function EditParkingPage() {
                         onChange={(e) => setTimeValue(setQuickApplyTimeInput, setQuickApplyMinutes)(e)}
                         onBlur={handleTimeBlur(setQuickApplyTimeInput, quickApplyMinutes)}
                         placeholder="4:00"
-                        className={IL}
+                        className={INPUT_ICON}
                       />
                       <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-text-muted/60 pointer-events-none group-focus-within:text-company-primary/40 transition-colors">{getTimeUnit(quickApplyMinutes)}</span>
                     </div>
@@ -530,7 +527,7 @@ export default function EditParkingPage() {
                         value={formatMoney(quickApplyPrice)}
                         onChange={(e) => setQuickApplyPrice(parseMoney(e.target.value))}
                         placeholder="1,000"
-                        className={IL}
+                        className={INPUT_ICON}
                       />
                     </div>
                   </div>
@@ -554,7 +551,7 @@ export default function EditParkingPage() {
                         sunday: config,
                       });
                     }}
-                    className="shrink-0 px-4 py-3 rounded-lg border border-input-border bg-input-bg text-text-secondary text-sm font-medium hover:bg-company-primary-subtle hover:border-company-primary-muted hover:text-company-primary transition-colors"
+                    className={BTN_ACTION}
                   >
                     {t("parkings.applyToAll")}
                   </button>
@@ -575,7 +572,7 @@ export default function EditParkingPage() {
                           sunday: dailyPricingConfig.sunday,
                         });
                       }}
-                      className="shrink-0 px-4 py-3 rounded-lg border border-input-border bg-input-bg text-text-secondary text-sm font-medium hover:bg-company-primary-subtle hover:border-company-primary-muted hover:text-company-primary transition-colors"
+                      className={BTN_ACTION}
                     >
                       {t("parkings.applyToWeekdays")}
                     </button>
@@ -596,7 +593,7 @@ export default function EditParkingPage() {
                           sunday: config,
                         });
                       }}
-                      className="shrink-0 px-4 py-3 rounded-lg border border-input-border bg-input-bg text-text-secondary text-sm font-medium hover:bg-company-primary-subtle hover:border-company-primary-muted hover:text-company-primary transition-colors"
+                      className={BTN_ACTION}
                     >
                       {t("parkings.applyToWeekend")}
                     </button>
@@ -650,7 +647,7 @@ export default function EditParkingPage() {
                               }}
                               onFocus={(e) => e.target.select()}
                               placeholder="0:00"
-                              className={IL}
+                              className={INPUT_ICON}
                             />
                             <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-text-muted/60 pointer-events-none group-focus-within:text-company-primary/40 transition-colors">{getTimeUnit(dailyPricingConfig[day.key as keyof typeof dailyPricingConfig].freeBenefitMinutes)}</span>
                           </div>
@@ -669,7 +666,7 @@ export default function EditParkingPage() {
                               })}
                               onFocus={(e) => e.target.select()}
                               placeholder="1,000"
-                              className={IL}
+                              className={INPUT_ICON}
                             />
                           </div>
                         </div>
@@ -690,7 +687,7 @@ export default function EditParkingPage() {
                             sunday: config,
                           });
                         }}
-                        className="shrink-0 px-4 py-3 rounded-lg border border-input-border bg-input-bg text-text-secondary text-sm font-medium hover:bg-company-primary-subtle hover:border-company-primary-muted hover:text-company-primary transition-colors"
+                        className={BTN_ACTION}
                       >
                         {t("parkings.clearAll")}
                       </button>
@@ -752,7 +749,7 @@ export default function EditParkingPage() {
             <button
               type="button"
               onClick={addSlotsBatch}
-              className="shrink-0 inline-flex items-center justify-center gap-2 px-4 py-3 rounded-lg bg-company-primary text-white text-sm font-medium hover:opacity-95 focus:outline-none focus:ring-1 focus:ring-company-primary focus:ring-offset-2"
+              className={`shrink-0 ${BTN_PRIMARY}`}
             >
               <Plus className="w-4 h-4" />
               {t("parkings.addSlotsBatch")}
@@ -793,7 +790,7 @@ export default function EditParkingPage() {
                     type="button"
                     onClick={() => removeSlot(slot.id)}
                     title={t("parkings.removeSlot")}
-                    className="p-2 rounded-lg text-text-muted hover:text-red-600 hover:bg-red-500/10 transition-colors"
+                    className="p-2 rounded-xl text-text-muted hover:text-red-600 hover:bg-red-500/10 transition-colors"
                     aria-label={t("parkings.removeSlot")}
                   >
                     <Trash className="w-4 h-4" />
@@ -804,7 +801,7 @@ export default function EditParkingPage() {
             <button
               type="button"
               onClick={addSlot}
-              className="mt-3 w-full py-2.5 rounded-lg border border-dashed border-input-border text-text-muted text-sm font-medium hover:border-company-primary hover:text-company-primary hover:bg-company-primary-subtle/50 transition-colors flex items-center justify-center gap-2"
+              className="mt-3 w-full py-2.5 rounded-xl border border-dashed border-border-color/60 text-text-muted text-sm font-medium hover:border-company-primary hover:text-company-primary hover:bg-company-primary-subtle/50 transition-colors flex items-center justify-center gap-2"
             >
               <Plus className="w-4 h-4" />
               {t("parkings.addSlot")}
@@ -827,7 +824,7 @@ export default function EditParkingPage() {
               <label className={LABEL}>{t("parkings.latitude")} <span className="text-company-primary">*</span></label>
               <div className="relative group">
                 <Navigation className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-text-muted group-focus-within:text-company-primary transition-colors pointer-events-none" />
-                <input type="number" step="any" inputMode="decimal" min={-90} max={90} value={form.latitude} readOnly placeholder={t("common.placeholderLatitude")} className={IL + " cursor-pointer"} onClick={() => setAddressPickerOpen(true)} aria-invalid={!!fieldErrors.latitude} />
+                <input type="number" step="any" inputMode="decimal" min={-90} max={90} value={form.latitude} readOnly placeholder={t("common.placeholderLatitude")} className={INPUT_ICON + " cursor-pointer"} onClick={() => setAddressPickerOpen(true)} aria-invalid={!!fieldErrors.latitude} />
               </div>
               <div className="min-h-[1.25rem] mt-1">
                 {fieldErrors.latitude && <p className="text-sm text-red-500" role="alert">{fieldErrors.latitude}</p>}
@@ -837,7 +834,7 @@ export default function EditParkingPage() {
               <label className={LABEL}>{t("parkings.longitude")} <span className="text-company-primary">*</span></label>
               <div className="relative group">
                 <Navigation className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-text-muted group-focus-within:text-company-primary transition-colors pointer-events-none" />
-                <input type="number" step="any" inputMode="decimal" min={-180} max={180} value={form.longitude} readOnly placeholder={t("common.placeholderLongitude")} className={IL + " cursor-pointer"} onClick={() => setAddressPickerOpen(true)} aria-invalid={!!fieldErrors.longitude} />
+                <input type="number" step="any" inputMode="decimal" min={-180} max={180} value={form.longitude} readOnly placeholder={t("common.placeholderLongitude")} className={INPUT_ICON + " cursor-pointer"} onClick={() => setAddressPickerOpen(true)} aria-invalid={!!fieldErrors.longitude} />
               </div>
               <div className="min-h-[1.25rem] mt-1">
                 {fieldErrors.longitude && <p className="text-sm text-red-500" role="alert">{fieldErrors.longitude}</p>}
@@ -847,7 +844,7 @@ export default function EditParkingPage() {
               <label className={LABEL}>{t("parkings.geofenceRadius")} <span className="text-company-primary">*</span></label>
               <div className="relative group">
                 <CircleDashed className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-text-muted group-focus-within:text-company-primary transition-colors pointer-events-none" />
-                <input type="number" min={1} max={10000} inputMode="numeric" step={1} value={form.geofenceRadius} readOnly onFocus={(e) => e.target.select()} placeholder={t("common.placeholderRadius")} className={IL + " cursor-pointer"} onClick={() => setAddressPickerOpen(true)} aria-invalid={fieldErrors.geofenceRadius ? "true" : "false"} />
+                <input type="number" min={1} max={10000} inputMode="numeric" step={1} value={form.geofenceRadius} readOnly onFocus={(e) => e.target.select()} placeholder={t("common.placeholderRadius")} className={INPUT_ICON + " cursor-pointer"} onClick={() => setAddressPickerOpen(true)} aria-invalid={fieldErrors.geofenceRadius ? "true" : "false"} />
               </div>
               <div className="min-h-[1.25rem] mt-1">
                 {fieldErrors.geofenceRadius && <p className="text-sm text-red-500" role="alert">{fieldErrors.geofenceRadius}</p>}
@@ -870,11 +867,11 @@ export default function EditParkingPage() {
           <p className="text-xs text-text-muted">{t("common.requiredNote")}</p>
           <div className="flex items-center gap-3 ml-auto">
             <Link href="/dashboard/parkings"
-              className="px-5 py-3 rounded-lg border border-input-border text-sm font-medium text-text-secondary hover:bg-input-bg hover:text-text-primary transition-colors">
+              className={BTN_SECONDARY}>
               {t("common.cancel")}
             </Link>
             <button type="button" onClick={handleSubmit} disabled={submitting || !isDirty || !isValid}
-              className="inline-flex items-center gap-2 px-6 py-3 rounded-lg bg-company-primary text-white text-sm font-medium hover:bg-company-primary focus:outline-none focus:ring-1 focus:ring-company-primary focus:ring-offset-2 focus:ring-offset-page disabled:opacity-50 disabled:pointer-events-none transition-colors">
+              className={BTN_PRIMARY}>
               {submitting ? <><LoadingSpinner size="sm" />{t("common.saving")}</> : <>{t("common.save")}<ArrowRight className="w-4 h-4" /></>}
             </button>
           </div>

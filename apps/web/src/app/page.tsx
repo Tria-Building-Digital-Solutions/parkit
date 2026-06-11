@@ -5,8 +5,9 @@ import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import { TypewriterEffect } from "@/components/ui/typewriter-effect";
 import { AuthModal } from "@/components/AuthModal";
-import { ArrowRight, Menu, X, Plus, Minus, Check, Mail } from "lucide-react";
-import { DeviceMobile, LayoutDashboard, Gauge, ClipboardText, Key, MapPin, Bell } from "@/lib/premiumIcons";
+import { ArrowRight, Menu, X, Plus, Minus, Check } from "lucide-react";
+import { Gauge, MapPin, DeviceMobile, MessageSquare, Key, ParkingMeter } from "@/lib/premiumIcons";
+import { IconKeyFilled, IconLayoutDashboardFilled, IconDeviceMobileFilled, IconClipboardTextFilled } from "@tabler/icons-react";
 import { BackgroundBeams } from "@/components/ui/background-beams";
 import { hyperspeedPresets } from "@/components/effects/hyperspeedPresets";
 import dynamic from "next/dynamic";
@@ -327,21 +328,21 @@ export default function Home() {
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
             {[
-              { href: "/services/key-management", Icon: Key, title: t("landing.services.item1Title"), desc: t("landing.services.item1Desc") },
-              { href: "/services/dashboard", Icon: LayoutDashboard, title: t("landing.services.item2Title"), desc: t("landing.services.item2Desc") },
-              { href: "/services/mobile-checkin", Icon: DeviceMobile, title: t("landing.services.item3Title"), desc: t("landing.services.item3Desc") },
-              { href: "/services/reports", Icon: ClipboardText, title: t("landing.services.item4Title"), desc: t("landing.services.item4Desc") },
-            ].map(({ href, Icon, title, desc }, i) => (
+              { href: "/services/dashboard", Icon: IconLayoutDashboardFilled, title: t("landing.services.item2Title"), desc: t("landing.services.item2Desc"), iconColor: "text-sky-500", iconBg: "bg-sky-500/10", iconHoverBg: "group-hover:bg-sky-500/20" },
+              { href: "/services/key-management", Icon: IconKeyFilled, title: t("landing.services.item1Title"), desc: t("landing.services.item1Desc"), iconColor: "text-amber-500", iconBg: "bg-amber-500/10", iconHoverBg: "group-hover:bg-amber-500/20" },
+              { href: "/services/mobile-checkin", Icon: IconDeviceMobileFilled, title: t("landing.services.item3Title"), desc: t("landing.services.item3Desc"), iconColor: "text-emerald-500", iconBg: "bg-emerald-500/10", iconHoverBg: "group-hover:bg-emerald-500/20" },
+              { href: "/services/reports", Icon: IconClipboardTextFilled, title: t("landing.services.item4Title"), desc: t("landing.services.item4Desc"), iconColor: "text-violet-500", iconBg: "bg-violet-500/10", iconHoverBg: "group-hover:bg-violet-500/20" },
+            ].map(({ href, Icon, title, desc, iconColor, iconBg, iconHoverBg }, i) => (
               <motion.div
                 key={i}
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ duration: 0.4, delay: i * 0.1 }}
-                className="group relative flex flex-col rounded-xl bg-page-alt p-8 border border-border-color hover:shadow-lg hover:border-company-primary/20 hover:shadow-company-primary/5 transition-all overflow-hidden"
+                className="group relative flex flex-col rounded-xl bg-page-alt p-8 border border-border-color hover:shadow-lg hover:border-border-color/80 transition-all overflow-hidden"
               >
-                <div className="w-14 h-14 rounded-lg bg-company-primary/10 flex items-center justify-center mb-6 group-hover:bg-company-primary/20 transition-colors">
-                  <Icon className="text-company-primary" width={28} height={28} strokeWidth={1.5} />
+                <div className={`w-14 h-14 rounded-lg ${iconBg} flex items-center justify-center mb-6 ${iconHoverBg} transition-colors`}>
+                  <Icon className={iconColor} width={28} height={28} />
                 </div>
                 <h3 className="text-lg font-semibold text-text-primary">{title}</h3>
                 <p className="mt-3 text-sm text-text-secondary leading-relaxed">{desc}</p>
@@ -407,9 +408,9 @@ export default function Home() {
             {[
               { num: "1", stepTitle: t("landing.howItWorks.step1Title"), stepDesc: t("landing.howItWorks.step1Desc"), Icon: DeviceMobile },
               { num: "2", stepTitle: t("landing.howItWorks.step2Title"), stepDesc: t("landing.howItWorks.step2Desc"), Icon: MapPin },
-              { num: "3", stepTitle: t("landing.howItWorks.step3Title"), stepDesc: t("landing.howItWorks.step3Desc"), Icon: LayoutDashboard },
-              { num: "4", stepTitle: t("landing.howItWorks.step4Title"), stepDesc: t("landing.howItWorks.step4Desc"), Icon: Key },
-              { num: "5", stepTitle: t("landing.howItWorks.step5Title"), stepDesc: t("landing.howItWorks.step5Desc"), Icon: Bell },
+              { num: "3", stepTitle: t("landing.howItWorks.step4Title"), stepDesc: t("landing.howItWorks.step4Desc"), Icon: Key },
+              { num: "4", stepTitle: t("landing.howItWorks.step3Title"), stepDesc: t("landing.howItWorks.step3Desc"), Icon: ParkingMeter },
+              { num: "5", stepTitle: t("landing.howItWorks.step5Title"), stepDesc: t("landing.howItWorks.step5Desc"), Icon: MessageSquare },
               { num: "6", stepTitle: t("landing.howItWorks.step6Title"), stepDesc: t("landing.howItWorks.step6Desc"), Icon: Gauge },
             ].map(({ num, stepDesc, Icon }, i) => (
               <motion.div
@@ -423,7 +424,7 @@ export default function Home() {
                 <span className="text-2xl font-bold text-company-primary">
                   {num}.
                 </span>
-                <Icon className="my-8 stroke-current text-text-primary" width={55} height={55} strokeWidth={1.5} />
+                <Icon className="my-8 text-black" width={55} height={55} strokeWidth={1.5} />
                 <p className="font-light text-text-primary leading-relaxed max-w-xs">
                   {stepDesc}
                 </p>

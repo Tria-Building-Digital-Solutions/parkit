@@ -4,6 +4,7 @@ import React, { useState, useRef, useEffect, useCallback } from "react";
 import { createPortal } from "react-dom";
 import { ChevronDown, Search } from "@/lib/premiumIcons";
 import { useTheme } from "next-themes";
+import { SELECT_TRIGGER, SELECT_OPTION, INPUT } from "@/lib/dashboardStyles";
 
 interface SelectFieldProps {
   value: string;
@@ -136,7 +137,7 @@ export function SelectField({ value, onChange, icon: Icon, children, className, 
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Buscar…"
-              className="w-full pl-9 pr-3 py-2.5 text-sm bg-slate-100/80 dark:bg-slate-800/80 rounded-xl outline-none text-slate-700 dark:text-slate-300 placeholder:text-text-muted border border-transparent focus:border-company-primary/30 transition-colors"
+              className={`${INPUT} pl-9 pr-3 bg-transparent dark:bg-transparent border-transparent focus:border-company-primary/30 rounded-xl`}
             />
           </div>
         )}
@@ -146,7 +147,7 @@ export function SelectField({ value, onChange, icon: Icon, children, className, 
               key={opt.value}
               type="button"
               onClick={() => handleSelect(opt.value)}
-              className={`w-full px-3 py-2.5 text-left text-sm rounded-xl transition-all duration-200 flex items-center gap-3 ${
+              className={`${SELECT_OPTION} ${
                 opt.value === value
                   ? "bg-company-primary/10 dark:bg-company-primary/20 text-company-primary font-medium"
                   : "text-slate-700 dark:text-slate-200 hover:bg-slate-100/80 dark:hover:bg-slate-800/80"
@@ -179,7 +180,7 @@ export function SelectField({ value, onChange, icon: Icon, children, className, 
           onClick={handleOpen}
           aria-invalid={ariaInvalid}
           className={[
-            "w-full pl-10 pr-10 py-3 rounded-lg border border-input-border bg-input-bg text-sm transition-all duration-200 ease-out focus:border-company-primary focus:outline-none focus:ring-1 focus:ring-company-primary/20 focus:ring-inset placeholder:text-text-muted text-left",
+            SELECT_TRIGGER,
             "text-sm font-medium truncate",
             !value ? "text-text-muted" : "",
           ].join(" ")}

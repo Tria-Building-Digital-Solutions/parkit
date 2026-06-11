@@ -507,7 +507,7 @@ export default function DashboardPage() {
                           type="button"
                           onClick={() => setCustomRange(null)}
                           disabled={loading}
-                          className="flex items-center gap-1.5 px-3 py-2 rounded-md text-sm font-medium text-company-tertiary hover:bg-company-tertiary-subtle hover:text-text-primary border border-transparent transition-colors disabled:opacity-60"
+                          className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-medium text-company-tertiary hover:bg-company-tertiary-subtle hover:text-text-primary border border-transparent transition-colors disabled:opacity-60"
                           aria-label={t("common.back")}
                         >
                           <ArrowLeft className="w-4 h-4 shrink-0" />
@@ -554,7 +554,7 @@ export default function DashboardPage() {
                                 setDays(d);
                               }}
                               disabled={loading}
-                              className={`px-3 py-2 rounded-md text-sm font-medium transition-colors disabled:opacity-60 ${
+                              className={`px-3 py-2 rounded-xl text-sm font-medium transition-colors disabled:opacity-60 ${
                                 days === d
                                   ? "bg-company-primary-subtle text-company-primary border border-company-primary-muted"
                                   : "text-text-secondary hover:bg-company-primary-subtle/50 hover:text-company-primary border border-transparent"
@@ -570,7 +570,7 @@ export default function DashboardPage() {
                               setCustomRangeJustOpened(true);
                             }}
                             disabled={loading}
-                            className="px-3 py-2 rounded-md text-sm font-medium text-text-secondary hover:bg-company-primary-subtle/50 hover:text-company-primary border border-transparent transition-colors disabled:opacity-60"
+                            className="px-3 py-2 rounded-xl text-sm font-medium text-text-secondary hover:bg-company-primary-subtle/50 hover:text-company-primary border border-transparent transition-colors disabled:opacity-60"
                           >
                             {t("dashboard.rangeCustom")}
                           </button>

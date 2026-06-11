@@ -11,8 +11,7 @@ import { useDashboardStore } from "@/lib/store";
 import { useToast } from "@/lib/toastStore";
 import { PageLoader } from "@/components/PageLoader";
 import { LoadingSpinner } from "@/components/LoadingSpinner";
-
-const LABEL = "block text-sm font-medium text-text-secondary mb-1.5";
+import { LABEL, BTN_PRIMARY, BTN_SECONDARY } from "@/lib/dashboardStyles";
 
 type ClientOption = { id: string; user?: { firstName?: string; lastName?: string; email?: string } };
 type VehicleOption = { id: string; plate?: string; brand?: string; model?: string };
@@ -145,7 +144,7 @@ export default function EditTicketPage() {
     );
   }
 
-  const skel = <div className="h-[46px] rounded-lg bg-input-bg border border-input-border animate-pulse" />;
+  const skel = <div className="h-[46px] rounded-xl bg-white dark:bg-white/5 border border-border-color/60 animate-pulse" />;
 
   return (
     <div className="flex-1 flex flex-col pt-6 px-4 md:px-10 lg:px-12 w-full gap-5">
@@ -276,11 +275,11 @@ export default function EditTicketPage() {
           <p className="text-xs text-text-muted">{t("common.requiredNote")}</p>
           <div className="flex items-center gap-3 ml-auto">
           <Link href="/dashboard/tickets"
-            className="px-5 py-3 rounded-lg border border-input-border text-sm font-medium text-text-secondary hover:bg-input-bg hover:text-text-primary transition-colors">
+            className={BTN_SECONDARY}>
             {t("common.cancel")}
           </Link>
           <button type="button" onClick={handleSubmit} disabled={submitting || !isDirty || !isValid}
-            className="inline-flex items-center gap-2 px-6 py-3 rounded-lg bg-company-primary text-white text-sm font-medium hover:bg-company-primary focus:outline-none focus:ring-2 focus:ring-company-primary focus:ring-offset-2 focus:ring-offset-page disabled:opacity-50 disabled:pointer-events-none transition-colors">
+            className={BTN_PRIMARY}>
             {submitting ? <><LoadingSpinner size="sm" />{t("common.saving")}</> : <>{t("common.save")}<ArrowRight className="w-4 h-4" /></>}
           </button>
         </div>

@@ -4,7 +4,8 @@ import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { motion, useInView, animate } from "framer-motion";
 import { ArrowLeft } from "lucide-react";
-import { ParkingCircle, Check } from "@/lib/premiumIcons";
+import { Check } from "@/lib/premiumIcons";
+import parkingImg from "@/assets/parking.svg";
 import { ThemeToggleSimple } from "@/components/ThemeToggleSimple";
 import { LocaleToggle } from "@/components/LocaleToggle";
 import { BackgroundBeams } from "@/components/ui/background-beams";
@@ -46,7 +47,9 @@ export default function AboutPage() {
   ];
 
   return (
-    <div className="min-h-screen bg-surface">
+    <div className="min-h-screen bg-surface relative overflow-hidden">
+      <BackgroundBeams />
+
       {/* Header */}
       <div className="fixed top-0 left-0 right-0 z-30">
         <div className="mx-auto max-w-7xl px-6 lg:px-8">
@@ -68,7 +71,6 @@ export default function AboutPage() {
 
       {/* Hero */}
       <section className="relative min-h-screen flex items-center overflow-hidden">
-        <BackgroundBeams />
         <div className="relative z-10 w-full mx-auto max-w-7xl px-6 lg:px-8 pt-24 pb-16">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
             <motion.div
@@ -76,9 +78,9 @@ export default function AboutPage() {
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.6 }}
             >
-              <div className="rounded-2xl bg-gradient-to-br from-company-primary/15 to-transparent p-1">
-                <div className="rounded-2xl bg-surface/80 backdrop-blur-sm p-8 flex items-center justify-center aspect-[4/3]">
-                  <ParkingCircle className="text-company-primary/20" width={200} height={200} strokeWidth={1} />
+              <div className="rounded-2xl bg-gradient-to-br from-company-primary/15 to-transparent">
+                <div className="rounded-2xl bg-surface/80 backdrop-blur-sm flex items-center justify-center">
+                  <img src={parkingImg.src} alt="Parking" className="w-full max-h-[500px] object-contain p-2" />
                 </div>
               </div>
             </motion.div>

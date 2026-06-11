@@ -32,7 +32,7 @@ export function ThemeToggle() {
 
   if (!mounted) {
     return (
-      <div className="p-2 rounded-lg w-10 h-10 flex items-center justify-center" />
+      <div className="p-2 rounded-xl w-10 h-10 flex items-center justify-center" />
     );
   }
 
@@ -43,7 +43,7 @@ export function ThemeToggle() {
         <button
           type="button"
           onClick={handleToggle}
-          className="h-10 w-10 rounded-lg text-company-secondary hover:text-text-primary hover:bg-company-tertiary-subtle transition-colors flex items-center justify-center"
+          className="h-10 w-10 rounded-xl text-company-secondary hover:text-text-primary hover:bg-company-tertiary-subtle transition-colors flex items-center justify-center"
         >
           {isDark ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
         </button>

@@ -5,6 +5,7 @@ import Link from "next/link";
 import { ChevronLeft, ArrowRight, Check, AlertOctagon } from "@/lib/premiumIcons";
 import { useTranslation } from "@/hooks/useTranslation";
 import { LoadingSpinner } from "@/components/LoadingSpinner";
+import { BTN_PRIMARY, BTN_GHOST } from "@/lib/dashboardStyles";
 
 export interface WizardStep {
   title: string;
@@ -198,7 +199,7 @@ export function FormWizard({
           {current === 0 ? (
             <Link
               href={cancelHref}
-              className="group px-4 py-2.5 rounded-lg text-sm font-medium text-text-muted hover:text-text-primary hover:bg-input-bg transition-colors"
+              className={BTN_GHOST}
             >
               {t("common.cancel")}
             </Link>
@@ -206,7 +207,7 @@ export function FormWizard({
             <button
               type="button"
               onClick={handleBack}
-              className="group inline-flex items-center gap-1.5 px-4 py-2.5 rounded-lg text-sm font-medium text-text-muted hover:text-text-primary hover:bg-input-bg transition-colors"
+              className={`${BTN_GHOST} group inline-flex`}
             >
               <ChevronLeft className="w-3.5 h-3.5 transition-transform duration-300 group-hover:-translate-x-0.5" />
               {t("common.back")}
@@ -217,7 +218,7 @@ export function FormWizard({
             type="button"
             onClick={handleNext}
             disabled={submitting || nextLoading || (onValidateBeforeAction ? false : !canAdvance)}
-            className="group inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-company-primary text-white text-sm font-medium hover:bg-company-primary focus:outline-none focus:ring-2 focus:ring-company-primary focus:ring-offset-2 focus:ring-offset-page disabled:opacity-40 disabled:pointer-events-none transition-all shadow-sm"
+            className={`${BTN_PRIMARY} group`}
           >
             {submitting ? (
               <>
