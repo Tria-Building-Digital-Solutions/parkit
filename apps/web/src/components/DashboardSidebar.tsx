@@ -14,15 +14,24 @@ import { apiClient } from "@/lib/api";
 import { useTranslation } from "@/hooks/useTranslation";
 import {
   LayoutDashboard,
+  LayoutDashboardFilled,
   Users,
   UserCircle,
+  UserCircleFilled,
   Key,
+  KeyFilled,
   Car,
+  CarFilled,
   ParkingCircle,
+  ParkingCircleFilled,
   CalendarEvent,
+  CalendarEventFilled,
   TicketCheck,
+  TicketCheckFilled,
   Bell,
+  BellFilled,
   Settings,
+  SettingsFilled,
   SidebarCollapse,
   SidebarExpand,
   ChevronRight,
@@ -455,20 +464,20 @@ export function DashboardSidebar() {
 
   const navGroups = useMemo(() => {
     const mainItems = [
-      { label: t("sidebar.overview"), href: "/dashboard", icon: LayoutDashboard },
-      { label: t("sidebar.parkings"), href: "/dashboard/parkings", icon: ParkingCircle },
-      ...(hasBookableParkings ? [{ label: t("sidebar.bookings"), href: "/dashboard/bookings", icon: CalendarEvent }] : []),
-      { label: t("sidebar.tickets"), href: "/dashboard/tickets", icon: TicketCheck },
+      { label: t("sidebar.overview"), href: "/dashboard", icon: LayoutDashboard, iconFilled: LayoutDashboardFilled },
+      { label: t("sidebar.parkings"), href: "/dashboard/parkings", icon: ParkingCircle, iconFilled: ParkingCircleFilled },
+      ...(hasBookableParkings ? [{ label: t("sidebar.bookings"), href: "/dashboard/bookings", icon: CalendarEvent, iconFilled: CalendarEventFilled }] : []),
+      { label: t("sidebar.tickets"), href: "/dashboard/tickets", icon: TicketCheck, iconFilled: TicketCheckFilled },
     ];
 
     const teamItems = [
-      ...(admin ? [{ label: t("sidebar.employees"), href: "/dashboard/users", icon: UserCircle }] : []),
-      ...(superAdmin ? [{ label: t("sidebar.valets"), href: "/dashboard/valets", icon: Key }] : []),
+      ...(admin ? [{ label: t("sidebar.employees"), href: "/dashboard/users", icon: UserCircle, iconFilled: UserCircleFilled }] : []),
+      ...(superAdmin ? [{ label: t("sidebar.valets"), href: "/dashboard/valets", icon: Key, iconFilled: KeyFilled }] : []),
     ];
 
     const clientsItems = [
       { label: t("sidebar.customers"), href: "/dashboard/customers", icon: Users },
-      { label: t("sidebar.vehicles"), href: "/dashboard/vehicles", icon: Car },
+      { label: t("sidebar.vehicles"), href: "/dashboard/vehicles", icon: Car, iconFilled: CarFilled },
     ];
 
     return [
@@ -487,8 +496,8 @@ export function DashboardSidebar() {
       {
         label: t("sidebar.account"),
         items: [
-          { label: t("sidebar.notifications"), href: "/dashboard/notifications", icon: Bell },
-          { label: t("sidebar.settings"), href: "/dashboard/settings", icon: Settings },
+          { label: t("sidebar.notifications"), href: "/dashboard/notifications", icon: Bell, iconFilled: BellFilled },
+          { label: t("sidebar.settings"), href: "/dashboard/settings", icon: Settings, iconFilled: SettingsFilled },
         ],
       },
     ];
@@ -564,7 +573,7 @@ export function DashboardSidebar() {
                 className="hidden md:flex p-2 rounded-lg text-text-muted hover:text-company-primary hover:bg-company-primary/10 transition-all duration-300 ease-out shrink-0 group mt-1"
                 aria-label="Collapse sidebar"
               >
-                <SidebarCollapse className="w-5 h-5 transition-all duration-300 group-hover:scale-110 group-hover:-rotate-90" />
+                <SidebarCollapse className="w-5 h-5 transition-all duration-300 group-hover:scale-110" />
               </button>
             </div>
           </>
@@ -574,15 +583,9 @@ export function DashboardSidebar() {
       {/* Company card */}
       {hasCompanies ? (
         <div className="shrink-0 px-3 pt-3 pb-1">
-          <div className="relative overflow-hidden rounded-2xl border-2 border-card-border/30 dark:border-white/[0.08] shadow-lg">
-            {companyBranding?.bannerImageUrl?.trim() && (
-              <div
-                className="absolute inset-0 bg-cover bg-center"
-                style={{ backgroundImage: `url(${companyBranding.bannerImageUrl})` }}
-              />
-            )}
-            <div className="relative z-10 flex items-center gap-3 px-4 py-3">
-              <div className="w-9 h-9 rounded-full overflow-hidden shrink-0 flex items-center justify-center ring-2 ring-company-primary/20 ring-offset-2 ring-offset-page"
+          {collapsed ? (
+            <div className="flex justify-center">
+              <div className="w-9 h-9 rounded-full overflow-hidden flex items-center justify-center ring-2 ring-company-primary/20 ring-offset-2 ring-offset-page"
                 style={{
                   backgroundColor: isDark ? '#1e293b' : '#ffffff',
                   boxShadow: `0 0 20px ${companyColors?.primary ? companyColors.primary + '30' : 'rgba(0,0,0,0.08)'}`,
@@ -600,34 +603,63 @@ export function DashboardSidebar() {
                   <IndustryIcon className="w-[18px] h-[18px]" strokeWidth={2} style={{ color: companyColors?.primary }} />
                 )}
               </div>
-              <div className="flex-1 min-w-0 relative">
-                <div className="absolute inset-0 rounded-lg backdrop-blur-2xl bg-black/10 dark:bg-white/10 border border-white/30 dark:border-white/10 shadow-[0_4px_16px_-4px_rgba(0,0,0,0.08)]" />
-                <div className="relative z-10">
-                  {superAdmin ? (
-                    <CompanySelector
-                      companies={companies}
-                      selectedCompanyId={selectedCompanyId}
-                      selectedCompanyName={selectedCompanyName}
-                      onSelect={handleSelectCompany}
-                      placeholder={t("sidebar.selectCompany")}
-                      allCompaniesLabel={t("sidebar.allCompanies")}
-                      emptyLabel={t("companies.noCompanies")}
-                      isDark={isDark}
-                      logoImageUrl={companyBranding?.logoImageUrl}
-                      hideAvatar
-                      highContrast
-                      transparentBg
-                      companyColors={defaults}
+            </div>
+          ) : (
+            <div className="relative overflow-hidden rounded-2xl border-2 border-card-border/30 dark:border-white/[0.08] shadow-lg">
+              {companyBranding?.bannerImageUrl?.trim() && (
+                <div
+                  className="absolute inset-0 bg-cover bg-center"
+                  style={{ backgroundImage: `url(${companyBranding.bannerImageUrl})` }}
+                />
+              )}
+              <div className="relative z-10 flex items-center gap-3 px-4 py-3">
+                <div className="w-9 h-9 rounded-full overflow-hidden shrink-0 flex items-center justify-center ring-2 ring-company-primary/20 ring-offset-2 ring-offset-page"
+                  style={{
+                    backgroundColor: isDark ? '#1e293b' : '#ffffff',
+                    boxShadow: `0 0 20px ${companyColors?.primary ? companyColors.primary + '30' : 'rgba(0,0,0,0.08)'}`,
+                  }}
+                >
+                  {companyBranding?.logoImageUrl?.trim() ? (
+                    <Image
+                      src={companyBranding.logoImageUrl}
+                      alt=""
+                      width={512}
+                      height={512}
+                      className="w-full h-full object-cover object-center"
                     />
                   ) : (
-                    <p className="text-sm font-medium truncate text-white px-3 py-1.5">
-                      {adminCompanyName || selectedCompanyName || "Company"}
-                    </p>
+                    <IndustryIcon className="w-[18px] h-[18px]" strokeWidth={2} style={{ color: companyColors?.primary }} />
                   )}
+                </div>
+                <div className="flex-1 min-w-0 relative">
+                  <div className="absolute inset-0 rounded-lg backdrop-blur-2xl bg-black/10 dark:bg-white/10 border border-white/30 dark:border-white/10 shadow-[0_4px_16px_-4px_rgba(0,0,0,0.08)]" />
+                  <div className="relative z-10">
+                    {superAdmin ? (
+                      <CompanySelector
+                        companies={companies}
+                        selectedCompanyId={selectedCompanyId}
+                        selectedCompanyName={selectedCompanyName}
+                        onSelect={handleSelectCompany}
+                        placeholder={t("sidebar.selectCompany")}
+                        allCompaniesLabel={t("sidebar.allCompanies")}
+                        emptyLabel={t("companies.noCompanies")}
+                        isDark={isDark}
+                        logoImageUrl={companyBranding?.logoImageUrl}
+                        hideAvatar
+                        highContrast
+                        transparentBg
+                        companyColors={defaults}
+                      />
+                    ) : (
+                      <p className="text-sm font-medium truncate text-white px-3 py-1.5">
+                        {adminCompanyName || selectedCompanyName || "Company"}
+                      </p>
+                    )}
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
+          )}
         </div>
       ) : shouldShowLoading ? (
         <div className="shrink-0 px-3 pt-3 pb-1">
@@ -681,24 +713,21 @@ export function DashboardSidebar() {
                   <div className="overflow-hidden">
                     <ul className="space-y-0.5">
                       {group.items.map((item) => {
-                        const Icon = item.icon;
                         const isActive = pathname === item.href;
+                        const Icon = isActive && item.iconFilled ? item.iconFilled : item.icon;
+                        const fillValue = isActive ? "currentColor" : "none";
                         const linkContent = (
                           <>
-                            <span
-                              className={`absolute left-0 top-1/2 -translate-y-1/2 w-[3px] rounded-r-full bg-gradient-to-b from-company-primary to-company-primary/70 transition-all duration-500 ease-[cubic-bezier(0.23,1,0.32,1)] shadow-[0_0_12px_rgba(var(--company-primary-rgb),0.4)] ${
-                                isActive ? "opacity-100 h-7" : "opacity-0 h-0"
-                              }`}
-                            />
                             <span className={`flex items-center justify-center w-10 h-10 rounded-lg shrink-0 transition-all duration-300 ease-out ${
                                 isActive 
-                                  ? "bg-company-primary/10 shadow-[0_2px_8px_-2px_rgba(var(--company-primary-rgb),0.2)]" 
+                                  ? "" 
                                   : "group-hover:bg-input-bg/50"
                               }`}>
                               <Icon
                                 className={`w-[18px] h-[18px] transition-all duration-300 ${
                                   isActive ? "text-company-primary scale-105" : "text-text-secondary group-hover:text-company-primary group-hover:scale-105"
                                 }`}
+                                fill={fillValue}
                               />
                             </span>
                             {!collapsed && (
@@ -714,9 +743,6 @@ export function DashboardSidebar() {
                                   <span className="min-w-[22px] h-[22px] px-1.5 flex items-center justify-center rounded-full bg-gradient-to-br from-red-500 to-red-600 text-white text-[11px] font-bold shrink-0 ml-auto shadow-lg shadow-red-500/25">
                                     {unreadNotificationsCount > 99 ? "99+" : unreadNotificationsCount}
                                   </span>
-                                )}
-                                {isActive && (
-                                  <ChevronRight className="w-4 h-4 text-company-primary shrink-0 ml-auto opacity-70" />
                                 )}
                               </>
                             )}
@@ -740,7 +766,7 @@ export function DashboardSidebar() {
                                   collapsed ? "justify-center mx-1" : "mx-1"
                                 } ${
                                   isActive
-                                    ? "bg-company-primary/5 text-text-primary shadow-[0_1px_3px_-1px_rgba(0,0,0,0.05)]"
+                                    ? "text-text-primary"
                                     : "text-text-secondary hover:bg-input-bg/80 hover:text-company-primary"
                                 }`}
                               >

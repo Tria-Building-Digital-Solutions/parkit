@@ -14,7 +14,7 @@ import { HelpModal } from "@/components/HelpModal";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useAuthStore, useDashboardStore, getBrandingFromCache } from "@/lib/store";
 import type { CompanyBranding } from "@/lib/store";
-import { getFullName, getShortName, isSuperAdmin } from "@/lib/auth";
+import { getFullName, getShortName, getInitials, isSuperAdmin } from "@/lib/auth";
 import { apiClient } from "@/lib/api";
 import { useTheme } from "next-themes";
 import { useLocaleStore } from "@/lib/store";
@@ -311,10 +311,10 @@ function DashboardLayoutInner({
                         }
                         setUserMenuOpen((open) => !open);
                       }}
-                      className={`group relative h-11 pl-1 pr-3 flex items-center gap-2.5 rounded-xl transition-all duration-300 ease-[cubic-bezier(0.23,1,0.32,1)] ${
+                      className={`group relative h-11 pl-1.5 pr-3 flex items-center gap-2.5 rounded-xl transition-all duration-300 ease-out ${
                         userMenuOpen
-                          ? "bg-white/80 dark:bg-slate-800/80 shadow-[0_8px_32px_rgba(0,0,0,0.12),0_2px_8px_rgba(0,0,0,0.08)] dark:shadow-[0_8px_32px_rgba(0,0,0,0.4),0_2px_8px_rgba(0,0,0,0.3)] ring-2 ring-company-primary/20"
-                          : "bg-white/60 dark:bg-slate-900/60 hover:bg-white/90 dark:hover:bg-slate-800/90 shadow-[0_4px_20px_rgba(0,0,0,0.08),0_1px_3px_rgba(0,0,0,0.05)] dark:shadow-[0_4px_20px_rgba(0,0,0,0.3),0_1px_3px_rgba(0,0,0,0.2)] hover:shadow-[0_8px_28px_rgba(0,0,0,0.12),0_2px_6px_rgba(0,0,0,0.08)] dark:hover:shadow-[0_8px_28px_rgba(0,0,0,0.4),0_2px_6px_rgba(0,0,0,0.3)] backdrop-blur-xl border border-white/40 dark:border-white/10"
+                          ? "bg-white shadow-lg ring-2 ring-company-primary/20 dark:bg-slate-800"
+                          : "bg-white/20 dark:bg-slate-900/20 hover:bg-white/60 dark:hover:bg-slate-800/60 ring-1 ring-white/10 dark:ring-white/5 hover:ring-white/30 dark:hover:ring-white/20 shadow-sm hover:shadow-md backdrop-blur-xl"
                       }`}
                       aria-haspopup="menu"
                       aria-expanded={userMenuOpen ? "true" : "false"}
@@ -323,15 +323,10 @@ function DashboardLayoutInner({
                       {(() => {
                         const hasAvatar = (user.avatarUrl ?? user.avatar)?.trim();
                         return (
-                              <div
-                            className={`relative w-9 h-9 rounded-full overflow-hidden flex items-center justify-center shrink-0 transition-transform duration-300 ease-out ${
-                              userMenuOpen ? "scale-95" : "group-hover:scale-105"
+                          <div
+                            className={`relative w-9 h-9 rounded-full overflow-hidden flex items-center justify-center shrink-0 ring-2 ring-white/90 dark:ring-slate-700/80 group-hover:ring-company-primary/30 transition-all duration-300 ${
+                              userMenuOpen ? "scale-95 ring-company-primary/30" : "group-hover:scale-105"
                             }`}
-                            style={{
-                              backgroundColor: theme === "dark" ? '#1e293b' : '#ffffff',
-                              border: '3px solid var(--card-border)',
-                              boxShadow: '0 8px 32px -8px rgba(0,0,0,0.1)',
-                            }}
                           >
                             {hasAvatar ? (
                               <Image
@@ -343,10 +338,16 @@ function DashboardLayoutInner({
                                 unoptimized
                               />
                             ) : (
-                              <User
-                                className="w-[18px] h-[18px]"
-                                style={{ color: companyBranding?.primaryColor || (theme === "dark" ? '#e2e8f0' : '#475569') }}
-                              />
+                              <div
+                                className="w-full h-full flex items-center justify-center text-white text-[11px] font-bold"
+                                style={{
+                                  background: companyBranding?.primaryColor
+                                    ? `linear-gradient(135deg, ${companyBranding.primaryColor}, ${companyBranding.primaryColor}dd)`
+                                    : 'linear-gradient(135deg, #6366f1, #8b5cf6)',
+                                }}
+                              >
+                                {getInitials(user)}
+                              </div>
                             )}
                           </div>
                         );
@@ -359,15 +360,11 @@ function DashboardLayoutInner({
                           {user.email}
                         </span>
                       </div>
-                      <div className={`ml-1 flex items-center justify-center w-5 h-5 rounded-md bg-slate-100/80 dark:bg-slate-800/80 transition-all duration-300 ${
-                        userMenuOpen ? "rotate-180 bg-company-primary/10" : "group-hover:bg-slate-200/80 dark:group-hover:bg-slate-700/80"
-                      }`}>
-                        <ChevronDown
-                          className={`w-3.5 h-3.5 transition-colors duration-300 ${
-                            userMenuOpen ? "text-company-primary" : "text-slate-500 dark:text-slate-400"
-                          }`}
-                        />
-                      </div>
+                      <ChevronDown
+                        className={`w-3.5 h-3.5 transition-all duration-300 ${
+                          userMenuOpen ? "rotate-180 text-company-primary" : "text-slate-400 dark:text-slate-500 group-hover:text-slate-600 dark:group-hover:text-slate-300"
+                        }`}
+                      />
                     </button>
                     {userMenuOpen && typeof document !== "undefined" && createPortal(
                       <div
