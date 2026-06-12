@@ -528,7 +528,7 @@ export default function Home() {
                 className="flex flex-col items-center text-center px-10"
               >
                 <div className="h-[2rem]" aria-hidden="true" />
-                <Icon className="my-8 text-black" width={55} height={55} strokeWidth={1.5} />
+                <Icon className="my-8 text-text-primary" width={55} height={55} strokeWidth={1.5} />
                 <p className="font-light text-text-primary leading-relaxed max-w-xs">
                   {stepDesc}
                 </p>
