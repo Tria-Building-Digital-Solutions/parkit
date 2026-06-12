@@ -7,7 +7,7 @@ import { TypewriterEffect } from "@/components/ui/typewriter-effect";
 import { AuthModal } from "@/components/AuthModal";
 import { ArrowRight, Menu, X, Plus, Minus, Check } from "lucide-react";
 import { Gauge, MapPin, DeviceMobile, MessageSquare, Key, ParkingMeter } from "@/lib/premiumIcons";
-import { IconKeyFilled, IconLayoutDashboardFilled, IconDeviceMobileFilled, IconClipboardTextFilled } from "@tabler/icons-react";
+import { IconKeyFilled, IconLayoutDashboardFilled, IconDeviceMobileFilled, IconPaletteFilled, IconBellFilled } from "@tabler/icons-react";
 import { BackgroundBeams } from "@/components/ui/background-beams";
 import { hyperspeedPresets } from "@/components/effects/hyperspeedPresets";
 import dynamic from "next/dynamic";
@@ -259,7 +259,7 @@ export default function Home() {
               <span>{t("landing.hero.subtitle")} </span>
               <TypewriterEffect
                 words={t("landing.hero.typewriterWords").split(",").map((w) => ({ text: w.trim(), className: "text-company-primary" }))}
-                className="text-company-primary"
+                className="text-company-primary dark:text-white/80"
                 cursorClassName="bg-company-primary"
               />
             </h1>
@@ -307,15 +307,19 @@ export default function Home() {
         </div>
       </div>
 
-      {/* Services Section — Bizidea mirror */}
-      <section id="services" className="bg-surface min-h-screen flex items-center">
-        <div className="w-full mx-auto max-w-7xl px-6 lg:px-8 py-12">
+      {/* Services Section — bento grid premium */}
+      <section id="services" className="bg-surface min-h-screen flex items-center relative overflow-hidden">
+        {/* Ambient gradient orbs for glass depth */}
+        <div className="pointer-events-none absolute -left-32 top-1/4 w-[500px] h-[500px] rounded-full bg-company-primary/[0.04] blur-[120px]" aria-hidden="true" />
+        <div className="pointer-events-none absolute -right-32 bottom-1/4 w-[500px] h-[500px] rounded-full bg-company-primary/[0.04] blur-[120px]" aria-hidden="true" />
+
+        <div className="w-full mx-auto max-w-7xl px-6 lg:px-8 py-12 relative z-10">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.5 }}
-            className="text-center max-w-2xl mx-auto mb-12"
+            className="text-center max-w-2xl mx-auto mb-16"
           >
             <h2 className="text-base/7 font-semibold text-company-primary tracking-wide uppercase">{t("landing.services.title")}</h2>
             <p className="mt-3 text-3xl font-semibold tracking-tight text-text-primary sm:text-4xl">
@@ -326,57 +330,159 @@ export default function Home() {
             </p>
           </motion.div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
-            {[
-              { href: "/services/dashboard", Icon: IconLayoutDashboardFilled, title: t("landing.services.item2Title"), desc: t("landing.services.item2Desc"), iconColor: "text-sky-500", iconBg: "bg-sky-500/10", iconHoverBg: "group-hover:bg-sky-500/20" },
-              { href: "/services/key-management", Icon: IconKeyFilled, title: t("landing.services.item1Title"), desc: t("landing.services.item1Desc"), iconColor: "text-amber-500", iconBg: "bg-amber-500/10", iconHoverBg: "group-hover:bg-amber-500/20" },
-              { href: "/services/mobile-checkin", Icon: IconDeviceMobileFilled, title: t("landing.services.item3Title"), desc: t("landing.services.item3Desc"), iconColor: "text-emerald-500", iconBg: "bg-emerald-500/10", iconHoverBg: "group-hover:bg-emerald-500/20" },
-              { href: "/services/reports", Icon: IconClipboardTextFilled, title: t("landing.services.item4Title"), desc: t("landing.services.item4Desc"), iconColor: "text-violet-500", iconBg: "bg-violet-500/10", iconHoverBg: "group-hover:bg-violet-500/20" },
-            ].map(({ href, Icon, title, desc, iconColor, iconBg, iconHoverBg }, i) => (
-              <motion.div
-                key={i}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.4, delay: i * 0.1 }}
-                className="group relative flex flex-col rounded-xl bg-page-alt p-8 border border-border-color hover:shadow-lg hover:border-border-color/80 transition-all overflow-hidden"
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 mb-12">
+            {/* Mobile Check-in */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ type: "spring", stiffness: 80, damping: 20, delay: 0 }}
+              className="group relative flex flex-col rounded-2xl bg-white/70 dark:bg-white/[0.04] backdrop-blur-xl border border-white/30 dark:border-white/5 p-6 transition-all duration-500 ease-out hover:-translate-y-1.5 hover:shadow-xl hover:border-company-primary/30 overflow-hidden"
+            >
+              <div className="w-11 h-11 rounded-xl bg-company-primary/[0.08] dark:bg-white/[0.08] flex items-center justify-center mb-4 group-hover:bg-company-primary/15 dark:group-hover:bg-white/[0.12] transition-colors">
+                <IconDeviceMobileFilled className="text-company-primary dark:text-white/80" width={22} height={22} />
+              </div>
+              <h3 className="text-[15px] font-semibold text-text-primary">{t("landing.services.item3Title")}</h3>
+              <p className="mt-1.5 text-sm text-text-secondary/80 dark:text-text-secondary leading-relaxed">{t("landing.services.item3Desc")}</p>
+              <Link
+                href="/services/mobile-checkin"
+                className="mt-auto pt-4 inline-flex items-center gap-1.5 text-sm font-semibold text-company-primary opacity-0 group-hover:opacity-100 translate-y-1 group-hover:translate-y-0 transition-all duration-300"
               >
-                <div className={`w-14 h-14 rounded-lg ${iconBg} flex items-center justify-center mb-6 ${iconHoverBg} transition-colors`}>
-                  <Icon className={iconColor} width={28} height={28} />
-                </div>
-                <h3 className="text-lg font-semibold text-text-primary">{title}</h3>
-                <p className="mt-3 text-sm text-text-secondary leading-relaxed">{desc}</p>
-                <Link
-                  href={href}
-                  className="mt-auto pt-5 inline-flex items-center gap-2 text-sm font-semibold text-company-primary hover:underline group/btn"
-                >
-                  {t("landing.services.title") === "Services" ? "Read More" : "Leer más"}
-                  <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover/btn:translate-x-1" />
-                </Link>
-              </motion.div>
-            ))}
+                {t("landing.services.title") === "Services" ? "Read More" : "Leer más"}
+                <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover/btn:translate-x-1" />
+              </Link>
+            </motion.div>
+
+            {/* Live Dashboard — hero bento (col-span-2, row-span-2) */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ type: "spring", stiffness: 80, damping: 20, delay: 0.08 }}
+              className="group relative flex flex-col rounded-2xl p-10 sm:col-span-2 lg:col-span-2 lg:row-span-2 border border-company-primary/25 transition-all duration-500 ease-out hover:scale-[1.01] hover:border-company-primary/50 overflow-hidden dark:[box-shadow:0_-20px_80px_-20px_#ffffff1f_inset]"
+              style={{
+                background: `linear-gradient(135deg, color-mix(in srgb, var(--company-primary) 18%, transparent), color-mix(in srgb, var(--company-primary) 5%, transparent) 50%, var(--page-bg-alt) 100%)`,
+                backgroundImage: `radial-gradient(circle at 1px 1px, color-mix(in srgb, var(--company-primary) 12%, transparent) 1px, transparent 0)`,
+                backgroundSize: `24px 24px, cover`,
+                backgroundBlendMode: `normal, overlay`,
+              }}
+            >
+              {/* Decorative glow orbs */}
+              <div className="pointer-events-none absolute -right-16 -top-16 w-80 h-80 rounded-full bg-gradient-to-br from-company-primary/20 to-transparent blur-3xl" aria-hidden="true" />
+              <div className="pointer-events-none absolute -left-10 bottom-0 w-40 h-40 rounded-full bg-gradient-to-tr from-company-primary/10 to-transparent blur-2xl" aria-hidden="true" />
+
+              <span className="relative inline-flex self-start rounded-full bg-company-primary/10 px-3 py-1 text-[11px] font-semibold text-company-primary mb-5 z-10">
+                {t("landing.services.title") === "Services" ? "Featured" : "Destacado"}
+              </span>
+              <div className="relative w-14 h-14 rounded-2xl bg-gradient-to-br from-company-primary/20 to-company-primary/5 flex items-center justify-center mb-5 group-hover:scale-110 transition-transform duration-500 z-10">
+                <IconLayoutDashboardFilled className="text-company-primary dark:text-white/80" width={28} height={28} />
+              </div>
+              <h3 className="relative text-2xl font-semibold tracking-tight text-text-primary z-10">{t("landing.services.item2Title")}</h3>
+              <p className="relative mt-2.5 text-base text-text-secondary/90 leading-relaxed max-w-prose z-10">{t("landing.services.item2Desc")}</p>
+              <Link
+                href="/services/dashboard"
+                className="relative mt-auto pt-6 inline-flex items-center gap-2 text-sm font-semibold text-company-primary hover:underline group/btn z-10"
+              >
+                {t("landing.services.title") === "Services" ? "Read More" : "Leer más"}
+                <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover/btn:translate-x-1" />
+              </Link>
+            </motion.div>
+
+            {/* Key Management */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ type: "spring", stiffness: 80, damping: 20, delay: 0.16 }}
+              className="group relative flex flex-col rounded-2xl bg-white/70 dark:bg-white/[0.04] backdrop-blur-xl border border-white/30 dark:border-white/5 p-6 transition-all duration-500 ease-out hover:-translate-y-1.5 hover:shadow-xl hover:border-company-primary/30 overflow-hidden"
+            >
+              <div className="w-11 h-11 rounded-xl bg-company-primary/[0.08] dark:bg-white/[0.08] flex items-center justify-center mb-4 group-hover:bg-company-primary/15 dark:group-hover:bg-white/[0.12] transition-colors">
+                <IconKeyFilled className="text-company-primary dark:text-white/80" width={22} height={22} />
+              </div>
+              <h3 className="text-[15px] font-semibold text-text-primary">{t("landing.services.item1Title")}</h3>
+              <p className="mt-1.5 text-sm text-text-secondary/80 dark:text-text-secondary leading-relaxed">{t("landing.services.item1Desc")}</p>
+              <Link
+                href="/services/key-management"
+                className="mt-auto pt-4 inline-flex items-center gap-1.5 text-sm font-semibold text-company-primary opacity-0 group-hover:opacity-100 translate-y-1 group-hover:translate-y-0 transition-all duration-300"
+              >
+                {t("landing.services.title") === "Services" ? "Read More" : "Leer más"}
+                <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover/btn:translate-x-1" />
+              </Link>
+            </motion.div>
+
+            {/* Smart Notifications */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ type: "spring", stiffness: 80, damping: 20, delay: 0.24 }}
+              className="group relative flex flex-col rounded-2xl bg-white/70 dark:bg-white/[0.04] backdrop-blur-xl border border-white/30 dark:border-white/5 p-6 transition-all duration-500 ease-out hover:-translate-y-1.5 hover:shadow-xl hover:border-company-primary/30 overflow-hidden"
+            >
+              <div className="w-11 h-11 rounded-xl bg-company-primary/[0.08] dark:bg-white/[0.08] flex items-center justify-center mb-4 group-hover:bg-company-primary/15 dark:group-hover:bg-white/[0.12] transition-colors">
+                <IconBellFilled className="text-company-primary dark:text-white/80" width={22} height={22} />
+              </div>
+              <h3 className="text-[15px] font-semibold text-text-primary">{t("landing.services.item6Title")}</h3>
+              <p className="mt-1.5 text-sm text-text-secondary/80 dark:text-text-secondary leading-relaxed">{t("landing.services.item6Desc")}</p>
+              <Link
+                href="/services/notifications"
+                className="mt-auto pt-4 inline-flex items-center gap-1.5 text-sm font-semibold text-company-primary opacity-0 group-hover:opacity-100 translate-y-1 group-hover:translate-y-0 transition-all duration-300"
+              >
+                {t("landing.services.title") === "Services" ? "Read More" : "Leer más"}
+                <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover/btn:translate-x-1" />
+              </Link>
+            </motion.div>
+
+            {/* White-Label */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ type: "spring", stiffness: 80, damping: 20, delay: 0.28 }}
+              className="group relative flex flex-col rounded-2xl bg-white/70 dark:bg-white/[0.04] backdrop-blur-xl border border-white/30 dark:border-white/5 p-6 transition-all duration-500 ease-out hover:-translate-y-1.5 hover:shadow-xl hover:border-company-primary/30 overflow-hidden"
+            >
+              <div className="w-11 h-11 rounded-xl bg-company-primary/[0.08] dark:bg-white/[0.08] flex items-center justify-center mb-4 group-hover:bg-company-primary/15 dark:group-hover:bg-white/[0.12] transition-colors">
+                <IconPaletteFilled className="text-company-primary dark:text-white/80" width={22} height={22} />
+              </div>
+              <h3 className="text-[15px] font-semibold text-text-primary">{t("landing.services.item5Title")}</h3>
+              <p className="mt-1.5 text-sm text-text-secondary/80 dark:text-text-secondary leading-relaxed">{t("landing.services.item5Desc")}</p>
+              <Link
+                href="/services/white-label"
+                className="mt-auto pt-4 inline-flex items-center gap-1.5 text-sm font-semibold text-company-primary opacity-0 group-hover:opacity-100 translate-y-1 group-hover:translate-y-0 transition-all duration-300"
+              >
+                {t("landing.services.title") === "Services" ? "Read More" : "Leer más"}
+                <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover/btn:translate-x-1" />
+              </Link>
+            </motion.div>
           </div>
 
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.5 }}
-            className="text-center mt-16"
-          >
-            <p className="text-2xl font-semibold tracking-tight text-text-primary sm:text-3xl">
+        </div>
+      </section>
+
+      {/* CTA Section — Simple centered on brand */}
+      <section className="bg-company-primary">
+        <div className="px-6 py-24 sm:py-32 lg:px-8">
+          <div className="mx-auto max-w-2xl text-center">
+            <h2 className="text-4xl font-semibold tracking-tight text-white sm:text-5xl">
               {t("landing.cta.heading")}
-            </p>
-            <p className="mt-3 text-base text-text-secondary leading-relaxed max-w-2xl mx-auto">
+            </h2>
+            <p className="mx-auto mt-6 max-w-lg text-lg/8 text-white/70">
               {t("landing.ctaBanner.description")}
             </p>
-            <button
-              onClick={() => handleGetStarted()}
-              className="mt-6 rounded-full bg-company-primary px-10 py-4 text-base font-semibold text-white shadow-sm hover:brightness-110 transition-all"
-            >
-              {t("landing.cta.button")}
-            </button>
-          </motion.div>
+            <div className="mt-10 flex items-center justify-center gap-x-6">
+              <button
+                onClick={() => handleGetStarted()}
+                className="rounded-full bg-white px-8 py-4 text-base font-semibold text-company-primary shadow-sm hover:brightness-110 transition-all focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
+              >
+                {t("landing.cta.button")}
+              </button>
+              <button
+                onClick={handleRequestDemo}
+                className="text-base font-semibold text-white"
+              >
+                {t("landing.hero.requestDemoLink")} <span aria-hidden="true">→</span>
+              </button>
+            </div>
+          </div>
         </div>
       </section>
 
@@ -406,13 +512,13 @@ export default function Home() {
             className="w-full grid grid-cols-1 md:grid-cols-3 gap-10"
           >
             {[
-              { num: "1", stepTitle: t("landing.howItWorks.step1Title"), stepDesc: t("landing.howItWorks.step1Desc"), Icon: DeviceMobile },
-              { num: "2", stepTitle: t("landing.howItWorks.step2Title"), stepDesc: t("landing.howItWorks.step2Desc"), Icon: MapPin },
-              { num: "3", stepTitle: t("landing.howItWorks.step4Title"), stepDesc: t("landing.howItWorks.step4Desc"), Icon: Key },
-              { num: "4", stepTitle: t("landing.howItWorks.step3Title"), stepDesc: t("landing.howItWorks.step3Desc"), Icon: ParkingMeter },
-              { num: "5", stepTitle: t("landing.howItWorks.step5Title"), stepDesc: t("landing.howItWorks.step5Desc"), Icon: MessageSquare },
-              { num: "6", stepTitle: t("landing.howItWorks.step6Title"), stepDesc: t("landing.howItWorks.step6Desc"), Icon: Gauge },
-            ].map(({ num, stepDesc, Icon }, i) => (
+              { stepDesc: t("landing.howItWorks.step1Desc"), Icon: DeviceMobile },
+              { stepDesc: t("landing.howItWorks.step2Desc"), Icon: MapPin },
+              { stepDesc: t("landing.howItWorks.step4Desc"), Icon: Key },
+              { stepDesc: t("landing.howItWorks.step3Desc"), Icon: ParkingMeter },
+              { stepDesc: t("landing.howItWorks.step5Desc"), Icon: MessageSquare },
+              { stepDesc: t("landing.howItWorks.step6Desc"), Icon: Gauge },
+            ].map(({ stepDesc, Icon }, i) => (
               <motion.div
                 key={i}
                 initial={{ opacity: 0, y: 20 }}
@@ -421,10 +527,8 @@ export default function Home() {
                 transition={{ duration: 0.4, delay: i * 0.12 }}
                 className="flex flex-col items-center text-center px-10"
               >
-                <span className="text-2xl font-bold text-company-primary">
-                  {num}.
-                </span>
-                <Icon className="my-8 text-black" width={55} height={55} strokeWidth={1.5} />
+                <div className="h-[2rem]" aria-hidden="true" />
+                <Icon className="my-8 text-text-primary" width={55} height={55} strokeWidth={1.5} />
                 <p className="font-light text-text-primary leading-relaxed max-w-xs">
                   {stepDesc}
                 </p>

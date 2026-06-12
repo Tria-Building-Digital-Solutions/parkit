@@ -8,6 +8,7 @@ import { AllCommunityModule, ModuleRegistry } from "ag-grid-community";
 import "ag-grid-community/styles/ag-grid.css";
 import "ag-grid-community/styles/ag-theme-quartz.css";
 import "@/app/ag-grid-parkit-overrides.css";
+import { CustomGridPagination } from "@/components/CustomGridPagination";
 
 ModuleRegistry.registerModules([AllCommunityModule]);
 
@@ -191,7 +192,7 @@ export function DataTable<T extends Record<string, any>>({
           onFirstDataRendered={onFirstDataRendered}
           pagination={pagination}
           paginationPageSize={pageSize}
-          suppressPaginationPanel={false}
+          suppressPaginationPanel={true}
           domLayout="normal"
           animateRows={true}
           loading={loading}
@@ -204,6 +205,7 @@ export function DataTable<T extends Record<string, any>>({
           suppressContextMenu={false}
           rowSelection="single"
         />
+        {pagination && <CustomGridPagination gridApi={gridApi} pageSize={pageSize} />}
       </div>
     </div>
   );

@@ -5,6 +5,7 @@ module.exports = {
     "./src/pages/**/*.{js,ts,jsx,tsx,mdx}",
     "./src/components/**/*.{js,ts,jsx,tsx,mdx}",
     "./src/app/**/*.{js,ts,jsx,tsx,mdx}",
+    "./node_modules/@tremor/react/dist/**/*.{js,mjs}",
   ],
   theme: {
     extend: {
@@ -32,6 +33,21 @@ module.exports = {
         "error-bg": "var(--error-bg)",
         info: "var(--info)",
         "info-bg": "var(--info-bg)",
+        // Tremor theme colors
+        "tremor-background": "var(--card-bg)",
+        "dark-tremor-background": "var(--card-bg)",
+        "tremor-content": "var(--text-secondary)",
+        "dark-tremor-content": "var(--text-secondary)",
+        "tremor-content-emphasis": "var(--text-primary)",
+        "dark-tremor-content-emphasis": "var(--text-primary)",
+        "tremor-content-strong": "var(--text-primary)",
+        "dark-tremor-content-strong": "var(--text-primary)",
+        "tremor-border": "var(--card-border)",
+        "dark-tremor-border": "var(--card-border)",
+        "tremor-ring": "var(--card-border)",
+        "dark-tremor-ring": "var(--card-border)",
+        "tremor-brand": "var(--company-primary)",
+        "dark-tremor-brand": "var(--company-primary)",
       },
       animation: {
         "fade-in": "fade-in 0.6s ease-out forwards",
@@ -55,7 +71,30 @@ module.exports = {
       backdropBlur: {
         xs: "2px",
       },
+      // Tremor theme tokens (v3 compatibility)
+      borderRadius: {
+        "tremor-default": "0.5rem",
+        "tremor-full": "9999px",
+      },
+      fontSize: {
+        "tremor-label": ["0.75rem", { lineHeight: "1rem" }],
+        "tremor-default": ["0.875rem", { lineHeight: "1.25rem" }],
+        "tremor-title": ["1.125rem", { lineHeight: "1.75rem" }],
+        "tremor-metric": ["1.875rem", { lineHeight: "2.25rem" }],
+      },
+      boxShadow: {
+        "tremor-card":
+          "0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px -1px rgba(0, 0, 0, 0.1)",
+        "dark-tremor-card":
+          "0 1px 3px 0 rgba(0, 0, 0, 0.3), 0 1px 2px -1px rgba(0, 0, 0, 0.2)",
+      },
     },
   },
+  safelist: [
+    {
+      pattern: /-tremor-/,
+      variants: ["dark"],
+    },
+  ],
   plugins: [],
 };
