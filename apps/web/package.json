@@ -20,6 +20,7 @@
   },
   "dependencies": {
     "@tabler/icons-react": "^3.31.0",
+    "@tremor/react": "^3.18.7",
     "ag-grid-community": "^35.1.0",
     "ag-grid-react": "^35.1.0",
     "autoprefixer": "^10.4.20",

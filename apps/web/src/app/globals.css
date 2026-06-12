@@ -144,10 +144,7 @@ body {
   font-weight: 700;
   letter-spacing: -0.02em;
   line-height: 1.1;
-  background: linear-gradient(135deg, var(--text-primary) 0%, var(--company-primary, #2563eb) 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  color: var(--text-primary);
 }
 
 /* Premium subtitle - Elegant complement */
@@ -296,68 +293,7 @@ body {
   border-radius: 1rem 1rem 0 0;
 }
 
-/* Pagination: transparent and app typography */
-.ag-theme-parkit .ag-paging-panel {
-  border-top: 1px solid var(--card-border);
-  border-radius: 0 0 1rem 1rem;
-  padding: 0.35rem 1rem;
-  min-height: 36px;
-  background-color: transparent;
-  color: var(--text-secondary);
-  font-size: 0.875rem;
-  font-family: inherit;
-  display: flex !important;
-  flex-direction: row !important;
-  align-items: center !important;
-  justify-content: flex-start !important; /* mobile: horizontal left-to-right scroll */
-  flex-wrap: nowrap !important;
-  overflow-x: auto;
-  min-width: 0;
-  gap: 0.75rem;
-}
-
-/* Prevent panel children from shrinking or wrapping */
-.ag-theme-parkit .ag-paging-row-summary-panel,
-.ag-theme-parkit .ag-paging-page-number,
-.ag-theme-parkit .ag-paging-page-size,
-.ag-theme-parkit .ag-paging-button-wrapper,
-.ag-theme-parkit .ag-paging-buttons-panel {
-  white-space: nowrap !important;
-  flex-shrink: 0 !important;
-}
-
-/* Row summary ("1 to 20 of 100") should be inline, never stacked */
-.ag-theme-parkit .ag-paging-row-summary-panel {
-  display: inline-flex !important;
-  flex-direction: row !important;
-  align-items: center !important;
-  gap: 0.2rem;
-  color: var(--text-muted);
-}
-
-/* "Page 1" - label and number must stay inline without overlapping */
-.ag-theme-parkit .ag-paging-page-number {
-  display: inline-flex !important;
-  flex-direction: row !important;
-  align-items: center !important;
-  gap: 0.25rem;
-}
-
-.ag-theme-parkit .ag-paging-description,
-.ag-theme-parkit .ag-paging-number {
-  white-space: nowrap !important;
-  flex-shrink: 0 !important;
-  display: inline !important;
-}
-
-.ag-theme-parkit .ag-paging-button {
-  color: var(--company-secondary, var(--text-secondary)) !important;
-  font-weight: 500;
-}
-
-.ag-theme-parkit .ag-paging-button:not(.ag-disabled):hover {
-  color: var(--company-primary, #0ea5e9) !important;
-}
+/* ── Pagination is now handled by CustomGridPagination component ── */
 
 /* Sorting icons with theme color */
 .ag-theme-parkit .ag-header-cell-sorted-asc .ag-icon-asc,

@@ -7,7 +7,7 @@ import { TypewriterEffect } from "@/components/ui/typewriter-effect";
 import { AuthModal } from "@/components/AuthModal";
 import { ArrowRight, Menu, X, Plus, Minus, Check } from "lucide-react";
 import { Gauge, MapPin, DeviceMobile, MessageSquare, Key, ParkingMeter } from "@/lib/premiumIcons";
-import { IconKeyFilled, IconLayoutDashboardFilled, IconDeviceMobileFilled, IconClipboardTextFilled } from "@tabler/icons-react";
+import { IconKeyFilled, IconLayoutDashboardFilled, IconDeviceMobileFilled, IconPaletteFilled, IconBellFilled } from "@tabler/icons-react";
 import { BackgroundBeams } from "@/components/ui/background-beams";
 import { hyperspeedPresets } from "@/components/effects/hyperspeedPresets";
 import dynamic from "next/dynamic";
@@ -326,12 +326,13 @@ export default function Home() {
             </p>
           </motion.div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6 mb-12">
             {[
-              { href: "/services/dashboard", Icon: IconLayoutDashboardFilled, title: t("landing.services.item2Title"), desc: t("landing.services.item2Desc"), iconColor: "text-sky-500", iconBg: "bg-sky-500/10", iconHoverBg: "group-hover:bg-sky-500/20" },
-              { href: "/services/key-management", Icon: IconKeyFilled, title: t("landing.services.item1Title"), desc: t("landing.services.item1Desc"), iconColor: "text-amber-500", iconBg: "bg-amber-500/10", iconHoverBg: "group-hover:bg-amber-500/20" },
-              { href: "/services/mobile-checkin", Icon: IconDeviceMobileFilled, title: t("landing.services.item3Title"), desc: t("landing.services.item3Desc"), iconColor: "text-emerald-500", iconBg: "bg-emerald-500/10", iconHoverBg: "group-hover:bg-emerald-500/20" },
-              { href: "/services/reports", Icon: IconClipboardTextFilled, title: t("landing.services.item4Title"), desc: t("landing.services.item4Desc"), iconColor: "text-violet-500", iconBg: "bg-violet-500/10", iconHoverBg: "group-hover:bg-violet-500/20" },
+              { href: "/services/mobile-checkin", Icon: IconDeviceMobileFilled, title: t("landing.services.item3Title"), desc: t("landing.services.item3Desc"), iconColor: "text-text-secondary", iconBg: "bg-card-border/40", iconHoverBg: "group-hover:bg-card-border/60" },
+              { href: "/services/key-management", Icon: IconKeyFilled, title: t("landing.services.item1Title"), desc: t("landing.services.item1Desc"), iconColor: "text-text-secondary", iconBg: "bg-card-border/40", iconHoverBg: "group-hover:bg-card-border/60" },
+              { href: "/services/dashboard", Icon: IconLayoutDashboardFilled, title: t("landing.services.item2Title"), desc: t("landing.services.item2Desc"), iconColor: "text-text-secondary", iconBg: "bg-card-border/40", iconHoverBg: "group-hover:bg-card-border/60" },
+              { href: "/services/notifications", Icon: IconBellFilled, title: t("landing.services.item6Title"), desc: t("landing.services.item6Desc"), iconColor: "text-text-secondary", iconBg: "bg-card-border/40", iconHoverBg: "group-hover:bg-card-border/60" },
+              { href: "/services/white-label", Icon: IconPaletteFilled, title: t("landing.services.item5Title"), desc: t("landing.services.item5Desc"), iconColor: "text-text-secondary", iconBg: "bg-card-border/40", iconHoverBg: "group-hover:bg-card-border/60" },
             ].map(({ href, Icon, title, desc, iconColor, iconBg, iconHoverBg }, i) => (
               <motion.div
                 key={i}
@@ -339,16 +340,16 @@ export default function Home() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ duration: 0.4, delay: i * 0.1 }}
-                className="group relative flex flex-col rounded-xl bg-page-alt p-8 border border-border-color hover:shadow-lg hover:border-border-color/80 transition-all overflow-hidden"
+                className="group relative flex flex-col rounded-xl bg-page-alt p-6 border border-border-color hover:shadow-lg hover:border-border-color/80 transition-all overflow-hidden min-h-[270px]"
               >
-                <div className={`w-14 h-14 rounded-lg ${iconBg} flex items-center justify-center mb-6 ${iconHoverBg} transition-colors`}>
-                  <Icon className={iconColor} width={28} height={28} />
+                <div className={`w-12 h-12 rounded-lg ${iconBg} flex items-center justify-center mb-5 ${iconHoverBg} transition-colors`}>
+                  <Icon className={iconColor} width={24} height={24} />
                 </div>
-                <h3 className="text-lg font-semibold text-text-primary">{title}</h3>
-                <p className="mt-3 text-sm text-text-secondary leading-relaxed">{desc}</p>
+                <h3 className="text-base font-semibold text-text-primary">{title}</h3>
+                <p className="mt-2 text-sm text-text-secondary leading-relaxed">{desc}</p>
                 <Link
                   href={href}
-                  className="mt-auto pt-5 inline-flex items-center gap-2 text-sm font-semibold text-company-primary hover:underline group/btn"
+                  className="mt-auto pt-4 inline-flex items-center gap-2 text-sm font-semibold text-company-primary hover:underline group/btn"
                 >
                   {t("landing.services.title") === "Services" ? "Read More" : "Leer más"}
                   <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover/btn:translate-x-1" />
@@ -357,26 +358,34 @@ export default function Home() {
             ))}
           </div>
 
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.5 }}
-            className="text-center mt-16"
-          >
-            <p className="text-2xl font-semibold tracking-tight text-text-primary sm:text-3xl">
+        </div>
+      </section>
+
+      {/* CTA Section — Simple centered on brand */}
+      <section className="bg-company-primary">
+        <div className="px-6 py-24 sm:py-32 lg:px-8">
+          <div className="mx-auto max-w-2xl text-center">
+            <h2 className="text-4xl font-semibold tracking-tight text-white sm:text-5xl">
               {t("landing.cta.heading")}
-            </p>
-            <p className="mt-3 text-base text-text-secondary leading-relaxed max-w-2xl mx-auto">
+            </h2>
+            <p className="mx-auto mt-6 max-w-lg text-lg/8 text-white/70">
               {t("landing.ctaBanner.description")}
             </p>
-            <button
-              onClick={() => handleGetStarted()}
-              className="mt-6 rounded-full bg-company-primary px-10 py-4 text-base font-semibold text-white shadow-sm hover:brightness-110 transition-all"
-            >
-              {t("landing.cta.button")}
-            </button>
-          </motion.div>
+            <div className="mt-10 flex items-center justify-center gap-x-6">
+              <button
+                onClick={() => handleGetStarted()}
+                className="rounded-full bg-white px-8 py-4 text-base font-semibold text-company-primary shadow-sm hover:brightness-110 transition-all focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
+              >
+                {t("landing.cta.button")}
+              </button>
+              <button
+                onClick={handleRequestDemo}
+                className="text-base font-semibold text-white"
+              >
+                {t("landing.hero.requestDemoLink")} <span aria-hidden="true">→</span>
+              </button>
+            </div>
+          </div>
         </div>
       </section>
 
@@ -406,13 +415,13 @@ export default function Home() {
             className="w-full grid grid-cols-1 md:grid-cols-3 gap-10"
           >
             {[
-              { num: "1", stepTitle: t("landing.howItWorks.step1Title"), stepDesc: t("landing.howItWorks.step1Desc"), Icon: DeviceMobile },
-              { num: "2", stepTitle: t("landing.howItWorks.step2Title"), stepDesc: t("landing.howItWorks.step2Desc"), Icon: MapPin },
-              { num: "3", stepTitle: t("landing.howItWorks.step4Title"), stepDesc: t("landing.howItWorks.step4Desc"), Icon: Key },
-              { num: "4", stepTitle: t("landing.howItWorks.step3Title"), stepDesc: t("landing.howItWorks.step3Desc"), Icon: ParkingMeter },
-              { num: "5", stepTitle: t("landing.howItWorks.step5Title"), stepDesc: t("landing.howItWorks.step5Desc"), Icon: MessageSquare },
-              { num: "6", stepTitle: t("landing.howItWorks.step6Title"), stepDesc: t("landing.howItWorks.step6Desc"), Icon: Gauge },
-            ].map(({ num, stepDesc, Icon }, i) => (
+              { stepDesc: t("landing.howItWorks.step1Desc"), Icon: DeviceMobile },
+              { stepDesc: t("landing.howItWorks.step2Desc"), Icon: MapPin },
+              { stepDesc: t("landing.howItWorks.step4Desc"), Icon: Key },
+              { stepDesc: t("landing.howItWorks.step3Desc"), Icon: ParkingMeter },
+              { stepDesc: t("landing.howItWorks.step5Desc"), Icon: MessageSquare },
+              { stepDesc: t("landing.howItWorks.step6Desc"), Icon: Gauge },
+            ].map(({ stepDesc, Icon }, i) => (
               <motion.div
                 key={i}
                 initial={{ opacity: 0, y: 20 }}
@@ -421,9 +430,7 @@ export default function Home() {
                 transition={{ duration: 0.4, delay: i * 0.12 }}
                 className="flex flex-col items-center text-center px-10"
               >
-                <span className="text-2xl font-bold text-company-primary">
-                  {num}.
-                </span>
+                <div className="h-[2rem]" aria-hidden="true" />
                 <Icon className="my-8 text-black" width={55} height={55} strokeWidth={1.5} />
                 <p className="font-light text-text-primary leading-relaxed max-w-xs">
                   {stepDesc}

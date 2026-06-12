@@ -24,16 +24,12 @@ import dynamic from "next/dynamic";
 import { DatePickerField } from "@/components/DatePickerField";
 import { LoadingSpinner } from "@/components/LoadingSpinner";
 
-const DashboardTicketsChart = dynamic(
-  () =>
-    import("@/components/DashboardTicketsChart").then((m) => m.DashboardTicketsChart),
-  {
-    ssr: false,
-    loading: () => (
-      <div className="flex-1 min-h-[240px] flex items-center justify-center bg-input-bg/50 rounded-lg animate-pulse" />
-    ),
-  }
-);
+const TremorAreaChart = dynamic(() => import("@/components/TremorAreaChart"), {
+  ssr: false,
+  loading: () => (
+    <div className="w-full h-full flex items-center justify-center bg-input-bg/50 rounded-lg animate-pulse" />
+  ),
+});
 
 interface DashboardStats {
   companiesCount: number;
@@ -56,7 +52,6 @@ interface DashboardStats {
 }
 
 function formatShortDate(dateStr: string, locale: string) {
-  // Interpret YYYY-MM-DD as calendar date (without converting to local time) so label matches data day
   const [yStr, mStr, dStr] = dateStr.split("-");
   const y = Number(yStr ?? 0);
   const m = Number(mStr ?? 1);
@@ -93,7 +88,6 @@ function toYYYYMMDD(d: Date) {
   return `${y}-${m}-${day}`;
 }
 
-/** Maximum days allowed in the range (same as in the API). */
 const MAX_RANGE_DAYS = 90;
 
 function addDays(dateStr: string, days: number): string {
@@ -109,7 +103,6 @@ function getDefaultCustomRange(): { from: string; to: string } {
   return { from: toYYYYMMDD(from), to: toYYYYMMDD(now) };
 }
 
-/** Adjusts from/to so the range does not exceed MAX_RANGE_DAYS. */
 function clampRange(from: string, to: string): { from: string; to: string } {
   const fromDate = new Date(from + "T12:00:00").getTime();
   const toDate = new Date(to + "T12:00:00").getTime();
@@ -163,7 +156,6 @@ export default function DashboardPage() {
     };
   }, [query, selectedCompanyId, showToastError, t]);
 
-  // After opening custom range for the first time, reset the flag
   useEffect(() => {
     if (customRangeJustOpened) {
       const id = window.setTimeout(() => setCustomRangeJustOpened(false), 0);
@@ -171,8 +163,6 @@ export default function DashboardPage() {
     }
   }, [customRangeJustOpened]);
 
-  // Redirect to "no companies" only for SUPER_ADMIN without selected company and with none in system.
-  // With selected company, stats are scoped to that company and companiesCount is 0; do not redirect.
   useEffect(() => {
     if (
       superAdmin &&
@@ -186,11 +176,9 @@ export default function DashboardPage() {
     }
   }, [superAdmin, selectedCompanyId, stats, redirectingNoCompanies, router]);
 
-  // Show skeleton on initial load instead of blocking
   if (loading && !stats) {
     return (
       <div className="pt-4 md:pt-6 px-4 md:px-10 lg:px-12 pb-4 md:pb-10 lg:pb-12 w-full flex-1 flex flex-col gap-6 md:gap-8">
-        {/* Skeleton Banner */}
         <div
           className="relative overflow-hidden rounded-3xl border border-white/20 p-6 md:p-8 h-48 animate-pulse"
           style={{
@@ -203,8 +191,6 @@ export default function DashboardPage() {
             `,
           }}
         />
-        
-        {/* Skeleton Stat Cards */}
         <section className="w-full">
           <div className="flex flex-wrap gap-4">
             {[
@@ -222,8 +208,6 @@ export default function DashboardPage() {
             ))}
           </div>
         </section>
-
-        {/* Skeleton Chart and Recent Tickets */}
         <section className="grid grid-cols-1 lg:grid-cols-3 gap-6 flex-1 min-h-[320px]">
           <div className="lg:col-span-2 rounded-2xl border border-card-border bg-card p-6 animate-pulse min-h-[320px]" />
           <div className="rounded-2xl border border-card-border bg-card p-6 animate-pulse min-h-[320px]" />
@@ -247,7 +231,6 @@ export default function DashboardPage() {
     return null;
   }
 
-  // Same order as sidebar: Main (parkings, bookings, tickets) -> Team (valets) -> Clients (customers, vehicles)
   const statCards: Array<{
     key: string;
     title: string;
@@ -374,284 +357,288 @@ export default function DashboardPage() {
 
   return (
     <div className="pt-4 md:pt-6 px-4 md:px-10 lg:px-12 pb-4 md:pb-10 lg:pb-12 w-full flex-1 flex flex-col gap-6 md:gap-8">
-            {/* Premium Banner with glassmorphism and refined gradients */}
-            <header
-              className="relative overflow-hidden rounded-3xl border border-white/20 p-6 md:p-8 shadow-2xl shadow-black/10"
-              style={{
-                background: `
-                  linear-gradient(135deg, 
-                    color-mix(in srgb, var(--company-primary, #2563eb) 60%, black) 0%,
-                    color-mix(in srgb, var(--company-primary, #2563eb) 35%, black) 50%,
-                    color-mix(in srgb, var(--company-primary, #2563eb) 18%, black) 100%
-                  )
-                `,
-              }}
-            >
-              {/* Premium ambient glow effects */}
-              <div className="absolute -top-20 -right-20 w-64 h-64 bg-white/5 rounded-full blur-3xl" />
-              <div className="absolute -bottom-20 -left-20 w-48 h-48 bg-white/5 rounded-full blur-3xl" />
-              <div className="absolute inset-0 bg-[radial-gradient(ellipse_120%_80%_at_50%_-30%,rgba(255,255,255,0.12),transparent)]" />
-              <div className="absolute inset-0 bg-[linear-gradient(to_bottom,transparent_0%,rgba(0,0,0,0.1)_100%)]" />
+      {/* Premium Banner */}
+      <header
+        className="relative overflow-hidden rounded-3xl border border-white/20 p-6 md:p-8 shadow-2xl shadow-black/10"
+        style={{
+          background: `
+            linear-gradient(135deg, 
+              color-mix(in srgb, var(--company-primary, #2563eb) 60%, black) 0%,
+              color-mix(in srgb, var(--company-primary, #2563eb) 35%, black) 50%,
+              color-mix(in srgb, var(--company-primary, #2563eb) 18%, black) 100%
+            )
+          `,
+        }}
+      >
+        <div className="absolute -top-20 -right-20 w-64 h-64 bg-white/5 rounded-full blur-3xl" />
+        <div className="absolute -bottom-20 -left-20 w-48 h-48 bg-white/5 rounded-full blur-3xl" />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_120%_80%_at_50%_-30%,rgba(255,255,255,0.12),transparent)]" />
+        <div className="absolute inset-0 bg-[linear-gradient(to_bottom,transparent_0%,rgba(0,0,0,0.1)_100%)]" />
 
-              <div className="relative space-y-6">
-                <div className="flex flex-wrap items-center gap-4">
-                  <div className="flex items-center gap-4">
-                    <div className="rounded-2xl bg-white/10 backdrop-blur-md border border-white/20 p-3 shrink-0 text-white shadow-lg">
-                      <TrendingUp className="w-7 h-7" />
-                    </div>
-                    <div>
-                      <p className="text-xl font-bold text-white tracking-tight drop-shadow-sm">
-                        {t("dashboard.activityOverviewTitle")}
-                      </p>
-                      <p className="text-sm mt-1 text-white/90 font-medium tracking-wide">
-                        {stats.ticketsLast7Days.reduce((a, b) => a + b.count, 0)} {t("dashboard.ticketsThisWeek")}
-                      </p>
-                    </div>
+        <div className="relative space-y-6">
+          <div className="flex flex-wrap items-center gap-4">
+            <div className="flex items-center gap-4">
+              <div className="rounded-2xl bg-white/10 backdrop-blur-md border border-white/20 p-3 shrink-0 text-white shadow-lg">
+                <TrendingUp className="w-7 h-7" />
+              </div>
+              <div>
+                <p className="text-xl font-bold text-white tracking-tight drop-shadow-sm">
+                  {t("dashboard.activityOverviewTitle")}
+                </p>
+                <p className="text-sm mt-1 text-white/90 font-medium tracking-wide">
+                  {stats.ticketsLast7Days.reduce((a, b) => a + b.count, 0)} {t("dashboard.ticketsThisWeek")}
+                </p>
+              </div>
+            </div>
+          </div>
+          <div className="flex flex-wrap items-center gap-x-8 gap-y-4 pt-4 border-t border-white/15">
+            <div className="flex items-center gap-2.5">
+              <div className="rounded-lg bg-white/10 p-1.5">
+                <Calendar className="w-4 h-4 shrink-0 text-white/90" />
+              </div>
+              <span className="text-sm text-white/80">
+                {t("dashboard.avgPerDay")}
+                <strong className="text-white font-semibold tabular-nums ml-1.5">
+                  {avgPerDay.toFixed(avgPerDay >= 10 ? 0 : 1)}
+                </strong>
+              </span>
+            </div>
+            <div className="flex items-center gap-2.5">
+              <div className="rounded-lg bg-white/10 p-1.5">
+                <TrendingUp className="w-4 h-4 shrink-0 text-white/90" />
+              </div>
+              <span className="text-sm text-white/80">
+                {t("dashboard.peakDay")}
+                <strong className="text-white font-semibold tabular-nums ml-1.5">
+                  {peakDay.count.toLocaleString()}
+                </strong>
+                <span className="text-white/60 ml-1">({peakDayLabel})</span>
+              </span>
+            </div>
+            <div className="flex items-center gap-2.5">
+              <div className="rounded-lg bg-white/10 p-1.5">
+                <TicketCheck className="w-4 h-4 shrink-0 text-white/90" />
+              </div>
+              <span className="text-sm text-white/80">
+                {t("dashboard.today")}
+                <strong className="text-white font-semibold tabular-nums ml-1.5">
+                  {todayCount.toLocaleString()}
+                </strong>
+              </span>
+            </div>
+            <div className="flex items-center gap-2.5">
+              <div className="rounded-lg bg-white/10 p-1.5">
+                <Users className="w-4 h-4 shrink-0 text-white/90" />
+              </div>
+              <span className="text-sm text-white/80">
+                {t("dashboard.lastActivity")}
+                <strong className="text-white font-semibold ml-1.5">
+                  {lastActivity}
+                </strong>
+              </span>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      {/* Stat Cards */}
+      <section className="w-full">
+        <div className="flex flex-wrap gap-4">
+          {statCards.map((card) => {
+            const c = colorClasses[card.color] ?? defaultCardStyle;
+            return (
+              <div
+                key={card.key}
+                className="group relative flex-1 min-w-[160px] rounded-2xl border border-card-border bg-gradient-to-br from-card to-card/95 p-5 backdrop-blur-sm transition-all duration-300 ease-out hover:border-company-primary/30 hover:shadow-lg hover:shadow-black/5 hover:-translate-y-0.5"
+              >
+                <div className={`absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 bg-gradient-to-br ${c.bg} blur-xl -z-10`} />
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <p className="premium-label text-slate-500 dark:text-slate-400">
+                      {card.title}
+                    </p>
+                    <p className="text-2xl font-bold text-text-primary mt-1.5 tabular-nums tracking-tight">
+                      {card.value.toLocaleString()}
+                    </p>
                   </div>
-                </div>
-                <div className="flex flex-wrap items-center gap-x-8 gap-y-4 pt-4 border-t border-white/15">
-                  <div className="flex items-center gap-2.5">
-                    <div className="rounded-lg bg-white/10 p-1.5">
-                      <Calendar className="w-4 h-4 shrink-0 text-white/90" />
-                    </div>
-                    <span className="text-sm text-white/80">
-                      {t("dashboard.avgPerDay")}
-                      <strong className="text-white font-semibold tabular-nums ml-1.5">
-                        {avgPerDay.toFixed(avgPerDay >= 10 ? 0 : 1)}
-                      </strong>
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-2.5">
-                    <div className="rounded-lg bg-white/10 p-1.5">
-                      <TrendingUp className="w-4 h-4 shrink-0 text-white/90" />
-                    </div>
-                    <span className="text-sm text-white/80">
-                      {t("dashboard.peakDay")}
-                      <strong className="text-white font-semibold tabular-nums ml-1.5">
-                        {peakDay.count.toLocaleString()}
-                      </strong>
-                      <span className="text-white/60 ml-1">({peakDayLabel})</span>
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-2.5">
-                    <div className="rounded-lg bg-white/10 p-1.5">
-                      <TicketCheck className="w-4 h-4 shrink-0 text-white/90" />
-                    </div>
-                    <span className="text-sm text-white/80">
-                      {t("dashboard.today")}
-                      <strong className="text-white font-semibold tabular-nums ml-1.5">
-                        {todayCount.toLocaleString()}
-                      </strong>
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-2.5">
-                    <div className="rounded-lg bg-white/10 p-1.5">
-                      <Users className="w-4 h-4 shrink-0 text-white/90" />
-                    </div>
-                    <span className="text-sm text-white/80">
-                      {t("dashboard.lastActivity")}
-                      <strong className="text-white font-semibold ml-1.5">
-                        {lastActivity}
-                      </strong>
-                    </span>
+                  <div
+                    className={`rounded-xl p-2.5 shrink-0 ${c.bg} ${c.text} transition-all duration-300 ease-out group-hover:scale-110 group-hover:shadow-md ${c.glow}`}
+                  >
+                    {card.icon}
                   </div>
                 </div>
               </div>
-            </header>
+            );
+          })}
+        </div>
+      </section>
 
-            {/* Premium Stat Cards with refined shadows and gradients */}
-            <section className="w-full">
-              <div className="flex flex-wrap gap-4">
-                {statCards.map((card) => {
-                  const c = colorClasses[card.color] ?? defaultCardStyle;
-                  return (
-                    <div
-                      key={card.key}
-                      className={`group relative flex-1 min-w-[160px] rounded-2xl border border-card-border bg-gradient-to-br from-card to-card/95 p-5 backdrop-blur-sm transition-all duration-300 ease-out hover:border-company-primary/30 hover:shadow-lg hover:shadow-black/5 hover:-translate-y-0.5`}
-                    >
-                      {/* Subtle glow effect on hover */}
-                      <div className={`absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 bg-gradient-to-br ${c.bg} blur-xl -z-10`} />
-
-                      <div className="flex items-start justify-between gap-3">
-                        <div className="min-w-0">
-                          <p className="premium-label text-slate-500 dark:text-slate-400">
-                            {card.title}
-                          </p>
-                          <p className="text-2xl font-bold text-text-primary mt-1.5 tabular-nums tracking-tight">
-                            {card.value.toLocaleString()}
-                          </p>
-                        </div>
-                        <div
-                          className={`rounded-xl p-2.5 shrink-0 ${c.bg} ${c.text} transition-all duration-300 ease-out group-hover:scale-110 group-hover:shadow-md ${c.glow}`}
-                        >
-                          {card.icon}
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </section>
-
-            {/* Chart + Recent tickets with premium styling */}
-            <section className="grid grid-cols-1 lg:grid-cols-3 gap-6 flex-1 min-h-0">
-              <div className="lg:col-span-2 rounded-2xl border border-card-border bg-gradient-to-br from-card to-card/95 p-6 backdrop-blur-sm overflow-hidden flex flex-col min-h-[320px] shadow-sm hover:shadow-md transition-shadow duration-300">
-                <div className="flex flex-wrap items-center justify-between gap-4 mb-4">
-                  <h2 className="text-lg premium-section-title">
-                    {t("dashboard.chartTicketsTitle")}
-                  </h2>
-                  <div className="flex items-center justify-end gap-3">
-                    {customRange ? (
-                      <div className="flex items-center gap-2 rounded-lg border border-input-border bg-input-bg p-0.5">
-                        <button
-                          type="button"
-                          onClick={() => setCustomRange(null)}
-                          disabled={loading}
-                          className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-medium text-company-tertiary hover:bg-company-tertiary-subtle hover:text-text-primary border border-transparent transition-colors disabled:opacity-60"
-                          aria-label={t("common.back")}
-                        >
-                          <ArrowLeft className="w-4 h-4 shrink-0" />
-                          {t("common.back")}
-                        </button>
-                        <DatePickerField
-                          value={customRange.from}
-                          autoOpen={customRangeJustOpened}
-                          compact
-                          minDate={addDays(customRange.to, -MAX_RANGE_DAYS + 1)}
-                          maxDate={customRange.to}
-                          onChange={(v) => {
-                            const nextFrom = v || customRange.from;
-                            setCustomRange((r) =>
-                              r ? clampRange(nextFrom, r.to) : r
-                            );
-                          }}
-                          className="min-w-[11rem]"
-                        />
-                        <DatePickerField
-                          value={customRange.to}
-                          autoOpen={customRangeJustOpened}
-                          compact
-                          minDate={customRange.from}
-                          maxDate={addDays(customRange.from, MAX_RANGE_DAYS - 1)}
-                          onChange={(v) => {
-                            const nextTo = v || customRange.to;
-                            setCustomRange((r) =>
-                              r ? clampRange(r.from, nextTo) : r
-                            );
-                          }}
-                          className="min-w-[11rem]"
-                        />
-                      </div>
-                    ) : (
-                      <>
-                        <div className="flex items-center gap-2 rounded-lg border border-input-border bg-input-bg p-0.5">
-                          {RANGE_OPTIONS.map((d) => (
-                            <button
-                              key={d}
-                              type="button"
-                              onClick={() => {
-                                setCustomRange(null);
-                                setDays(d);
-                              }}
-                              disabled={loading}
-                              className={`px-3 py-2 rounded-xl text-sm font-medium transition-colors disabled:opacity-60 ${
-                                days === d
-                                  ? "bg-company-primary-subtle text-company-primary border border-company-primary-muted"
-                                  : "text-text-secondary hover:bg-company-primary-subtle/50 hover:text-company-primary border border-transparent"
-                              }`}
-                            >
-                              {t(d === 7 ? "dashboard.rangeLast7" : d === 14 ? "dashboard.rangeLast14" : "dashboard.rangeLast30")}
-                            </button>
-                          ))}
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setCustomRange(getDefaultCustomRange());
-                              setCustomRangeJustOpened(true);
-                            }}
-                            disabled={loading}
-                            className="px-3 py-2 rounded-xl text-sm font-medium text-text-secondary hover:bg-company-primary-subtle/50 hover:text-company-primary border border-transparent transition-colors disabled:opacity-60"
-                          >
-                            {t("dashboard.rangeCustom")}
-                          </button>
-                        </div>
-                        {loading && (
-                          <LoadingSpinner size="sm" className="shrink-0" aria-label="" />
-                        )}
-                      </>
-                    )}
-                  </div>
-                </div>
-                <div className="flex-1 min-h-[240px] w-full">
-                  <DashboardTicketsChart
-                    data={chartData}
-                    ticketsLabel={t("dashboard.ticketsLabel")}
+      {/* Chart + Recent tickets */}
+      <section className="grid grid-cols-1 lg:grid-cols-3 gap-6 flex-1 min-h-0">
+        <div className="lg:col-span-2 rounded-2xl border border-card-border bg-gradient-to-br from-card to-card/95 p-6 backdrop-blur-sm overflow-hidden shadow-sm hover:shadow-md transition-shadow duration-300">
+          <div className="flex flex-wrap items-center justify-between gap-4 mb-4">
+            <h2 className="text-lg premium-section-title">
+              {t("dashboard.chartTicketsTitle")}
+            </h2>
+            <div className="flex items-center justify-end gap-3">
+              {customRange ? (
+                <div className="flex items-center gap-2 rounded-lg border border-input-border bg-input-bg p-0.5">
+                  <button
+                    type="button"
+                    onClick={() => setCustomRange(null)}
+                    disabled={loading}
+                    className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-medium text-company-tertiary hover:bg-company-tertiary-subtle hover:text-text-primary border border-transparent transition-colors disabled:opacity-60"
+                    aria-label={t("common.back")}
+                  >
+                    <ArrowLeft className="w-4 h-4 shrink-0" />
+                    {t("common.back")}
+                  </button>
+                  <DatePickerField
+                    value={customRange.from}
+                    autoOpen={customRangeJustOpened}
+                    compact
+                    minDate={addDays(customRange.to, -MAX_RANGE_DAYS + 1)}
+                    maxDate={customRange.to}
+                    onChange={(v) => {
+                      const nextFrom = v || customRange.from;
+                      setCustomRange((r) =>
+                        r ? clampRange(nextFrom, r.to) : r
+                      );
+                    }}
+                    className="min-w-[11rem]"
+                  />
+                  <DatePickerField
+                    value={customRange.to}
+                    autoOpen={customRangeJustOpened}
+                    compact
+                    minDate={customRange.from}
+                    maxDate={addDays(customRange.from, MAX_RANGE_DAYS - 1)}
+                    onChange={(v) => {
+                      const nextTo = v || customRange.to;
+                      setCustomRange((r) =>
+                        r ? clampRange(r.from, nextTo) : r
+                      );
+                    }}
+                    className="min-w-[11rem]"
                   />
                 </div>
-              </div>
-
-              <div className="rounded-2xl border border-card-border bg-gradient-to-br from-card to-card/95 backdrop-blur-sm overflow-hidden flex flex-col min-h-0 shadow-sm hover:shadow-md transition-shadow duration-300">
-                <div className="p-4 border-b border-card-border/80 flex items-center justify-between bg-gradient-to-r from-transparent via-card to-transparent">
-                  <h2 className="text-lg premium-section-title">
-                    {t("dashboard.recentTickets")}
-                  </h2>
-                  <Link
-                    href="/dashboard/tickets"
-                    className="text-sm font-medium text-company-primary hover:text-company-primary flex items-center gap-1"
-                  >
-                    {t("dashboard.viewAll")}
-                    <ChevronRight className="w-4 h-4" />
-                  </Link>
-                </div>
-                <div className="flex-1 overflow-auto p-2">
-                  {stats.recentTickets.length === 0 ? (
-                    <p className="text-text-muted text-sm py-8 text-center">
-                      {t("dashboard.noRecentActivity")}
-                    </p>
-                  ) : (
-                    <ul className="space-y-1">
-                      {stats.recentTickets.map((ticket) => {
-                        const vehicleLabel = ticket.vehicle
-                          ? [ticket.vehicle.brand, ticket.vehicle.model]
-                              .filter(Boolean)
-                              .join(" ")
-                          : null;
-                        const plate = ticket.vehicle?.plate ? formatPlate(ticket.vehicle.plate) : "—";
-                        return (
-                          <li key={ticket.id}>
-                            <Link
-                              href="/dashboard/tickets"
-                              className="flex items-center gap-3 rounded-xl p-3 transition-colors hover:bg-input-bg"
-                            >
-                              <div className="rounded-lg bg-company-primary-subtle p-2 text-company-primary">
-                                <Car className="w-4 h-4" />
-                              </div>
-                              <div className="min-w-0 flex-1">
-                                <p className="text-sm font-medium text-text-primary truncate">
-                                  {vehicleLabel ? `${vehicleLabel} (${plate})` : plate}
-                                </p>
-                                <p className="text-xs text-text-muted flex items-center gap-2">
-                                  <span>{ticket.parking?.name ?? "—"}</span>
-                                  <span>·</span>
-                                  <span>
-                                    {ticket.entryTime
-                                      ? formatRelativeTime(ticket.entryTime, locale)
-                                      : "—"}
-                                  </span>
-                                </p>
-                              </div>
-                              <span className="text-xs font-medium px-2 py-0.5 rounded-md bg-input-bg text-text-secondary shrink-0">
-                                {tEnum("ticketStatus", ticket.status)}
-                              </span>
-                            </Link>
-                          </li>
-                        );
-                      })}
-                    </ul>
+              ) : (
+                <>
+                  <div className="flex items-center gap-2 rounded-lg border border-input-border bg-input-bg p-0.5">
+                    {RANGE_OPTIONS.map((d) => (
+                      <button
+                        key={d}
+                        type="button"
+                        onClick={() => {
+                          setCustomRange(null);
+                          setDays(d);
+                        }}
+                        disabled={loading}
+                        className={`px-3 py-2 rounded-xl text-sm font-medium transition-colors disabled:opacity-60 ${
+                          days === d
+                            ? "bg-company-primary-subtle text-company-primary border border-company-primary-muted"
+                            : "text-text-secondary hover:bg-company-primary-subtle/50 hover:text-company-primary border border-transparent"
+                        }`}
+                      >
+                        {t(d === 7 ? "dashboard.rangeLast7" : d === 14 ? "dashboard.rangeLast14" : "dashboard.rangeLast30")}
+                      </button>
+                    ))}
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setCustomRange(getDefaultCustomRange());
+                        setCustomRangeJustOpened(true);
+                      }}
+                      disabled={loading}
+                      className="px-3 py-2 rounded-xl text-sm font-medium text-text-secondary hover:bg-company-primary-subtle/50 hover:text-company-primary border border-transparent transition-colors disabled:opacity-60"
+                    >
+                      {t("dashboard.rangeCustom")}
+                    </button>
+                  </div>
+                  {loading && (
+                    <LoadingSpinner size="sm" className="shrink-0" aria-label="" />
                   )}
-                </div>
-              </div>
-            </section>
+                </>
+              )}
+            </div>
+          </div>
+          <div className="w-full" style={{ height: "320px" }}>
+            <TremorAreaChart
+              data={chartData}
+              index="label"
+              categories={["count"]}
+              colors={["blue"]}
+              valueFormatter={(v) => `${v}`}
+              showLegend={false}
+              showGridLines={true}
+              curveType="natural"
+              yAxisWidth={40}
+            />
+          </div>
+        </div>
+
+        <div className="rounded-2xl border border-card-border bg-gradient-to-br from-card to-card/95 backdrop-blur-sm overflow-hidden flex flex-col min-h-0 shadow-sm hover:shadow-md transition-shadow duration-300">
+          <div className="p-4 border-b border-card-border/80 flex items-center justify-between bg-gradient-to-r from-transparent via-card to-transparent">
+            <h2 className="text-lg premium-section-title">
+              {t("dashboard.recentTickets")}
+            </h2>
+            <Link
+              href="/dashboard/tickets"
+              className="text-sm font-medium text-company-primary hover:text-company-primary flex items-center gap-1"
+            >
+              {t("dashboard.viewAll")}
+              <ChevronRight className="w-4 h-4" />
+            </Link>
+          </div>
+          <div className="flex-1 overflow-auto p-2">
+            {stats.recentTickets.length === 0 ? (
+              <p className="text-text-muted text-sm py-8 text-center">
+                {t("dashboard.noRecentActivity")}
+              </p>
+            ) : (
+              <ul className="space-y-1">
+                {stats.recentTickets.map((ticket) => {
+                  const vehicleLabel = ticket.vehicle
+                    ? [ticket.vehicle.brand, ticket.vehicle.model]
+                        .filter(Boolean)
+                        .join(" ")
+                    : null;
+                  const plate = ticket.vehicle?.plate ? formatPlate(ticket.vehicle.plate) : "—";
+                  return (
+                    <li key={ticket.id}>
+                      <Link
+                        href="/dashboard/tickets"
+                        className="flex items-center gap-3 rounded-xl p-3 transition-colors hover:bg-input-bg"
+                      >
+                        <div className="rounded-lg bg-company-primary-subtle p-2 text-company-primary">
+                          <Car className="w-4 h-4" />
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <p className="text-sm font-medium text-text-primary truncate">
+                            {vehicleLabel ? `${vehicleLabel} (${plate})` : plate}
+                          </p>
+                          <p className="text-xs text-text-muted flex items-center gap-2">
+                            <span>{ticket.parking?.name ?? "—"}</span>
+                            <span>·</span>
+                            <span>
+                              {ticket.entryTime
+                                ? formatRelativeTime(ticket.entryTime, locale)
+                                : "—"}
+                            </span>
+                          </p>
+                        </div>
+                        <span className="text-xs font-medium px-2 py-0.5 rounded-md bg-input-bg text-text-secondary shrink-0">
+                          {tEnum("ticketStatus", ticket.status)}
+                        </span>
+                      </Link>
+                    </li>
+                  );
+                })}
+              </ul>
+            )}
+          </div>
+        </div>
+      </section>
     </div>
   );
 }

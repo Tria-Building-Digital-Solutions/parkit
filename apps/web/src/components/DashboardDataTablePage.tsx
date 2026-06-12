@@ -22,6 +22,7 @@ import { BrandModelCatalogCellEditor } from "@/components/BrandModelCatalogCellE
 import { AddressCellEditor } from "@/components/AddressCellEditor";
 import { DateTimeCellEditor } from "@/components/DateTimeCellEditor";
 import { PageLoader } from "@/components/PageLoader";
+import { CustomGridPagination } from "@/components/CustomGridPagination";
 
 ModuleRegistry.registerModules([AllCommunityModule]);
 
@@ -539,6 +540,7 @@ export function DashboardDataTablePage<T extends { id?: string | number }>({
   const gridRef = useRef<AgGridReact<T>>(null);
   const [quickFilter, setQuickFilter] = useState("");
   const [isMobile, setIsMobile] = useState(false);
+  const [gridApi, setGridApi] = useState<GridApi | null>(null);
   // Measured detail-row heights by row id (so each grid/row adapts to its content).
   const [detailRowHeights, setDetailRowHeights] = useState<Record<string | number, number>>({});
 
@@ -1125,6 +1127,7 @@ export function DashboardDataTablePage<T extends { id?: string | number }>({
                     rowData={rowData}
                     columnDefs={columnDefs}
                     embedFullWidthRows={Boolean(renderRowDetail)}
+                    onGridReady={(params) => setGridApi(params.api)}
                     getRowClass={renderRowDetail ? getRowClass : undefined}
                     getRowStyle={renderRowDetail ? getRowStyle : undefined}
                     quickFilterText={quickFilter || undefined}
@@ -1139,6 +1142,7 @@ export function DashboardDataTablePage<T extends { id?: string | number }>({
                     overlayNoRowsTemplate={`<div class="flex flex-col items-center justify-center text-company-primary"><svg class="w-12 h-12 mb-3 opacity-40" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" /></svg><span class="font-medium">${emptyMessage}</span></div>`}
                     pagination
                     paginationPageSize={20}
+                    suppressPaginationPanel={true}
                     animateRows={false}
                     suppressCellFocus={!hasEditableColumns}
                     singleClickEdit={hasEditableColumns}
@@ -1152,6 +1156,7 @@ export function DashboardDataTablePage<T extends { id?: string | number }>({
                     isFullWidthRow={renderRowDetail ? isFullWidthRow : undefined}
                     fullWidthCellRenderer={renderRowDetail ? fullWidthCellRenderer : undefined}
                   />
+                  <CustomGridPagination gridApi={gridApi} pageSize={20} />
                 </div>
               </div>
             )}
