@@ -259,7 +259,7 @@ export default function Home() {
               <span>{t("landing.hero.subtitle")} </span>
               <TypewriterEffect
                 words={t("landing.hero.typewriterWords").split(",").map((w) => ({ text: w.trim(), className: "text-company-primary" }))}
-                className="text-company-primary"
+                className="text-company-primary dark:text-white/80"
                 cursorClassName="bg-company-primary"
               />
             </h1>
@@ -339,8 +339,8 @@ export default function Home() {
               transition={{ type: "spring", stiffness: 80, damping: 20, delay: 0 }}
               className="group relative flex flex-col rounded-2xl bg-white/70 dark:bg-white/[0.04] backdrop-blur-xl border border-white/30 dark:border-white/5 p-6 transition-all duration-500 ease-out hover:-translate-y-1.5 hover:shadow-xl hover:border-company-primary/30 overflow-hidden"
             >
-              <div className="w-11 h-11 rounded-xl bg-company-primary/[0.08] dark:bg-company-primary/[0.15] flex items-center justify-center mb-4 group-hover:bg-company-primary/15 dark:group-hover:bg-company-primary/25 transition-colors">
-                <IconDeviceMobileFilled className="text-company-primary" width={22} height={22} />
+              <div className="w-11 h-11 rounded-xl bg-company-primary/[0.08] dark:bg-white/[0.08] flex items-center justify-center mb-4 group-hover:bg-company-primary/15 dark:group-hover:bg-white/[0.12] transition-colors">
+                <IconDeviceMobileFilled className="text-company-primary dark:text-white/80" width={22} height={22} />
               </div>
               <h3 className="text-[15px] font-semibold text-text-primary">{t("landing.services.item3Title")}</h3>
               <p className="mt-1.5 text-sm text-text-secondary/80 dark:text-text-secondary leading-relaxed">{t("landing.services.item3Desc")}</p>
@@ -375,7 +375,7 @@ export default function Home() {
                 {t("landing.services.title") === "Services" ? "Featured" : "Destacado"}
               </span>
               <div className="relative w-14 h-14 rounded-2xl bg-gradient-to-br from-company-primary/20 to-company-primary/5 flex items-center justify-center mb-5 group-hover:scale-110 transition-transform duration-500 z-10">
-                <IconLayoutDashboardFilled className="text-company-primary" width={28} height={28} />
+                <IconLayoutDashboardFilled className="text-company-primary dark:text-white/80" width={28} height={28} />
               </div>
               <h3 className="relative text-2xl font-semibold tracking-tight text-text-primary z-10">{t("landing.services.item2Title")}</h3>
               <p className="relative mt-2.5 text-base text-text-secondary/90 leading-relaxed max-w-prose z-10">{t("landing.services.item2Desc")}</p>
@@ -396,8 +396,8 @@ export default function Home() {
               transition={{ type: "spring", stiffness: 80, damping: 20, delay: 0.16 }}
               className="group relative flex flex-col rounded-2xl bg-white/70 dark:bg-white/[0.04] backdrop-blur-xl border border-white/30 dark:border-white/5 p-6 transition-all duration-500 ease-out hover:-translate-y-1.5 hover:shadow-xl hover:border-company-primary/30 overflow-hidden"
             >
-              <div className="w-11 h-11 rounded-xl bg-company-primary/[0.08] dark:bg-company-primary/[0.15] flex items-center justify-center mb-4 group-hover:bg-company-primary/15 dark:group-hover:bg-company-primary/25 transition-colors">
-                <IconKeyFilled className="text-company-primary" width={22} height={22} />
+              <div className="w-11 h-11 rounded-xl bg-company-primary/[0.08] dark:bg-white/[0.08] flex items-center justify-center mb-4 group-hover:bg-company-primary/15 dark:group-hover:bg-white/[0.12] transition-colors">
+                <IconKeyFilled className="text-company-primary dark:text-white/80" width={22} height={22} />
               </div>
               <h3 className="text-[15px] font-semibold text-text-primary">{t("landing.services.item1Title")}</h3>
               <p className="mt-1.5 text-sm text-text-secondary/80 dark:text-text-secondary leading-relaxed">{t("landing.services.item1Desc")}</p>
@@ -418,8 +418,8 @@ export default function Home() {
               transition={{ type: "spring", stiffness: 80, damping: 20, delay: 0.24 }}
               className="group relative flex flex-col rounded-2xl bg-white/70 dark:bg-white/[0.04] backdrop-blur-xl border border-white/30 dark:border-white/5 p-6 transition-all duration-500 ease-out hover:-translate-y-1.5 hover:shadow-xl hover:border-company-primary/30 overflow-hidden"
             >
-              <div className="w-11 h-11 rounded-xl bg-company-primary/[0.08] dark:bg-company-primary/[0.15] flex items-center justify-center mb-4 group-hover:bg-company-primary/15 dark:group-hover:bg-company-primary/25 transition-colors">
-                <IconBellFilled className="text-company-primary" width={22} height={22} />
+              <div className="w-11 h-11 rounded-xl bg-company-primary/[0.08] dark:bg-white/[0.08] flex items-center justify-center mb-4 group-hover:bg-company-primary/15 dark:group-hover:bg-white/[0.12] transition-colors">
+                <IconBellFilled className="text-company-primary dark:text-white/80" width={22} height={22} />
               </div>
               <h3 className="text-[15px] font-semibold text-text-primary">{t("landing.services.item6Title")}</h3>
               <p className="mt-1.5 text-sm text-text-secondary/80 dark:text-text-secondary leading-relaxed">{t("landing.services.item6Desc")}</p>
@@ -440,8 +440,8 @@ export default function Home() {
               transition={{ type: "spring", stiffness: 80, damping: 20, delay: 0.28 }}
               className="group relative flex flex-col rounded-2xl bg-white/70 dark:bg-white/[0.04] backdrop-blur-xl border border-white/30 dark:border-white/5 p-6 transition-all duration-500 ease-out hover:-translate-y-1.5 hover:shadow-xl hover:border-company-primary/30 overflow-hidden"
             >
-              <div className="w-11 h-11 rounded-xl bg-company-primary/[0.08] dark:bg-company-primary/[0.15] flex items-center justify-center mb-4 group-hover:bg-company-primary/15 dark:group-hover:bg-company-primary/25 transition-colors">
-                <IconPaletteFilled className="text-company-primary" width={22} height={22} />
+              <div className="w-11 h-11 rounded-xl bg-company-primary/[0.08] dark:bg-white/[0.08] flex items-center justify-center mb-4 group-hover:bg-company-primary/15 dark:group-hover:bg-white/[0.12] transition-colors">
+                <IconPaletteFilled className="text-company-primary dark:text-white/80" width={22} height={22} />
               </div>
               <h3 className="text-[15px] font-semibold text-text-primary">{t("landing.services.item5Title")}</h3>
               <p className="mt-1.5 text-sm text-text-secondary/80 dark:text-text-secondary leading-relaxed">{t("landing.services.item5Desc")}</p>
