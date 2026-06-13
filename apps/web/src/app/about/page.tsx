@@ -10,7 +10,6 @@ import { ThemeToggleSimple } from "@/components/ThemeToggleSimple";
 import { LocaleToggle } from "@/components/LocaleToggle";
 import { BackgroundBeams } from "@/components/ui/background-beams";
 import { useTranslation } from "@/hooks/useTranslation";
-
 function AnimatedCounter({ value, suffix = "" }: { value: string; suffix?: string }) {
   const ref = useRef<HTMLSpanElement>(null);
   const isInView = useInView(ref, { once: true });
@@ -37,29 +36,45 @@ function AnimatedCounter({ value, suffix = "" }: { value: string; suffix?: strin
 
 export default function AboutPage() {
   const { t } = useTranslation();
+  const [scrolled, setScrolled] = useState(false);
   const [aboutTab, setAboutTab] = useState<"mission" | "vision">("mission");
 
-  const stats = [
-    { value: t("landing.about.stat1Value"), label: t("landing.about.stat1") },
-    { value: t("landing.about.stat2Value"), label: t("landing.about.stat2") },
-    { value: t("landing.about.stat3Value"), label: t("landing.about.stat3") },
-    { value: t("landing.about.stat4Value"), label: t("landing.about.stat4") },
-  ];
+  useEffect(() => {
+    const handleScroll = () => setScrolled(window.scrollY > 20);
+    handleScroll();
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
 
   return (
     <div className="min-h-screen bg-surface relative overflow-hidden">
       <BackgroundBeams />
 
       {/* Header */}
-      <div className="fixed top-0 left-0 right-0 z-30">
+      <div
+        className="fixed top-0 left-0 right-0 z-50 transition-all duration-300"
+        style={{
+          backgroundColor: scrolled ? "var(--surface)" : "transparent",
+          borderBottom: scrolled ? "1px solid var(--card-border)" : "1px solid transparent",
+          backdropFilter: scrolled ? "blur(12px)" : "none",
+          WebkitBackdropFilter: scrolled ? "blur(12px)" : "none",
+        }}
+      >
         <div className="mx-auto max-w-7xl px-6 lg:px-8">
-          <div className="flex items-center justify-between py-4">
+          <div className="flex items-center justify-between h-16">
+            <nav aria-label="Breadcrumb" className="hidden sm:block">
+              <ol role="list" className="flex items-center gap-2 text-sm text-text-secondary">
+                <li><Link href="/" className="transition hover:text-text-primary">Home</Link></li>
+                <li className="text-text-disabled">/</li>
+                <li className="font-medium text-text-primary" aria-current="page">{t("landing.about.title")}</li>
+              </ol>
+            </nav>
             <Link
               href="/"
-              className="inline-flex items-center gap-2 text-sm font-medium text-text-secondary hover:text-text-primary transition-colors"
+              className="sm:hidden inline-flex items-center gap-2 text-sm font-medium text-text-secondary hover:text-text-primary transition-colors"
             >
               <ArrowLeft className="w-4 h-4" />
-              {t("landing.about.backToHome")}
+              {t("landing.about.title")}
             </Link>
             <div className="flex items-center gap-3">
               <ThemeToggleSimple />
@@ -152,34 +167,6 @@ export default function AboutPage() {
         </div>
       </section>
 
-      {/* Stats */}
-      <motion.section
-        initial={{ opacity: 0, y: 20 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: true }}
-        transition={{ duration: 0.5 }}
-        className="bg-page-alt relative overflow-hidden"
-      >
-        <div className="mx-auto max-w-7xl px-6 lg:px-8 py-20">
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-8">
-            {stats.map((stat, i) => (
-              <motion.div
-                key={i}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.4, delay: i * 0.1 }}
-                className="text-center"
-              >
-                <p className="text-5xl font-bold text-company-primary tracking-tight">
-                  <AnimatedCounter value={stat.value} />
-                </p>
-                <p className="mt-2 text-sm font-medium text-text-secondary">{stat.label}</p>
-              </motion.div>
-            ))}
-          </div>
-        </div>
-      </motion.section>
     </div>
   );
 }

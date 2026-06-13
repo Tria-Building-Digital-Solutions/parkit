@@ -10,6 +10,7 @@
     --surface-hover: #f5f7fc;
     --card-bg: rgba(255, 255, 255, 0.92);
     --card-border: rgba(0, 0, 0, 0.06);
+    --border-color: rgba(0, 0, 0, 0.08);
     --text-primary: #0b1120;
     --text-secondary: #3d4a5c;
     --text-muted: #8896ab;
@@ -39,6 +40,7 @@
     --surface-hover: #151b30;
     --card-bg: rgba(255, 255, 255, 0.04);
     --card-border: rgba(255, 255, 255, 0.06);
+    --border-color: rgba(255, 255, 255, 0.08);
     --text-primary: #edf1f7;
     --text-secondary: #b8c2d4;
     --text-muted: #6a7893;

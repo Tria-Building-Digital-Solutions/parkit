@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, Suspense } from "react";
+import { useState, useEffect, Suspense } from "react";
 import dynamic from "next/dynamic";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
@@ -53,6 +53,15 @@ function SignupForm() {
   const preselectedPlan = searchParams.get("plan") as Plan | null;
   const validPlan = preselectedPlan && PLANS.includes(preselectedPlan) ? preselectedPlan : null;
 
+  const [scrolled, setScrolled] = useState(false);
+
+  useEffect(() => {
+    const handleScroll = () => setScrolled(window.scrollY > 20);
+    handleScroll();
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
   const [formData, setFormData] = useState({ name: "", company: "", email: "", password: "" });
   const [showPassword, setShowPassword] = useState(false);
   const [selectedPlan, setSelectedPlan] = useState<Plan | null>(validPlan);
@@ -103,15 +112,30 @@ function SignupForm() {
     <div className="min-h-screen bg-gradient-to-br from-page via-page to-page-alt/50 relative overflow-hidden">
       <BackgroundBeams />
 
-      <div className="fixed top-0 left-0 right-0 z-30">
+      <div
+        className="fixed top-0 left-0 right-0 z-50 transition-all duration-300"
+        style={{
+          backgroundColor: scrolled ? "var(--surface)" : "transparent",
+          borderBottom: scrolled ? "1px solid var(--card-border)" : "1px solid transparent",
+          backdropFilter: scrolled ? "blur(12px)" : "none",
+          WebkitBackdropFilter: scrolled ? "blur(12px)" : "none",
+        }}
+      >
         <div className="mx-auto max-w-7xl px-6 lg:px-8">
-          <div className="flex items-center justify-between py-4">
+          <div className="flex items-center justify-between h-16">
+            <nav aria-label="Breadcrumb" className="hidden sm:block">
+              <ol role="list" className="flex items-center gap-2 text-sm text-text-secondary">
+                <li><Link href="/" className="transition hover:text-text-primary">Home</Link></li>
+                <li className="text-text-disabled">/</li>
+                <li className="font-medium text-text-primary" aria-current="page">{t("landing.signup.title")}</li>
+              </ol>
+            </nav>
             <Link
               href="/"
-              className="inline-flex items-center gap-2 text-sm font-medium text-text-secondary hover:text-text-primary transition-colors"
+              className="sm:hidden inline-flex items-center gap-2 text-sm font-medium text-text-secondary hover:text-text-primary transition-colors"
             >
               <ArrowLeft className="w-4 h-4" />
-              {t("landing.signup.backToHome")}
+              {t("landing.signup.title")}
             </Link>
             <div className="flex items-center gap-3">
               <ThemeToggleSimple />
