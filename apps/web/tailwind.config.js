@@ -18,6 +18,7 @@ module.exports = {
         "surface-hover": "var(--surface-hover)",
         card: "var(--card-bg)",
         "card-border": "var(--card-border)",
+        "border-color": "var(--border-color)",
         "text-primary": "var(--text-primary)",
         "text-secondary": "var(--text-secondary)",
         "text-muted": "var(--text-muted)",

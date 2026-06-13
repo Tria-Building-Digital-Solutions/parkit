@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { ArrowLeft, ArrowUp } from "@/lib/premiumIcons";
 import { ThemeToggleSimple } from "@/components/ThemeToggleSimple";
@@ -9,21 +10,44 @@ import { useTranslation } from "@/hooks/useTranslation";
 
 export default function TermsPage() {
   const { t, locale } = useTranslation();
+  const [scrolled, setScrolled] = useState(false);
+
+  useEffect(() => {
+    const handleScroll = () => setScrolled(window.scrollY > 20);
+    handleScroll();
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
 
   return (
     <div className="min-h-screen bg-surface relative overflow-hidden">
       <BackgroundBeams />
 
       {/* Top bar */}
-      <div className="fixed top-0 left-0 right-0 z-30">
+      <div
+        className="fixed top-0 left-0 right-0 z-50 transition-all duration-300"
+        style={{
+          backgroundColor: scrolled ? "var(--surface)" : "transparent",
+          borderBottom: scrolled ? "1px solid var(--card-border)" : "1px solid transparent",
+          backdropFilter: scrolled ? "blur(12px)" : "none",
+          WebkitBackdropFilter: scrolled ? "blur(12px)" : "none",
+        }}
+      >
         <div className="mx-auto max-w-7xl px-6 lg:px-8">
-          <div className="flex items-center justify-between py-4">
+          <div className="flex items-center justify-between h-16">
+            <nav aria-label="Breadcrumb" className="hidden sm:block">
+              <ol role="list" className="flex items-center gap-2 text-sm text-text-secondary">
+                <li><Link href="/" className="transition hover:text-text-primary">Home</Link></li>
+                <li className="text-text-disabled">/</li>
+                <li className="font-medium text-text-primary" aria-current="page">{t("terms.title")}</li>
+              </ol>
+            </nav>
             <Link
               href="/"
-              className="inline-flex items-center gap-2 text-sm font-medium text-text-secondary hover:text-text-primary transition-colors"
+              className="sm:hidden inline-flex items-center gap-2 text-sm font-medium text-text-secondary hover:text-text-primary transition-colors"
             >
               <ArrowLeft className="w-4 h-4" />
-              {t("terms.backToHome")}
+              {t("terms.title")}
             </Link>
             <div className="flex items-center gap-3">
               <ThemeToggleSimple />

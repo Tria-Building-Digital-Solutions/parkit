@@ -112,15 +112,22 @@ export default function FaqPage() {
       <div className="relative z-10 pt-8 pb-24 px-4">
         <div className="max-w-3xl mx-auto">
           {/* Glass Card Container */}
-          <div className="bg-white/90 dark:bg-slate-900/70 backdrop-blur-2xl rounded-3xl border border-white/50 dark:border-white/20 shadow-[0_8px_32px_rgba(0,0,0,0.12)] dark:shadow-[0_8px_32px_rgba(0,0,0,0.4)] p-8 md:p-12">
+          <div className="bg-white/90 dark:bg-slate-900/70 backdrop-blur-2xl rounded-3xl border border-white/50 dark:border-card-border shadow-[0_8px_32px_rgba(0,0,0,0.12)] dark:shadow-[0_8px_32px_rgba(0,0,0,0.4)] p-8 md:p-12">
             {/* Header */}
             <div className="mb-10 border-b border-slate-200 dark:border-slate-700 pb-8">
+              <nav aria-label="Breadcrumb" className="hidden sm:block mb-6">
+                <ol role="list" className="flex items-center gap-2 text-sm text-indigo-400/70 dark:text-indigo-400/60">
+                  <li><Link href="/" className="transition hover:text-indigo-600 dark:hover:text-indigo-300">Home</Link></li>
+                  <li className="text-indigo-400/40 dark:text-indigo-400/30">/</li>
+                  <li className="font-medium text-indigo-600 dark:text-indigo-300" aria-current="page">{t("faq.title")}</li>
+                </ol>
+              </nav>
               <Link
                 href="/"
-                className="inline-flex items-center gap-2 text-indigo-500 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300 text-sm font-medium transition-colors mb-6"
+                className="sm:hidden inline-flex items-center gap-2 text-indigo-500 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300 text-sm font-medium transition-colors mb-6"
               >
                 <ArrowLeft className="w-4 h-4" />
-                {t("faq.backToHome")}
+                {t("faq.title")}
               </Link>
               <Logo className="text-3xl mb-4" />
               <h1 className="text-[2rem] md:text-[2.25rem] leading-tight premium-title premium-title-glow mb-2">

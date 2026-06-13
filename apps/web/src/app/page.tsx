@@ -84,8 +84,10 @@ export default function Home() {
         { name: t("landing.footer.linksAccess"), href: "/services/dashboard" },
         { name: t("landing.footer.linksReports"), href: "/services/mobile-checkin" },
         { name: t("landing.footer.linksApp"), href: "/services/reports" },
-      ],
-    },
+        { name: t("landing.footer.linksNotifications"), href: "/services/notifications" },
+        { name: t("landing.footer.linksWhiteLabel"), href: "/services/white-label" },
+          ],
+        },
     {
       title: t("landing.footer.support"),
       idPrefix: "footer-support",

@@ -135,7 +135,7 @@ function AcceptInviteForm() {
         <AnimatedBackground />
         <TopRightToggles />
         <main className="w-full max-w-[480px] relative z-10">
-          <div className="bg-white/90 dark:bg-slate-900/70 backdrop-blur-2xl rounded-lg border border-white/50 dark:border-white/20 shadow-[0_8px_32px_rgba(0,0,0,0.12)] dark:shadow-[0_8px_32px_rgba(0,0,0,0.4)] p-8 md:p-10 text-center">
+          <div className="bg-white/90 dark:bg-slate-900/70 backdrop-blur-2xl rounded-lg border border-white/50 dark:border-card-border shadow-[0_8px_32px_rgba(0,0,0,0.12)] dark:shadow-[0_8px_32px_rgba(0,0,0,0.4)] p-8 md:p-10 text-center">
             <Logo variant={logoVariant} className="text-5xl mx-auto mb-6" />
             <p className="text-slate-600 dark:text-slate-300 mb-6">{t("auth.inviteExpiredOrInvalid")}</p>
             <Link href="/?auth=login" className="group inline-flex items-center gap-2 text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300 text-sm font-medium">
@@ -156,7 +156,7 @@ function AcceptInviteForm() {
         <AnimatedBackground />
         <TopRightToggles />
         <main className="w-full max-w-[480px] relative z-10">
-          <div className="bg-white/90 dark:bg-slate-900/70 backdrop-blur-2xl rounded-lg border border-white/50 dark:border-white/20 shadow-[0_8px_32px_rgba(0,0,0,0.12)] dark:shadow-[0_8px_32px_rgba(0,0,0,0.4)] p-8 md:p-10 text-center">
+          <div className="bg-white/90 dark:bg-slate-900/70 backdrop-blur-2xl rounded-lg border border-white/50 dark:border-card-border shadow-[0_8px_32px_rgba(0,0,0,0.12)] dark:shadow-[0_8px_32px_rgba(0,0,0,0.4)] p-8 md:p-10 text-center">
             <Logo variant={logoVariant} className="text-5xl mx-auto mb-6" />
             <span className="inline-flex items-center justify-center w-14 h-14 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 mb-4">
               <CheckCircle className="w-8 h-8" />
@@ -181,7 +181,7 @@ function AcceptInviteForm() {
       <TopRightToggles />
       
       <main className="w-full max-w-[480px] relative z-10">
-        <div className="bg-white/90 dark:bg-slate-900/70 backdrop-blur-2xl rounded-lg border border-white/50 dark:border-white/20 shadow-[0_8px_32px_rgba(0,0,0,0.12)] dark:shadow-[0_8px_32px_rgba(0,0,0,0.4)] p-8 md:p-10">
+        <div className="bg-white/90 dark:bg-slate-900/70 backdrop-blur-2xl rounded-lg border border-white/50 dark:border-card-border shadow-[0_8px_32px_rgba(0,0,0,0.12)] dark:shadow-[0_8px_32px_rgba(0,0,0,0.4)] p-8 md:p-10">
           <div className="flex flex-col items-center mb-10">
             <Logo variant={logoVariant} className="text-5xl mb-5" />
             <h1 className="text-[1.75rem] leading-tight premium-title premium-title-glow mb-2">{t("auth.acceptInviteTitle")}</h1>

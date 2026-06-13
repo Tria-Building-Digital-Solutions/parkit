@@ -150,7 +150,7 @@ function RegisterForm() {
         {/* MAIN: Centered Form with Logo */}
         <main className="w-full max-w-[480px] relative z-10">
           {/* Premium Glass Card Container */}
-          <div className="bg-white/90 dark:bg-slate-900/70 backdrop-blur-2xl rounded-lg border border-white/50 dark:border-white/20 shadow-[0_8px_32px_rgba(0,0,0,0.12)] dark:shadow-[0_8px_32px_rgba(0,0,0,0.4)] p-8 md:p-10">
+          <div className="bg-white/90 dark:bg-slate-900/70 backdrop-blur-2xl rounded-lg border border-white/50 dark:border-card-border shadow-[0_8px_32px_rgba(0,0,0,0.12)] dark:shadow-[0_8px_32px_rgba(0,0,0,0.4)] p-8 md:p-10">
             {/* Logo and Title */}
             <div className="flex flex-col items-center mb-10">
               <Logo variant={logoVariant} className="text-5xl mb-5" />
@@ -302,7 +302,7 @@ function RegisterForm() {
       {/* MAIN: Centered Form with Logo */}
       <main className="w-full max-w-[480px] relative z-10">
         {/* Premium Glass Card Container */}
-        <div className="bg-white/90 dark:bg-slate-900/70 backdrop-blur-2xl rounded-lg border border-white/50 dark:border-white/20 shadow-[0_8px_32px_rgba(0,0,0,0.12)] dark:shadow-[0_8px_32px_rgba(0,0,0,0.4)] p-8 md:p-10">
+        <div className="bg-white/90 dark:bg-slate-900/70 backdrop-blur-2xl rounded-lg border border-white/50 dark:border-card-border shadow-[0_8px_32px_rgba(0,0,0,0.12)] dark:shadow-[0_8px_32px_rgba(0,0,0,0.4)] p-8 md:p-10">
           {/* Logo and Title */}
           <div className="flex flex-col items-center mb-10">
             <Logo variant={logoVariant} className="text-5xl mb-5" />
